@@ -116,6 +116,7 @@ PROJECT_ROOT/
 □ SERVICE_ORG_CORE.md → そのまま使う
 □ MASTER_LESSONS.md   → 蓄積した教訓ごと持っていく（リセット不要）
 □ OWNER_DEFAULTS.md   → 原本から最新版をコピーして使う（リセット不要）
+   ※ 原本を更新したら各プロジェクトの DOCS/OWNER_DEFAULTS.md にも反映すること
 
 【リセットして新規作成する】
 □ PROJECT_STATE.md    → 全項目リセット・新プロジェクト情報を記入
@@ -161,9 +162,9 @@ README.md v1.0（アプリ特化版）— 🔒不変層。変更には社長承�
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-▌アプリ共通参照ファイル
+▌アプリ共通参照ファイル（未作成・将来検討）
 
-📄 **ALL_APPS_GUIDE.md**（アプリ作成/ 直下）
-全アプリ共通の開発ガイドライン・ベストプラクティス集。
-新規アプリ開始時・設計判断時に参照すること。
-パス（DOCSからの相対）：`../../ALL_APPS_GUIDE.md`
+📄 **ALL_APPS_GUIDE.md**
+全アプリ共通の開発ガイドライン集。
+現時点では OWNER_DEFAULTS.md と SERVICE_ORG_CORE.md で代替している。
+将来的に共通ノウハウが蓄積した段階で OWNER_DEFAULTS.md から分離して作成する。

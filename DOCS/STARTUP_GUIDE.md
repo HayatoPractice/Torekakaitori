@@ -50,21 +50,30 @@ v1.0        初版    新規作成      記録チーム
 ## CHAPTER 1｜環境別セットアップ手順
 > ⏱ 所要時間の目安：初回のみ 約10〜15分
 
-「プロジェクトフォルダに9つのファイルを置いてAIに読み込ませる」
-という基本はどの環境でも同じです。環境ごとに違うのは読み込ませ方だけです。
+「プロジェクトフォルダに DOCSファイルを置いてAIに読み込ませる」が基本です。
+環境ごとに違うのは読み込ませ方だけです。
 
-**9つのファイル一覧（投入順）**
+**【必須】プロジェクト管理ファイル（9つ）— 全環境・毎回必須**
 ```
-① README.md
-② PROJECT_STATE.md
-③ SERVICE_ORG_CORE.md
-④ SERVICE_ORG_PHASE.md
-⑤ REQUIREMENTS_LOG.md
-⑥ LEARNING_LOG.md
-⑦ CONTEXT_BRIDGE.md
-⑧ MASTER_LESSONS.md
-⑨ STARTUP_GUIDE.md（このファイル）
+① README.md              ← 全体地図
+② PROJECT_STATE.md       ← 現在地・開発情報
+③ SERVICE_ORG_CORE.md    ← 組織ルール・開発フロー
+④ SERVICE_ORG_PHASE.md   ← フェーズ・チーム定義
+⑤ REQUIREMENTS_LOG.md   ← 要件・技術的負債
+⑥ LEARNING_LOG.md       ← 学習記録
+⑦ CONTEXT_BRIDGE.md     ← セッション橋渡し
+⑧ MASTER_LESSONS.md     ← 汎用教訓集
+⑨ STARTUP_GUIDE.md      ← このファイル
 ```
+
+**【推奨】AI強化リファレンス（4つ）— Claude Code使用時に追加**
+```
+⓪ MASTER_REFERENCE.md           ← AIエージェント知見
+⓫ CLAUDE_CODE_GUIDE.md          ← ツール運用ガイド
+⓬ PROMPT_ENGINEERING_MASTER.md  ← プロンプト技法
+⓭ BIO_PIPELINE_INSIGHTS.md      ← パイプライン構築知見
+```
+※ ⓪〜⓭は CLAUDE.md 自動読込用。Antigravity・通常チャットでは必須の9ファイルだけでOK。
 
 ---
 
@@ -83,7 +92,7 @@ v1.0        初版    新規作成      記録チーム
 □ 3. 「新しいフォルダを作成」をクリックする
        フォルダ名の例：「TodoApp_APP」「ECサイト_APP」
 □ 4. 作成したフォルダの中に「DOCS」フォルダを作成する
-□ 5. 9つの .md ファイルを DOCS フォルダにドラッグ＆ドロップする
+□ 5. 必須の9ファイルを DOCS フォルダにドラッグ＆ドロップする
        ※ ドラッグできない場合：「ファイルをアップロード」ボタンを使う
 □ 6. 全ファイルがアップロードされたことを確認する
 □ 7. チャット欄に以下をコピー＆ペーストして送信する
@@ -119,7 +128,7 @@ v1.0        初版    新規作成      記録チーム
        ※ フォルダがない場合：「フォルダを開く」→「新しいフォルダを作成」
 □ 2. フォルダ直下に DOCS フォルダを作成する
        方法：左側のエクスプローラーパネルで右クリック→「新しいフォルダー」
-□ 3. 9つの .md ファイルを DOCS フォルダに配置する
+□ 3. 必須の9ファイルを DOCS フォルダに配置する
 □ 4. プロジェクトフォルダの直下（DOCSの外）に CLAUDE.md を新規作成する
        方法：エクスプローラーで右クリック→「新しいファイル」→「CLAUDE.md」
 □ 5. CLAUDE.md に以下の内容をコピー＆ペーストして保存する
@@ -130,14 +139,15 @@ v1.0        初版    新規作成      記録チーム
 
        読込順：
        1. DOCS/README.md
-       2. DOCS/STARTUP_GUIDE.md
-       3. DOCS/PROJECT_STATE.md
-       4. DOCS/SERVICE_ORG_CORE.md
-       5. DOCS/SERVICE_ORG_PHASE.md
+       2. DOCS/PROJECT_STATE.md
+       3. DOCS/SERVICE_ORG_CORE.md
+       4. DOCS/SERVICE_ORG_PHASE.md
+       5. DOCS/CONTEXT_BRIDGE.md
        6. DOCS/REQUIREMENTS_LOG.md
        7. DOCS/LEARNING_LOG.md
-       8. DOCS/CONTEXT_BRIDGE.md
-       9. DOCS/MASTER_LESSONS.md
+       8. DOCS/MASTER_LESSONS.md
+       9. DOCS/OWNER_DEFAULTS.md
+       10. DOCS/STARTUP_GUIDE.md
        ↑↑↑CLAUDE.mdの内容ここまで↑↑↑
 □ 6. AI拡張機能のチャットパネルを開く
 □ 7. チャット欄に以下をコピー＆ペーストして送信する
@@ -172,7 +182,7 @@ v1.0        初版    新規作成      記録チーム
        入力例：cd /Users/自分の名前/Projects/MyApp
 □ 3. DOCSフォルダを作成する
        入力：mkdir DOCS
-□ 4. 9つの .md ファイルを DOCS フォルダにコピーする
+□ 4. 必須の9ファイルを DOCS フォルダにコピーする
        方法：Finderからドラッグ＆ドロップでも可
 □ 5. 環境B（VSCode）の手順4〜5と同じ方法で CLAUDE.md を作成する
 □ 6. Claude Code を起動する
@@ -208,7 +218,7 @@ v1.0        初版    新規作成      記録チーム
 □ 1. claude.ai をブラウザで開く
 □ 2. 新しい会話を開始する
 □ 3. チャット入力欄の「📎」（クリップ）アイコンをクリックして
-      9つの .md ファイルを全て添付する
+      必須の9ファイルを全て添付する
 □ 4. 以下をコピー＆ペーストして送信する
        ↓↓↓ここからコピー↓↓↓
        添付した全ファイルを順番に読み込んでください。
@@ -263,7 +273,7 @@ v1.0        初版    新規作成      記録チーム
 【フォルダ準備】
 □ 1. 新しいプロジェクトフォルダを作成する
       名前の例：「TodoApp_APP」「GAS_Tool_APP」
-□ 2. アプリ特化版の9ファイルをフォルダにコピーする
+□ 2. アプリ特化版の必須の9ファイルをフォルダにコピーする
 □ 3. 以下のファイルを「空欄にリセット」する
       □ PROJECT_STATE.md → 全項目を空欄にする
       □ REQUIREMENTS_LOG.md → 中身を空にする
@@ -302,7 +312,7 @@ v1.0        初版    新規作成      記録チーム
 
 ```
 【再開前の確認】
-□ 1. DOCSフォルダに9ファイルが全て揃っているか確認する
+□ 1. DOCSフォルダに必須の9ファイルが全て揃っているか確認する
       特に重要：CONTEXT_BRIDGE.md（前回の状態が入っているはず）
 □ 2. CONTEXT_BRIDGE.mdを自分で開いて以下を確認する
       □ 前回の最終タスク
@@ -473,7 +483,7 @@ v1.0        初版    新規作成      記録チーム
 □ CONTEXT_BRIDGE.md は最新の状態か（前回終了時に更新したか）
 □ MASTER_LESSONS.md を忘れていないか（毎回必ず投入する）
 □ STARTUP_GUIDE.md（このファイル）を含めているか
-□ 9ファイル全て揃っているか（漏れがないか）
+□ 必須の9ファイル全て揃っているか（漏れがないか）
 □ GASプロジェクトの場合：スクリプトプロパティ設定手順書も確認したか
 □ 古いバージョンのファイルを投入していないか
 ```
