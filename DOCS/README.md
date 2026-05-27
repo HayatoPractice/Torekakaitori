@@ -112,7 +112,8 @@ PROJECT_ROOT/
  │    ├── MASTER_LESSONS.md
  │    ├── OWNER_DEFAULTS.md   ← 原本からコピー（プロジェクト間で共通）
  │    ├── APP_SHARED_RULES.md ← AI共通行動指針（原本からコピー）
- │    └── STARTUP_GUIDE.md    ← 起動・運用手順書
+ │    ├── STARTUP_GUIDE.md    ← 起動・運用手順書
+ │    └── UI_LIBRARY_GUIDE.md ← UIライブラリ共存・参照ガイドブック（原本からコピー）
  ├── 📁 BDR/                       ← 意思決定記録（Phase別）
  ├── 📁 src/                       ← コードファイル
  ├── 📁 demo/                      ← デモファイル・デモ結果
@@ -132,6 +133,7 @@ PROJECT_ROOT/
    ※ 原本を更新したら各プロジェクトの DOCS/OWNER_DEFAULTS.md にも反映すること
 □ APP_SHARED_RULES.md → 原本から最新版をコピーして使う（リセット不要）
 □ STARTUP_GUIDE.md   → そのまま使う
+□ UI_LIBRARY_GUIDE.md → 原本から最新版をコピーして使う（リセット不要）
 
 【リセットして新規作成する】
 □ PROJECT_STATE.md    → 全項目リセット・新プロジェクト情報を記入
