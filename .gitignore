@@ -1,0 +1,31 @@
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# AIエージェントの内部設定（リポジトリに含めない）
+.claude/
+
+# 環境変数・秘密鍵
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+credentials.json
+client_secret*.json
+
+# 依存関係
+node_modules/
+.venv/
+venv/
+env/
+
+# ビルド成果物
+dist/
+build/
+out/
+*.pyc
+__pycache__/

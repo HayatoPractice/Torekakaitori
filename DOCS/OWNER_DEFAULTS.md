@@ -1,8 +1,9 @@
+<!-- ⚠️ このファイルは [APP専用] アプリ開発用設定です。ホームページ作成フォルダに持ち込まないこと。 -->
 👤 OWNER_DEFAULTS.md — オーナー基準・個人開発スタンダード v1.0
 対象：隼（Hayato）
 層：🔄 随時更新層（判断が変わったら即更新する）
 用途：プロジェクト開始時にここを読んで「毎回同じことを考え直す」を防ぐ
-更新時：原本（アプリ作成/原本/DOCS/）を修正後、各プロジェクトの DOCS/OWNER_DEFAULTS.md にも反映すること
+更新時：原本（アプリ作成/アプリ作成原本/DOCS/）を修正後、各プロジェクトの DOCS/OWNER_DEFAULTS.md にも反映すること
 ▌変更履歴
 バージョン  日付          変更内容    変更者
 v1.0        2026-04-22    初版作成    秘書
@@ -188,4 +189,85 @@ v1.0        2026-04-22    初版作成    秘書
 □ 無料プランのサーバーコストが収益で賄える設計か
 □ 潜在ユーザーが1万人以上いる市場か
 
-OWNER_DEFAULTS.md v1.0 — 🔄随時更新層。判断が変わったら即更新すること。
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▌SECTION 7：型安全スタック標準（仕組み #TS）
+
+【基本方針】
+  全てのプロジェクトで「型安全な言語/ツール」を使って開発し、デプロイ時に最終変換する。
+  これにより、型エラーをコーディング中に発見でき、デバッグのトークン消費を60〜80%削減できる。
+
+【言語別ルール】
+  ✅ JavaScript  → TypeScript (.ts / .tsx) で作成。デプロイ時のみ .js にコンパイル。
+  ✅ CSS         → Tailwind CSS を使用。素の CSS / SCSS は最小限。
+  ✅ Python      → mypy を使った型アノテーション必須。
+  ✅ HTML        → JSX / TSX 形式を優先（React プロジェクト）。
+
+【tsc watchモード自動起動】
+  VSCode起動時  : .vscode/tasks.json の "runOn": "folderOpen" により自動起動する。
+  Antigravity  : CLAUDE.md の指示により、セッション開始時に確認・起動する。
+  起動コマンド : npx tsc --noEmit --watch（型チェックのみ、出力ファイルなし）
+
+【型エラー発覚時の強制ルール（AIへの指示）】
+  ✅ 型エラーが発覚した時点で即座に作業を止め、根本原因を特定してから修正する。
+  ✅ エラーを無視して先に進むことは禁止。修正完了後に作業を再開する。
+  ✅ 同一エラーで3回失敗した場合は即座に中断し、別のアプローチを社長に提案する。
+
+【コース別の適用方針】
+  Aコース（Vanilla JS）:
+    - TypeScript + esbuild または tsc でコンパイルして .js を出力
+    - tsconfig.json: "target": "ES2017", "module": "ESNext"
+  Bコース（Next.js）:
+    - 標準で TypeScript 対応（create-next-app --ts で初期化）
+    - tsconfig.json は Next.js のデフォルトを使用
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▌SECTION 8：ライブラリ・バージョンロック規約（仕組み #TS補足）
+
+※ 開発中の採用手順・判断基準は SERVICE_ORG_CORE.md「③ ライブラリ管理ルール」を参照。
+このセクションは「バージョンロックの手順と既知の地雷リスト」のみを記録する。
+
+【基本方針】
+プロジェクト開始時に採用した全ライブラリのバージョンを固定し、
+意図しないAPI変更によるバグを防ぐ。
+
+【手順】
+  STEP 1｜npm install 後、package.json の dependencies/devDependencies を
+           REQUIREMENTS_LOG.mdの「外部ライブラリ管理」セクションにコピーする
+  STEP 2｜コード実装時は、記録されたバージョンのAPIと記法のみ使用する
+  STEP 3｜バージョンアップは社長の明示的な承認なしに行わない
+  STEP 4｜アップグレード後は必ず `npx tsc --noEmit` で全型エラーを確認してから進める
+
+【よくある地雷（MASTER_LESSONS.md参照）】
+  □ @ai-sdk/google v3：googleTools は @ai-sdk/google/internal からインポート（ML-001）
+  □ @ai-sdk/google v3：maxSteps パラメータは廃止済み（ML-002）
+  □ @ai-sdk/google v3：googleSearch({}) の引数は必須（ML-003）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▌SECTION 9：推奨テストフレームワーク
+
+フロントエンド（React/Next.js）：
+  【第1選択】Vitest + React Testing Library
+    理由：Vite環境と相性が良い・Jest互換API・高速
+    設定：`npm install -D vitest @testing-library/react`
+
+  【第2選択】Jest + React Testing Library
+    理由：業界標準・ドキュメントが豊富
+    設定：`npm install -D jest @testing-library/react ts-jest`
+
+E2Eテスト：
+  【第1選択】Playwright
+    理由：複数ブラウザ対応・Anthropicのツールとも相性良し
+    設定：`npm install -D @playwright/test`
+
+  判断基準：
+    □ Vite/Next.js プロジェクト → Vitest
+    □ 既存のJestセットアップがある → Jest継続
+    □ ブラウザ横断テストが必要 → Playwright追加
+
+テストファイル配置：
+  src/tests/[対象].test.ts（ユニットテスト）
+  e2e/[機能名].spec.ts（E2Eテスト）
+
+OWNER_DEFAULTS.md v1.1 — 🔄随時更新層。

@@ -27,6 +27,8 @@ Phase 0｜設計・要件定義（目安：〜1週間〜2週間）
 完了条件（全て満たすこと）：
   □ アプリ名・目的・主要機能が定義済み
   □ tech_stackが決定済み（PROJECT_STATE.md「開発情報」に記入済み）
+  □ 型安全スタックの確認：JS→TypeScript / CSS→Tailwind / Python→mypy（OWNER_DEFAULTS.md）
+  □ .vscode/tasks.json（tsc --noEmit --watch 自動起動設定）の作成完了
   □ 画面構成・APIエンドポイント一覧の初版が完成
   □ REQUIREMENTS_LOG.mdにREQ-001〜が登録済み
   □ 社長の承認完了
@@ -46,6 +48,8 @@ Phase 1｜MVP実装（目安：〜1ヶ月）
 完了条件：
   □ 全てのMVP機能の実装ループ（implement→verify→fix）が完了
   □ 自動テストのパス率100%
+  □ TypeScriptの型エラーが0件（tsc --noEmit で確認）
+  □ Pythonの mypyエラーが0件（使用している場合）
   □ セキュリティチェックリストの全該当項目をクリア
   □ デモ実施・問題なし（demo/demo_results.mdに記録済み）
   □ 社長の承認完了

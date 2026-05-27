@@ -60,7 +60,7 @@ v1.0        初版    ビジネス版から分離・アプリ特化版新規作�
 
 【全プロジェクト横断・常時参照】
 ⑩ OWNER_DEFAULTS.md ← リソース制約・デフォルト技術スタック・Kill基準・収益化ルール
-   場所：アプリ作成/原本/OWNER_DEFAULTS.md（各プロジェクトのDOCSにもコピー）
+   場所：アプリ作成/アプリ作成原本/OWNER_DEFAULTS.md（各プロジェクトのDOCSにもコピー）
    参照タイミング：新規プロジェクト開始時・技術選定時・価格設定時・Kill判断時
 
 ▌ファイル層別定義と変更権限
@@ -95,7 +95,13 @@ OWNER_DEFAULTS.md   → 技術選定・kill判断・価格設定時に参照
 プロジェクト開始時に秘書が以下のフォルダ構成を作成する。
 
 PROJECT_ROOT/
- ├── 📁 DOCS/                ← 9ファイル格納
+ ├── 📄 .antigravityignore         ← 静的除外フィルター（原本から複製）
+ ├── 📄 .geminiignore              ← 静的除外フィルター（原本から複製）
+ ├── 📄 .aiexclude                 ← 静的除外フィルター（原本から複製）
+ ├── 📄 AGENTS.md                  ← AI行動規範・トークン削減指示書（ルート直下）
+ ├── 📁 scripts/                   ← 開発ユーティリティスクリプト
+ │    └── 📄 skeletonizer.py       ← コードシグネチャ抽出スクリプト（Python）
+ ├── 📁 DOCS/                      ← 必須mdファイル格納
  │    ├── README.md
  │    ├── PROJECT_STATE.md
  │    ├── SERVICE_ORG_CORE.md
@@ -104,19 +110,28 @@ PROJECT_ROOT/
  │    ├── LEARNING_LOG.md
  │    ├── CONTEXT_BRIDGE.md
  │    ├── MASTER_LESSONS.md
- │    └── OWNER_DEFAULTS.md  ← 原本からコピー（プロジェクト間で共通）
- ├── 📁 BDR/                 ← 意思決定記録（Phase別）
- ├── 📁 src/                 ← コードファイル
- ├── 📁 demo/                ← デモファイル・デモ結果
- └── 📁 ARCHIVE/             ← アーカイブ済みファイル
+ │    ├── OWNER_DEFAULTS.md   ← 原本からコピー（プロジェクト間で共通）
+ │    ├── APP_SHARED_RULES.md ← AI共通行動指針（原本からコピー）
+ │    └── STARTUP_GUIDE.md    ← 起動・運用手順書
+ ├── 📁 BDR/                       ← 意思決定記録（Phase別）
+ ├── 📁 src/                       ← コードファイル
+ ├── 📁 demo/                      ← デモファイル・デモ結果
+ └── 📁 ARCHIVE/                   ← アーカイブ済みファイル
 
 ▌新プロジェクト開始時のチェックリスト
 【毎回持っていく（変えない）】
+□ .antigravityignore   → そのままルートに配置（静的除外）
+□ .geminiignore        → そのままルートに配置（静的除外）
+□ .aiexclude           → そのままルートに配置（静的除外）
+□ AGENTS.md            → そのままルートに配置（AI行動規範）
+□ scripts/             → skeletonizer.py 込みでそのままフォルダごとルートに配置
 □ README.md           → そのまま使う
 □ SERVICE_ORG_CORE.md → そのまま使う
 □ MASTER_LESSONS.md   → 蓄積した教訓ごと持っていく（リセット不要）
 □ OWNER_DEFAULTS.md   → 原本から最新版をコピーして使う（リセット不要）
    ※ 原本を更新したら各プロジェクトの DOCS/OWNER_DEFAULTS.md にも反映すること
+□ APP_SHARED_RULES.md → 原本から最新版をコピーして使う（リセット不要）
+□ STARTUP_GUIDE.md   → そのまま使う
 
 【リセットして新規作成する】
 □ PROJECT_STATE.md    → 全項目リセット・新プロジェクト情報を記入
@@ -131,6 +146,11 @@ PROJECT_ROOT/
 
 ▌秘書へのセッション開始指示
 トリガー：新しいセッションが開始されたとき
+
+> 【環境による使い分け】
+> Claude Code（CLI・VSCode拡張）使用時：CLAUDE.md が自動読込されるため、この手順は不要。
+> Antigravity・通常チャット使用時：この手順に従って手動でセッションを開始すること。
+
 秘書（AIの役割のひとつ）は以下の順番で即座に実行する：
 
 STEP 1｜README.mdを読む
@@ -159,12 +179,3 @@ STEP 8｜モードを判定してから以下を社長に報告する
 続きから進めます。ご指示をお待ちしています。
 
 README.md v1.0（アプリ特化版）— 🔒不変層。変更には社長承認必須。
-
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-▌アプリ共通参照ファイル（未作成・将来検討）
-
-📄 **ALL_APPS_GUIDE.md**
-全アプリ共通の開発ガイドライン集。
-現時点では OWNER_DEFAULTS.md と SERVICE_ORG_CORE.md で代替している。
-将来的に共通ノウハウが蓄積した段階で OWNER_DEFAULTS.md から分離して作成する。
