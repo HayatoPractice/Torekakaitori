@@ -270,4 +270,60 @@ E2Eテスト：
   src/tests/[対象].test.ts（ユニットテスト）
   e2e/[機能名].spec.ts（E2Eテスト）
 
-OWNER_DEFAULTS.md v1.1 — 🔄随時更新層。
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▌SECTION 10：AI モデル選定基準（2026年版）
+
+迷ったらここを見る。コスト・性能・速度の三角形で最適解を選ぶ。
+
+━━ モデル性能比較表（SWE-bench = AIのコーディング能力指標）
+
+  | モデル名                        | SWE-bench | 出力速度       | API料金（入力/100万token） | 主な強み                              |
+  |-------------------------------|-----------|--------------|--------------------------|-------------------------------------|
+  | Claude Opus 4.8               | 最高水準    | 中速          | $25.00                   | 現時点で最強の知能。複雑バグ・難解ロジック |
+  | Claude Opus 4.6               | 80.8%     | 中速          | $25.00                   | 日本語の記述クオリティに定評あり         |
+  | Claude Sonnet 4.6（現在使用中） | 79.6%     | 高速          | $3.00                    | コストと性能のバランス型               |
+  | Gemini 3.5 Flash（Thinking時）  | 78.0%     | 284 token/秒  | $1.50                    | 圧倒的な低コスト・高速。24hエージェント向け |
+  | Gemini 3.5 Flash（標準）        | ~45.0%    | 284 token/秒  | $1.50                    | 最速・最安。軽量タスクの足回り          |
+
+  ⚠️ コスト注意：Claude Opus は Gemini 3.5 Flash の約16.6倍のAPIコスト。
+  大量データ・長時間エージェント運用では Gemini 3.5 Flash が圧倒的に有利。
+
+━━ 用途別モデル選定フロー
+
+  □ 複雑なバグ修正・難解なアーキテクチャ判断 → Claude Opus 4.8
+  □ 日本語の高品質な文章生成・ドキュメント → Claude Opus 4.6
+  □ 通常の開発作業・バランス重視            → Claude Sonnet 4.6（デフォルト）
+  □ 大量処理・24時間エージェント運用        → Gemini 3.5 Flash（Thinking）
+  □ GASと統合・Google エコシステム         → Gemini API（Google AI）
+  □ 高精度な文章生成・業界標準             → OpenAI GPT-4o
+
+━━ AIデザインツール使い分け
+
+  Claude Design：
+    → 会話しながら「動く試作品・LP・スライド」を爆速作成
+    → 0→1の構成はざっくりでOK。生成後に「角を丸くして」とブラッシュアップ
+    → ReactやHTML/CSSの「動くUIコード」生成が特に得意
+
+  Google Pics（2026年夏 Pro/Ultra向け正式追加）：
+    → スライド・バナー・イラストなど「純粋な画像・ビジュアル素材」を直感的に作成
+    → Google Workspace（スライド等）にネイティブ統合
+
+  → 連携ワーク：Google Picsで画像を作成 → Claudeに「このデザイン通りに動くReactコードを作って」と指示
+    → デザイン・CSSが100%再現された「動くソースコード」が一撃で手に入る
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▌SECTION 11：外部ツール・サービス参照先
+
+  詳細リファレンスは TOOL_REFERENCE.md を参照。
+  このセクションは「迷った時の判断フロー」のみ記載。
+
+  Google Workspace 連携が必要 → §D（Gmail/Sheets/Forms/GAS）
+  GCP インフラ選定           → §E（Cloud Run/Functions/Firestore）
+  AI/ML APIを使いたい        → §G（Vertex AI/Vision/Translation等）
+  セキュリティ設計            → §I（IAM/Secret Manager必須）
+  本番監視・モニタリング      → §J（Cloud Monitoring/Error Reporting）
+  地図・位置情報機能          → §K（Maps Platform/Places API）
+  画像アセット生成            → §L（Stable Diffusion/Gemini/Firefly）
+  夜間・定期自動化            → §O（6パターン）
+
+OWNER_DEFAULTS.md v1.2 — 🔄随時更新層。

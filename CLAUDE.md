@@ -9,30 +9,36 @@
 ## 起動シーケンス（必須・スキップ禁止）
 
 <startup_sequence>
-1. `AGENTS.md`（ルート）および `DOCS/MASTER_REFERENCE.md` を読み込み、トークン削減規範と最新AI知見を同期する。
-2. 以下の順番でDOCSフォルダのファイルを全て読み込む。
-   ① DOCS/README.md                        ← 全体地図・ファイル構成
-   ② DOCS/PROJECT_STATE.md                 ← 現在地（※全ファイルの参照前提）
-   ③ DOCS/SERVICE_ORG_CORE.md              ← 組織ルール・開発フロー
-   ④ DOCS/SERVICE_ORG_PHASE.md             ← フェーズ・チーム定義
-   ⑤ DOCS/CONTEXT_BRIDGE.md               ← 前回セッションの状態
-   ⑥ DOCS/REQUIREMENTS_LOG.md             ← 要件・技術的負債
-   ⑦ DOCS/LEARNING_LOG.md                 ← 学習記録
-   ⑧ DOCS/MASTER_LESSONS.md               ← 汎用教訓集
-   ⑨ DOCS/OWNER_DEFAULTS.md               ← 技術スタック・Kill基準
-   ⑩ DOCS/STARTUP_GUIDE.md                ← 起動・運用手順
-   ⑪ DOCS/CLAUDE_CODE_GUIDE.md            ← Claude Codeツール運用ガイド
-   ⑫ DOCS/PROMPT_ENGINEERING_MASTER.md    ← プロンプト技法
-   ⑬ DOCS/BIO_PIPELINE_INSIGHTS.md        ← パイプライン構築知見
-3. 【必須】インシデント管理フォルダを確認する（起動時・機能追加・編集・削除のたびに必須）：
-   Step 1｜`/Users/sasakihayato/アプリ作成関連/アプリ作成/インシデント管理/_PRE_CHECKLIST.md` を読み、全チェック項目を確認する
-   Step 2｜`/Users/sasakihayato/アプリ作成関連/アプリ作成/インシデント管理/INCIDENT_INDEX.md` を読み、「技術スタック別クイック検索」で作業に関係するタグを照合する
-   Step 3｜関連するインシデントファイルだけを読む（全ファイルを読む必要はない）
-   Step 4｜類似事例が見つかった場合は「⚠️ 類似インシデント検出：[INC-XXX / ファイル名]」として必ず報告する
-   ※ 起動時の1回だけでなく、新機能追加・既存機能編集・機能削除を行うたびに Step 2〜3 を繰り返すこと
-4. 読み込み完了後、以下を実行する：
-   - `<thinking>`：全ファイルを分析し、現在のプロジェクト状態、教訓、次の一手を論理的に推論せよ。
-   - 環境チェック：`git status` およびプロジェクト固有の依存関係を確認し、必要に応じてMCPやweb_fetchでの情報補完を検討せよ。
+<!--
+  ★ 2層構造読込方式（旧：全ファイル一括 → 新：INDEX先読み＋必要時ピンポイント）
+  旧方式：全DOCSを起動時に読込 → 約30,000トークン消費
+  新方式：まずINDEXだけ読み → 作業に応じて必要なファイルだけ読む → 約1/10以下
+-->
+
+【STEP 1】第1層：必ず読む（2ファイル固定）
+  ① AGENTS.md（ルート）           ← トークン削減規範・AI行動原則
+  ② DOCS/DOCS_INDEX.md           ← 全ファイルの索引・タスク別読込先
+
+【STEP 2】第2層：作業内容に応じてピンポイントで読む
+  DOCS_INDEX.md の「タスク別：読むべきファイル早見表」を参照して
+  現在の作業に必要なファイルだけを選んで読み込む。
+
+  セッション開始・現状把握が必要なら必ず読む：
+    → DOCS/PROJECT_STATE.md
+    → DOCS/CONTEXT_BRIDGE.md
+
+  ※ 他のファイルは作業中に必要になった時点で読む。起動時に全読みしない。
+
+【STEP 3】インシデント管理の確認（起動時・機能追加・編集・削除のたびに必須）
+  Step 1｜`/Users/sasakihayato/アプリ作成関連/アプリ作成/インシデント管理/_PRE_CHECKLIST.md` を読み、全チェック項目を確認する
+  Step 2｜`/Users/sasakihayato/アプリ作成関連/アプリ作成/インシデント管理/INCIDENT_INDEX.md` の「技術スタック別クイック検索」で作業タグを照合する
+  Step 3｜関連するインシデントファイルだけを読む（全ファイル読込は禁止）
+  Step 4｜類似事例が見つかった場合は「⚠️ 類似インシデント検出：[INC-XXX]」として必ず報告する
+  ※ 新機能追加・既存機能編集・機能削除のたびに Step 2〜3 を繰り返すこと
+
+【STEP 4】読み込み完了後に実行
+  - `<thinking>`：読み込んだ情報を分析し、現在のプロジェクト状態・教訓・次の一手を論理的に推論せよ。
+  - 環境チェック：`git status` でローカルの状態を確認し、必要に応じてMCPやweb_fetchで情報補完せよ。
 </startup_sequence>
 
 ---
