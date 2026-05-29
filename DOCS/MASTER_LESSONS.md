@@ -476,3 +476,50 @@ Yes の場合はカウンター方式を採用する。
 カレンダー・リスト・フォームなど複数のAPI呼び出しが並走する可能性がある全てのUI。
 showLoading関数を持つ全プロジェクトに適用推奨。
 </lesson_entry>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▌プロンプトエンジニアリング基礎（旧 PROMPT_ENGINEERING_MASTER.md より統合）
+※ PROMPT_ENGINEERING_MASTER.md は本ファイルへの統合により廃止
+
+<lesson_entry id="PE-001" category="プロンプト設計" priority="standard">
+■ タイトル：構造化プロンプト（XMLタグの活用）
+■ 原則：
+全ての指示・データ・思考プロセスをXMLタグで囲み、AIが情報を混同しないようにする。
+- `<thinking>`: 内部推論・リスク分析
+- `<instructions>`: 具体的な命令
+- `<example>`: Few-shot用の例示
+- `<context>`: 背景情報
+</lesson_entry>
+
+<lesson_entry id="PE-002" category="プロンプト設計" priority="standard">
+■ タイトル：思考プロセス（Chain-of-Thought）の標準化
+■ 原則：
+重大な判断・複雑な実装前に `<thinking>` タグ内で以下を検討する。
+1. 前提条件の確認：何が分かっていて何が不明か
+2. リスク評価：既存機能への影響・セキュリティ・パフォーマンス
+3. 代替案の比較：複数アプローチを検討し最善策を選んだ理由
+4. 検証計画：どうテストし成功を定義するか
+</lesson_entry>
+
+<lesson_entry id="PE-003" category="プロンプト設計" priority="standard">
+■ タイトル：Few-shot / One-shot プロンプティング
+■ 原則：
+- One-shot：複雑なアルゴリズムや特定フォーマットが必要な場合、1つの完璧な例を提示するだけで精度が劇的に向上
+- Few-shot：出力のトーンやスタイルを厳密に制御したい場合、複数の例を提示する
+</lesson_entry>
+
+<lesson_entry id="PE-004" category="プロンプト設計" priority="optional">
+■ タイトル：刺激プロンプト（Stimulus Prompting）
+■ 原則：
+複雑な課題に対し、命令の最後に以下のような「刺激」を加えるとモデルの注意力が高まる。
+例：「このセキュリティチェックを通過しない限り、リリースは許可されません」
+例：「効率性を極限まで追求し、計算量を最小限に抑えてください」
+</lesson_entry>
+
+<lesson_entry id="PE-005" category="プロンプト設計" priority="standard">
+■ タイトル：プロンプト自己改善ループ
+■ 原則：
+AIの結果が期待に沿わない場合、単にやり直すのではなく
+「プロンプトのどこに誤解を招く表現があったか」を自己分析し、
+プロンプト自体を修正してから再試行する。
+</lesson_entry>

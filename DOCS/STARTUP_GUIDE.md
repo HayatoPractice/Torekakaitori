@@ -56,30 +56,50 @@ v1.0        初版    新規作成      記録チーム
 「プロジェクトフォルダに DOCSファイルを置いてAIに読み込ませる」が基本です。
 環境ごとに違うのは読み込ませ方だけです。
 
-**【必須】プロジェクト管理・トークン削減ファイル（13個）— 全環境・毎回必須**
+**【2層構造・読込方式】— 全環境共通**
+
+> ⚠️ 旧方式（全ファイル一括読込）は廃止。常に以下の2層方式を使うこと。
+
 ```
-⓪ .antigravityignore / .geminiignore / .aiexclude  ← 静的除外設定（ルート）
+【第1層】毎回・起動時に必ず読む（2ファイル固定）
 ① AGENTS.md              ← AI行動規範・トークン削減指示書（ルート）
-② scripts/skeletonizer.py ← コードシグネチャ抽出ユーティリティ（ルート）
-③ README.md              ← 全体地図
-④ PROJECT_STATE.md       ← 現在地・開発情報
-⑤ SERVICE_ORG_CORE.md    ← 組織ルール・開発フロー
-⑥ SERVICE_ORG_PHASE.md   ← フェーズ・チーム定義
-⑦ REQUIREMENTS_LOG.md   ← 要件・技術的負債
-⑧ LEARNING_LOG.md       ← 学習記録
-⑨ CONTEXT_BRIDGE.md     ← セッション橋渡し
-⑩ MASTER_LESSONS.md     ← 汎用教訓集
-⑪ STARTUP_GUIDE.md      ← このファイル
+② DOCS/DOCS_INDEX.md     ← 全ファイル索引・タスク別読込先（常時読込）
+
+【第2層】DOCS_INDEX.md の「タスク別早見表」を見て、作業に必要なファイルだけ読む
+   例：セッション開始 → PROJECT_STATE.md + CONTEXT_BRIDGE.md
+   例：バグ修正      → MASTER_LESSONS.md
+   例：UI実装        → UI_LIBRARY_GUIDE.md
 ```
 
-**【推奨】AI強化リファレンス（4つ）— Claude Code使用時に追加**
+**【DOCSフォルダ 全ファイル一覧】**
 ```
-⓪ MASTER_REFERENCE.md           ← AIエージェント知見
-⓫ CLAUDE_CODE_GUIDE.md          ← ツール運用ガイド
-⓬ PROMPT_ENGINEERING_MASTER.md  ← プロンプト技法
-⓭ BIO_PIPELINE_INSIGHTS.md      ← パイプライン構築知見
+必須インフラ：
+⓪ .antigravityignore / .geminiignore / .aiexclude  ← 静的除外設定（ルート）
+   scripts/skeletonizer.py ← コードシグネチャ抽出ユーティリティ（ルート）
+
+第1層（常時読込）：
+   AGENTS.md              ← AI行動規範（ルート）
+   DOCS/DOCS_INDEX.md     ← 全索引・タスク別早見表 ★起動時必読
+
+第2層（オンデマンド）：
+   PROJECT_STATE.md       ← 現在地・開発情報
+   CONTEXT_BRIDGE.md      ← セッション橋渡し
+   OWNER_DEFAULTS.md      ← スタック標準・Kill基準・AI選定
+   SERVICE_ORG_CORE.md    ← 組織ルール・開発フロー
+   SERVICE_ORG_PHASE.md   ← フェーズ・チーム定義
+   REQUIREMENTS_LOG.md    ← 要件・技術的負債
+   LEARNING_LOG.md        ← 学習記録
+   MASTER_LESSONS.md      ← 汎用教訓集
+   MASTER_REFERENCE.md    ← AIエージェント知見
+   CLAUDE_CODE_GUIDE.md   ← CLI操作・Git戦略・Antigravityコマンド
+   BIO_PIPELINE_INSIGHTS.md ← パイプライン構築知見
+   STARTUP_GUIDE.md       ← このファイル
+   UI_LIBRARY_GUIDE.md    ← UIライブラリ共存設計・選定ガイド
+   APP_SHARED_RULES.md    ← 全アプリ共通行動ルール
+   APP_STRUCTURE_REFERENCE.md ← アプリ構造・ディレクトリ設計
+   AUTO_SYNC_GUIDE.md     ← 自動同期・外部連携設計
+   TOOL_REFERENCE.md      ← 外部ツール・サービス全リファレンス
 ```
-※ ⓪〜⓭は CLAUDE.md 自動読込用。Antigravity・通常チャットでは必須の管理ファイル（ルートおよびDOCS内）だけでOK。
 
 ---
 
@@ -270,10 +290,12 @@ v1.0        初版    新規作成      記録チーム
 ```
 □ 1. 使用する環境でAIを起動する
 □ 2. 以下の起動メッセージをコピー＆ペーストして送信する
+   ※ 2層方式：AGENTS.md と DOCS_INDEX.md の2ファイルだけを最初に読む（旧方式の全ファイル読込は廃止）
 
    ↓↓↓ここからコピー↓↓↓
-   DOCSフォルダの全mdファイルを読み込んでください。
-   読み込み後、STARTUP_GUIDE.mdに従って起動報告をしてください。
+   AGENTS.md と DOCS/DOCS_INDEX.md を読み込んでください。
+   読み込み後、DOCS_INDEX.md の「タスク別：読むべきファイル早見表」を参照して
+   現在の作業に必要なファイルだけを追加で読み込み、起動報告をしてください。
    ↑↑↑ここまでコピー↑↑↑
 
 □ 3. AIの起動報告を確認する
@@ -510,16 +532,20 @@ v1.0        初版    新規作成      記録チーム
 ## CHAPTER 10｜AIへの起動命令テンプレート集
 > コピー＆ペーストしてそのまま使えます
 
-**▌通常起動（毎回使う）**
+**▌通常起動（毎回使う）【2層方式・推奨】**
 ```
-DOCSフォルダの全mdファイルを読み込んでください。
-読み込み後、STARTUP_GUIDE.mdに従って起動報告をしてください。
+AGENTS.md と DOCS/DOCS_INDEX.md を読み込んでください。
+読み込み後、DOCS_INDEX.md の「タスク別：読むべきファイル早見表」を参照して
+現在の作業に必要なファイルだけを追加で読み込み、起動報告をしてください。
 ```
+> ※ 旧テンプレート「DOCSフォルダの全mdファイルを読み込んでください」は廃止。
+> 2層方式により起動トークンを約1/60に削減（約30,000 → 約500トークン）。
 
 **▌新規アプリ開発開始**
 ```
 新規プロジェクトです。
-DOCSフォルダの全mdファイルを読み込んだ後、
+AGENTS.md と DOCS/DOCS_INDEX.md を読み込んだ後、
+DOCS_INDEX.md 参照で OWNER_DEFAULTS.md と SERVICE_ORG_CORE.md を読み込み
 SERVICE_ORG_CORE.mdの「新規作成モードの確認フロー」に従って
 ヒアリングから始めてください。
 ```
