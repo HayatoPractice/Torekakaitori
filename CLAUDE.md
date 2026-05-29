@@ -27,11 +27,6 @@
     → DOCS/PROJECT_STATE.md
     → DOCS/CONTEXT_BRIDGE.md
 
-  ⚠️ 設計・ライブラリ選定・新プロジェクト開始時は追加で必ず読む：
-    → DOCS/CROSS_REFERENCE.md   ← アプリ種別×UI×ツール横断早見表・他カテゴリ流用パターン集
-    → DOCS/UI_LIBRARY_GUIDE.md  ← UIライブラリ選定・共存設計（競合回避含む）
-    → DOCS/TOOL_REFERENCE.md    ← 外部ツール・サービス全リファレンス
-
   ※ 他のファイルは作業中に必要になった時点で読む。起動時に全読みしない。
 
 【STEP 3】インシデント管理の確認（起動時・機能追加・編集・削除のたびに必須）
