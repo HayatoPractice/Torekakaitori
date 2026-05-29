@@ -38,7 +38,6 @@
 | **AUTO_SYNC_GUIDE.md** | データ同期設計時 | 自動同期・外部サービス連携の設計ガイド |
 | **TOOL_REFERENCE.md** | ツール・サービス選定時 | Google Workspace / GCP / AI / 画像生成 / 外部連携ツール全リファレンス |
 | **GITHUB_ACTIONS_GUIDE.md** | CI/CD設計時 / セキュリティ設計時 | Lint・型チェック・テスト・セキュリティスキャン・バージョン確認のYAML実装例 |
-| **PROMPT_FOR_HOMEPAGE_ORIGIN.md** | ホームページ原本へ改良を移植するとき | このセッションの改良内容をホームページ作成原本フォルダへ反映するための投入プロンプト |
 
 ---
 
