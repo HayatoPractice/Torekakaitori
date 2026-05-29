@@ -37,6 +37,8 @@
 | **APP_STRUCTURE_REFERENCE.md** | 設計・ファイル配置時 | アプリ構造パターン・ディレクトリ設計規則 |
 | **AUTO_SYNC_GUIDE.md** | データ同期設計時 | 自動同期・外部サービス連携の設計ガイド |
 | **TOOL_REFERENCE.md** | ツール・サービス選定時 | Google Workspace / GCP / AI / 画像生成 / 外部連携ツール全リファレンス |
+| **GITHUB_ACTIONS_GUIDE.md** | CI/CD設計時 / セキュリティ設計時 | Lint・型チェック・テスト・セキュリティスキャン・バージョン確認のYAML実装例 |
+| **PROMPT_FOR_HOMEPAGE_ORIGIN.md** | ホームページ原本へ改良を移植するとき | このセッションの改良内容をホームページ作成原本フォルダへ反映するための投入プロンプト |
 
 ---
 
@@ -54,7 +56,8 @@
 | **外部ツール・連携先を探す** | TOOL_REFERENCE.md | OWNER_DEFAULTS.md §スタック |
 | **自動化・スケジュール設計** | TOOL_REFERENCE.md §自動化パターン, CLAUDE_CODE_GUIDE.md | BIO_PIPELINE_INSIGHTS.md |
 | **インフラ・デプロイ選定** | OWNER_DEFAULTS.md §デプロイ, TOOL_REFERENCE.md §E | — |
-| **セキュリティ設計** | TOOL_REFERENCE.md §I | OWNER_DEFAULTS.md §法務 |
+| **セキュリティ設計** | TOOL_REFERENCE.md §I, GITHUB_ACTIONS_GUIDE.md §5 | OWNER_DEFAULTS.md §法務 |
+| **CI/CD・自動化設計** | GITHUB_ACTIONS_GUIDE.md | SERVICE_ORG_CORE.md §CI/CD |
 | **画像・アセット生成** | TOOL_REFERENCE.md §L | — |
 | **Git操作・ブランチ戦略** | CLAUDE_CODE_GUIDE.md §Git | MASTER_LESSONS.md |
 | **Google Workspace 連携** | TOOL_REFERENCE.md §D | OWNER_DEFAULTS.md §スタック |
