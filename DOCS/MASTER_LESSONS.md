@@ -479,8 +479,7 @@ showLoading関数を持つ全プロジェクトに適用推奨。
 </lesson_entry>
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-▌プロンプトエンジニアリング基礎（旧 PROMPT_ENGINEERING_MASTER.md より統合）
-※ PROMPT_ENGINEERING_MASTER.md は本ファイルへの統合により廃止
+▌プロンプトエンジニアリング基礎
 関連参照：MASTER_REFERENCE.md（AIエージェント活用・プロンプト工学の発展的知見）
 
 <lesson_entry id="PE-001" category="プロンプト設計" priority="standard">

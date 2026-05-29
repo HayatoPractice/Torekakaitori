@@ -29,7 +29,6 @@
 | **MASTER_LESSONS.md** | 実装前・バグ修正前 | 全プロジェクト横断の汎用教訓集（ミス防止・設計パターン・Git安全設計） |
 | **MASTER_REFERENCE.md** | 戦略・アーキテクチャ確認時 | AI活用・プロンプト工学・自動化ワークフロー統合リファレンス |
 | **CLAUDE_CODE_GUIDE.md** | ツール操作・CLI使用時 | Claude Code/Gemini CLIコマンド・Antigravityコマンド・Git黄金パターン |
-| ~~PROMPT_ENGINEERING_MASTER.md~~ | ~~廃止~~ | → MASTER_LESSONS.md（PE-001〜PE-005）に統合済み。参照不要 |
 | **BIO_PIPELINE_INSIGHTS.md** | 自動化パイプライン設計時 | パイプライン構築・複雑な自動化フローの知見 |
 | **STARTUP_GUIDE.md** | 環境構築・初回セットアップ時 | 環境セットアップ手順・起動コマンド |
 | **UI_LIBRARY_GUIDE.md** | UI実装・ライブラリ選定時 | 6大UIライブラリ共存設計・目的別ライブラリ選定ガイド |
