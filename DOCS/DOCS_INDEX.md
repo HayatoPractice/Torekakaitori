@@ -33,6 +33,7 @@
 | **BIO_PIPELINE_INSIGHTS.md** | 自動化パイプライン設計時 | パイプライン構築・複雑な自動化フローの知見 |
 | **STARTUP_GUIDE.md** | 環境構築・初回セットアップ時 | 環境セットアップ手順・起動コマンド |
 | **UI_LIBRARY_GUIDE.md** | UI実装・ライブラリ選定時 | 6大UIライブラリ共存設計・目的別ライブラリ選定ガイド |
+| **CROSS_REFERENCE.md** | 設計・ライブラリ選定時 / 新プロジェクト開始時 | アプリ種別×UI×ツール×フェーズの横断早見表。他カテゴリからの流用パターン集 |
 | **APP_SHARED_RULES.md** | 規約・ルール確認時 | 全アプリ共通の行動ルール・禁止事項 |
 | **APP_STRUCTURE_REFERENCE.md** | 設計・ファイル配置時 | アプリ構造パターン・ディレクトリ設計規則 |
 | **AUTO_SYNC_GUIDE.md** | データ同期設計時 | 自動同期・外部サービス連携の設計ガイド |
@@ -45,8 +46,8 @@
 | やること | 必読ファイル | 任意参照 |
 |---|---|---|
 | **セッション開始・現状把握** | PROJECT_STATE.md, CONTEXT_BRIDGE.md | OWNER_DEFAULTS.md |
-| **新プロジェクト開始** | OWNER_DEFAULTS.md, SERVICE_ORG_CORE.md | SERVICE_ORG_PHASE.md |
-| **UI・フロントエンド実装** | UI_LIBRARY_GUIDE.md | MASTER_LESSONS.md |
+| **新プロジェクト開始** | OWNER_DEFAULTS.md, SERVICE_ORG_CORE.md, CROSS_REFERENCE.md | SERVICE_ORG_PHASE.md |
+| **UI・フロントエンド実装** | UI_LIBRARY_GUIDE.md, CROSS_REFERENCE.md §2 | MASTER_LESSONS.md |
 | **バグ修正・デバッグ** | MASTER_LESSONS.md | REQUIREMENTS_LOG.md |
 | **AI / LLM 機能の追加** | OWNER_DEFAULTS.md §AI選定, TOOL_REFERENCE.md §G | MASTER_REFERENCE.md |
 | **モデル選定（Claude/Gemini等）** | OWNER_DEFAULTS.md §SECTION10 | TOOL_REFERENCE.md §G |
