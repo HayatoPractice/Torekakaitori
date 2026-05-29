@@ -1,0 +1,16 @@
+#!/bin/bash
+# post-merge — git pull 完了後に自動実行される Git フック
+#
+# 【セットアップ】
+#   初回1回だけ: bash scripts/install_hooks.sh
+#
+# 【動作】
+#   git pull でマージが発生するたびに sync_to_apps.py を自動実行し
+#   全アプリフォルダへ最新の共有ファイルを配布する
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+SYNC_SCRIPT="$REPO_ROOT/scripts/sync_to_apps.py"
+
+echo "🔄 原本フォルダの変更を全アプリへ同期します..."
+python3 "$SYNC_SCRIPT"
+echo "✅ 同期完了（詳細: tail -20 /tmp/appsync.log）"

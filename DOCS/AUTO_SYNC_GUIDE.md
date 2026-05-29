@@ -1,42 +1,46 @@
 # AUTO_SYNC_GUIDE.md — 原本→全フォルダ自動同期 セットアップガイド
 
-このガイドでは「原本フォルダを変更したら全アプリ/全サイトフォルダへ自動反映される」仕組みの
+このガイドでは「原本フォルダを git pull したら全アプリ/全サイトフォルダへ自動反映される」仕組みの
 技術解説と、別の原本フォルダ（例：ホームページ作成原本）に同じ仕組みを導入する手順を説明します。
 
 ---
 
-## 1. 仕組みの概要
+## 1. 仕組みの概要【現行方式：Git post-merge フック】
 
 ```
-アプリ作成原本/ のファイルを保存
-        ↓（数秒後に自動検知）
-macOS launchd（常駐プロセス管理）
+GitHub にプッシュ（原本フォルダの変更）
+        ↓
+ローカルで git pull
+        ↓（マージ完了後に自動実行）
+.git/hooks/post-merge（Git フック）
         ↓（sync_to_apps.py を起動）
 全アプリフォルダへ共有ファイルをコピー
         ↓
 ログ（/tmp/appsync.log）に記録
 ```
 
-### 使用技術
+### 旧方式（launchd）との比較
 
-| 技術 | 役割 |
-|---|---|
-| **macOS launchd** | macOS標準の常駐プロセス管理システム。Windowsでいうタスクスケジューラに相当 |
-| **WatchPaths** | launchd の機能。指定フォルダのファイルが変更されると即座にスクリプトを起動する |
-| **ThrottleInterval** | 連続変更があっても10秒以内は重複起動しない間引き設定 |
-| **Python3 (shutil)** | ファイルコピー・フォルダ検出の実装に使用 |
-| **plist ファイル** | launchd への設定ファイル。XML形式で ~/Library/LaunchAgents/ に置く |
+| 観点 | launchd 方式（旧） | post-merge フック（現行） |
+|---|---|---|
+| 実行タイミング | ファイル変更のたびに発火 | git pull 完了後のみ |
+| 誤配布リスク | 作業中にも発火する可能性あり | なし |
+| macOS専用か | はい | いいえ（クロスプラットフォーム） |
+| 常駐プロセス | 常駐する | しない |
+| 初回セットアップ | install コマンドが必要 | フックコピー1回のみ |
 
-### 設定ファイルの場所（アプリ作成版）
+### 設定ファイルの場所
 
 ```
 アプリ作成原本/
 ├── scripts/
 │    ├── sync_to_apps.py        ← 同期ロジック本体
-│    └── setup_auto_sync.sh     ← インストール/アンインストール用スクリプト
+│    ├── post-merge             ← フックの実体（リポジトリで管理）
+│    ├── install_hooks.sh       ← 初回1回だけ実行するセットアップ
+│    └── setup_auto_sync.sh     ← 旧launchd方式の停止に使う（移行完了後は不要）
 │
-~/Library/LaunchAgents/
-└── com.hayato.appsync.plist    ← launchd への設定（setup_auto_sync.sh が自動生成）
+.git/hooks/
+└── post-merge                  ← install_hooks.sh がここにコピーする
 ```
 
 ---
@@ -60,7 +64,46 @@ macOS launchd（常駐プロセス管理）
 
 ---
 
-## 3. ホームページ作成原本への導入手順
+## 3. 初回セットアップ手順
+
+### STEP 1｜ローカルでフックを登録する（1回だけ）
+
+```bash
+# 原本フォルダのルートで実行
+bash scripts/install_hooks.sh
+```
+
+成功すると以下が表示される：
+```
+✅ post-merge フックを登録しました
+   次回から git pull するたびに全アプリへ自動同期されます
+```
+
+### STEP 2｜launchd 方式を使っていた場合は停止する
+
+```bash
+bash scripts/setup_auto_sync.sh uninstall
+```
+
+### STEP 3｜動作確認（初回のみ）
+
+```bash
+# dry-run で何が同期されるか確認
+python3 scripts/sync_to_apps.py --dry-run
+
+# 問題なければ git pull を実行（以降は自動）
+git pull
+# → 同期ログが表示されれば成功
+```
+
+### STEP 4｜新しいPCや環境でも同じ手順
+
+`.git/hooks/` はリポジトリにコミットされないため、環境が変わるたびに STEP 1 だけ再実行する。
+`scripts/post-merge`（実体）はリポジトリで管理されているので git pull すれば常に最新版が手に入る。
+
+---
+
+## 4. ホームページ作成原本への導入手順
 
 ### STEP 1｜sync スクリプトをコピーする
 
@@ -136,7 +179,7 @@ launchctl list | grep sitesync
 
 ---
 
-## 4. 日常の操作
+## 5. 日常の操作
 
 ### ドライランモード（安全な事前確認）
 
@@ -182,27 +225,29 @@ cat /tmp/appsync.log   # アプリ作成用
 cat /tmp/sitesync.log  # ホームページ用（ログパスは setup スクリプトで変更可能）
 ```
 
-### 自動同期の一時停止・再開
+### 今すぐ手動で全アプリへ同期したい
+
+git pull を待たずに即時配布したい場合：
+
+```bash
+python3 scripts/sync_to_apps.py
+```
+
+### 自動同期を一時的に無効化したい
+
+`.git/hooks/post-merge` を退避すれば停止、戻せば再開：
 
 ```bash
 # 停止
-bash /Users/sasakihayato/.../scripts/setup_auto_sync.sh uninstall
+mv .git/hooks/post-merge .git/hooks/post-merge.disabled
 
 # 再開
-bash /Users/sasakihayato/.../scripts/setup_auto_sync.sh install
-
-# 今すぐ手動同期（原本を変更していなくても即時実行）
-bash /Users/sasakihayato/.../scripts/setup_auto_sync.sh sync
+mv .git/hooks/post-merge.disabled .git/hooks/post-merge
 ```
-
-### Mac 再起動後の動作
-
-launchd の LaunchAgents は**ログイン時に自動復元**されるため、
-再起動後も何もしなくて自動同期が続きます。
 
 ---
 
-## 5. トラブルシューティング
+## 6. トラブルシューティング
 
 ### 「同期されていない気がする」
 
@@ -214,13 +259,14 @@ tail -5 /tmp/appsync.log
 cat /tmp/appsync_error.log
 ```
 
-### 「エージェントが止まっている」
+### 「git pull しても同期されない」
+
+フックが登録されているか確認する：
 
 ```bash
-launchctl list | grep appsync
-# 数字が 0 以外（例: 1, -1）ならエラー終了している
-# → エラーログを確認して原因を修正後、再インストール
-bash .../setup_auto_sync.sh install
+ls -la .git/hooks/post-merge
+# → ファイルがあり実行権限(x)がついていれば正常
+# → ない場合は bash scripts/install_hooks.sh を再実行
 ```
 
 ### 「特定のファイルが同期されない」
@@ -237,4 +283,4 @@ sync_to_apps.py では `unicodedata.normalize("NFC", ...)` で正規化して比
 
 ---
 
-AUTO_SYNC_GUIDE.md v1.1 — 2026-05-23 作成 / ドライランモード・差分ログを追記
+AUTO_SYNC_GUIDE.md v2.0 — 2026-05-29 launchd方式 → Git post-mergeフック方式に移行
