@@ -42,6 +42,7 @@ SKIP_DOCS = {
     "LEARNING_LOG.md",
     "CONTEXT_BRIDGE.md",
     "SERVICE_ORG_PHASE.md",
+    "PROMPT_FOR_HOMEPAGE_ORIGIN.md",  # 原本運用専用ファイル。各アプリへの配布不要
 }
 
 # CLAUDE.md の「標準セクション」（これ以外のセクションがあれば固有セクションありと判定）
