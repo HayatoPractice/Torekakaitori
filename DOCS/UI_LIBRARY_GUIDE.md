@@ -180,8 +180,6 @@ export const DashboardPage: React.FC = () => {
 };
 ```
 
-> 💡 複数のデータ取得が並走する場合はローディングをboolean方式でなくカウンター方式で管理すること。
-> 関連教訓：`MASTER_LESSONS.md` **ML-007**「複数非同期並走時のローディング管理はcounter方式を使え」
 
 ---
 

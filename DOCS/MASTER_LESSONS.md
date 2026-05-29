@@ -204,10 +204,6 @@ git checkout main && git pull
 Gitは「誰がmainに直接書き込んだか」を100%記録として残す。
 
 ■ 適用できる場面：全フェーズ・全プロジェクト。習慣にする。
-
-■ 関連参照：
-  → CLAUDE_CODE_GUIDE.md §7「Git連携コマンドと必勝黄金パターン」（CLIコマンド詳細）
-  → SERVICE_ORG_CORE.md「バージョン管理ルール」（チームルール詳細）
 </lesson_entry>
 
 <lesson_entry>
@@ -249,9 +245,6 @@ document.querySelector('.js-submit-btn').addEventListener('click', ...)
 ■ 万が一クラス名が変わった場合の対処：JSの都合に合わせてHTMLを直す（JSは守る）
 
 ■ 適用できる場面：AIにHTML/CSS修正を依頼する全ての場面
-
-■ 関連参照：
-  → SERVICE_ORG_CORE.md「品質ルール」（クラス名規約・コーディング規準）
 </lesson_entry>
 
 <lesson_entry>
@@ -286,9 +279,6 @@ GitHub Actions（ロボット）が git push のたびに自動実行：
   src/tests/[対象].test.ts（Vitestユニットテスト）
 
 ■ 適用できる場面：本番公開するWebアプリ・フォーム・認証機能を持つ全プロジェクト
-
-■ 関連参照：
-  → SERVICE_ORG_CORE.md §CI/CD（GitHub Actions設定・デプロイ管理ルール）
 </lesson_entry>
 
 ━━━━━━━━━━━━━━━━
@@ -371,10 +361,6 @@ GitHub Actions（ロボット）が git push のたびに自動実行：
   STEP 1｜npm install 後、package.json のバージョンをREQUIREMENTS_LOG.mdにコピーする
   STEP 2｜バージョンアップ前に必ずCHANGELOGを確認する
   STEP 3｜バージョンアップ後は tsc --noEmit で全型エラーを確認してから進める
-
-■ 関連参照：
-  → REQUIREMENTS_LOG.md（バージョンロック記録の実際の記入先）
-  → OWNER_DEFAULTS.md §型安全スタック標準（バージョン管理ポリシー）
 </lesson_entry>
 
 ━━━━━━━━━━━━━━━━
@@ -490,9 +476,6 @@ Yes の場合はカウンター方式を採用する。
 カレンダー・リスト・フォームなど複数のAPI呼び出しが並走する可能性がある全てのUI。
 showLoading関数を持つ全プロジェクトに適用推奨。
 
-■ 関連参照：
-  → UI_LIBRARY_GUIDE.md §3「パフォーマンス維持ガイド」（React.lazyでの遅延ロードとの組み合わせ例あり）
-  → CROSS_REFERENCE.md §5「流用パターン5」（他アプリ種別への横断適用ガイド）
 </lesson_entry>
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
