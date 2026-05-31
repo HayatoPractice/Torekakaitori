@@ -144,38 +144,34 @@ STANDARD_CLAUDE_SECTIONS = {
 }
 ```
 
-### STEP 3｜setup スクリプトをコピーして書き換える
+### STEP 3｜install_hooks.sh をコピーして実行する
 
 ```bash
-cp /Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本/scripts/setup_auto_sync.sh \
-   /Users/sasakihayato/ホームページ作成/ホームページ作成原本/scripts/setup_auto_sync.sh
+cp /Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本/scripts/install_hooks.sh \
+   /Users/sasakihayato/ホームページ作成/ホームページ作成原本/scripts/install_hooks.sh
 ```
 
-`setup_auto_sync.sh` の以下の箇所を書き換える：
+`install_hooks.sh` の以下の箇所を書き換える（post-mergeの実体はアプリ版と同じものを使い回せます）：
 
 ```bash
 # ── 変更箇所 ──
-PLIST_LABEL="com.hayato.sitesync"          # ← 別のラベル名（appsync と被らないように）
-SYNC_SCRIPT="/Users/sasakihayato/ホームページ作成/ホームページ作成原本/scripts/sync_to_sites.py"
-WATCH_PATH="/Users/sasakihayato/ホームページ作成/ホームページ作成原本"
+# SYNC_SCRIPTのパスだけホームページ用に書き換えるよう修正する
+HOOK_SRC="$REPO_ROOT/scripts/post-merge" # post-mergeもホームページ版リポジトリにコピーしておく
 ```
 
-### STEP 4｜動作テストをしてから自動起動を有効化する
+### STEP 4｜動作テストをしてからフックを登録する
 
 ```bash
 # まず手動でテスト実行（エラーがないか確認）
 python3 /Users/sasakihayato/ホームページ作成/ホームページ作成原本/scripts/sync_to_sites.py
 
-# 問題なければ自動起動を有効化
-bash /Users/sasakihayato/ホームページ作成/ホームページ作成原本/scripts/setup_auto_sync.sh install
+# 問題なければフックを登録
+bash /Users/sasakihayato/ホームページ作成/ホームページ作成原本/scripts/install_hooks.sh
 ```
 
 ### STEP 5｜有効化を確認する
 
-```bash
-launchctl list | grep sitesync
-# → "-  0  com.hayato.sitesync" と表示されれば成功
-```
+適当なファイルを変更して `git commit` し、`git pull` を実行して「✅ 同期完了」と出力されるか確認する。
 
 ---
 
@@ -254,9 +250,6 @@ mv .git/hooks/post-merge.disabled .git/hooks/post-merge
 ```bash
 # ログで最後の同期時刻を確認
 tail -5 /tmp/appsync.log
-
-# エラーがあればエラーログを確認
-cat /tmp/appsync_error.log
 ```
 
 ### 「git pull しても同期されない」

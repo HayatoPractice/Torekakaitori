@@ -71,7 +71,7 @@ DOCS/TOOL_REFERENCE.md          外部ツール全リファレンス（GCP/Works
 【第2層-C：特定作業時のみ読む（オンデマンド）】
 DOCS/REQUIREMENTS_LOG.md          機能要件・技術的負債・バージョンロック記録
 DOCS/LEARNING_LOG.md              プロジェクト内の詳細な作業記録（参照専用）
-DOCS/PROMPT_ENGINEERING_MASTER.md プロンプト技法・XML構造化・Few-Shot設計
+DOCS/PROMPT_ENGINEERING_MASTER.md （未作成・将来追加予定。現時点は MASTER_REFERENCE.md を参照）
 DOCS/MASTER_REFERENCE.md          AI活用・アーキテクチャ統合リファレンス
 DOCS/BIO_PIPELINE_INSIGHTS.md     パイプライン構築・複雑な自動化フローの知見
 DOCS/STARTUP_GUIDE.md             環境セットアップ手順・起動コマンド
@@ -131,7 +131,7 @@ PROJECT_ROOT/
  │    ├── APP_STRUCTURE_REFERENCE.md ← アプリ構造パターン・設計規則
  │    ├── AUTO_SYNC_GUIDE.md       ← 自動同期・連携設計ガイド
  │    ├── STARTUP_GUIDE.md         ← 環境セットアップ・起動手順書
- │    ├── PROMPT_ENGINEERING_MASTER.md ← プロンプト技法
+ │    │    （PROMPT_ENGINEERING_MASTER.md は未作成）
  │    └── BIO_PIPELINE_INSIGHTS.md ← パイプライン構築知見
  ├── 📁 BDR/                       ← 意思決定記録（Phase別）
  ├── 📁 src/                       ← コードファイル
@@ -159,7 +159,7 @@ PROJECT_ROOT/
 □ CLAUDE_CODE_GUIDE.md → ★原本から最新版をコピー
 □ TOOL_REFERENCE.md    → ★原本から最新版をコピー
 □ STARTUP_GUIDE.md     → そのまま使う
-□ PROMPT_ENGINEERING_MASTER.md → そのまま使う
+□ PROMPT_ENGINEERING_MASTER.md → 未作成（将来追加予定。現時点は MASTER_REFERENCE.md を参照）
 
 【リセットして新規作成する】
 □ PROJECT_STATE.md     → 全項目リセット・新プロジェクト情報を記入

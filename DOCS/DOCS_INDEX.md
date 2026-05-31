@@ -38,6 +38,7 @@
 | **AUTO_SYNC_GUIDE.md** | データ同期設計時 | 自動同期・外部サービス連携の設計ガイド |
 | **TOOL_REFERENCE.md** | ツール・サービス選定時 | Google Workspace / GCP / AI / 画像生成 / 外部連携ツール全リファレンス |
 | **GITHUB_ACTIONS_GUIDE.md** | CI/CD設計時 / セキュリティ設計時 | Lint・型チェック・テスト・セキュリティスキャン・バージョン確認のYAML実装例 |
+| **AI_TOOLS_REFERENCE.md** | AIモデル選定時 / 自動化設計時 | AIモデル比較（Claude/Gemini）・コスト・用途別選定フロー・背景自動化6パターン |
 
 ---
 
@@ -48,10 +49,11 @@
 | **セッション開始・現状把握** | PROJECT_STATE.md, CONTEXT_BRIDGE.md | OWNER_DEFAULTS.md |
 | **新プロジェクト開始** | OWNER_DEFAULTS.md, SERVICE_ORG_CORE.md, CROSS_REFERENCE.md | SERVICE_ORG_PHASE.md |
 | **UI・フロントエンド実装** | UI_LIBRARY_GUIDE.md, CROSS_REFERENCE.md §2 | MASTER_LESSONS.md |
+| **バックエンド・API実装** | OWNER_DEFAULTS.md §DB | SERVICE_ORG_CORE.md |
 | **バグ修正・デバッグ** | MASTER_LESSONS.md | REQUIREMENTS_LOG.md |
 | **AI / LLM 機能の追加** | OWNER_DEFAULTS.md §AI選定, TOOL_REFERENCE.md §G | MASTER_REFERENCE.md |
-| **モデル選定（Claude/Gemini等）** | OWNER_DEFAULTS.md §SECTION10 | TOOL_REFERENCE.md §G |
-| **プロンプト設計** | PROMPT_ENGINEERING_MASTER.md | MASTER_REFERENCE.md |
+| **モデル選定（Claude/Gemini等）** | AI_TOOLS_REFERENCE.md, OWNER_DEFAULTS.md §SECTION10 | TOOL_REFERENCE.md §G |
+| **プロンプト設計** | MASTER_REFERENCE.md | — |
 | **外部ツール・連携先を探す** | TOOL_REFERENCE.md | OWNER_DEFAULTS.md §スタック |
 | **自動化・スケジュール設計** | TOOL_REFERENCE.md §自動化パターン, CLAUDE_CODE_GUIDE.md | BIO_PIPELINE_INSIGHTS.md |
 | **インフラ・デプロイ選定** | OWNER_DEFAULTS.md §デプロイ, TOOL_REFERENCE.md §E | — |

@@ -1,10 +1,23 @@
 #!/bin/bash
 # setup_auto_sync.sh — 自動同期の有効化・無効化スクリプト
 #
-# 使い方：
+# ⚠️ 【廃止済み】このスクリプトは launchd 方式（旧方式）のためのものです。
+# 現在の同期方式は「Git post-merge フック」に移行済みです。
+# 通常このファイルは実行しないでください。
+#
+# 【唯一の有効な使用ケース】
+#   旧 launchd エージェントを停止したい場合のみ:
+#     bash scripts/setup_auto_sync.sh uninstall
+#   → エージェントが存在しない場合はエラーになるが無視してOK
+#
+# 【現行方式のセットアップはこちら】
+#   bash scripts/install_hooks.sh
+#
+# 旧使い方（参照専用・実行しないこと）：
 #   有効化（初回・再有効化）: bash setup_auto_sync.sh install
 #   無効化（一時停止）:       bash setup_auto_sync.sh uninstall
 #   手動で今すぐ同期:         bash setup_auto_sync.sh sync
+
 
 PLIST_LABEL="com.hayato.appsync"
 PLIST_PATH="$HOME/Library/LaunchAgents/${PLIST_LABEL}.plist"

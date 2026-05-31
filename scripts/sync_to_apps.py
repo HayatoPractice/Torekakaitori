@@ -7,14 +7,20 @@ sync_to_apps.py — アプリ作成原本 → 全アプリフォルダへの自�
 - DOCSフォルダを持つサブディレクトリを自動検出（新規フォルダも自動対応）
 - プロジェクト固有ファイル（PROJECT_STATE.md 等）は上書きしない
 - CLAUDE.md はプロジェクト固有セクションが無いアプリのみ自動同期
+- scripts/ フォルダ内の .py ファイルを全て同期（ハードコード不要・新規追加も自動対応）
 
 【オプション】
 - --dry-run : 実際にはコピーせず、何が同期されるかだけ表示する（確認用）
 
-【launchd から自動起動】
-- ~/Library/LaunchAgents/com.hayato.appsync.plist で管理
-- アプリ作成原本フォルダの変更を検知して自動実行
+【自動起動方式】
+- Git post-merge フック（.git/hooks/post-merge）で管理
+- git pull でマージが発生するたびに自動実行
+- セットアップ：bash scripts/install_hooks.sh（初回1回のみ）
 - ログ: /tmp/appsync.log
+
+【注意】
+- 旧方式（launchd: ~/Library/LaunchAgents/com.hayato.appsync.plist）は廃止済み
+- setup_auto_sync.sh も廃止済み。参照のみ可・実行しないこと
 """
 
 import sys
@@ -45,6 +51,10 @@ SKIP_DOCS = {
 }
 
 # CLAUDE.md の「標準セクション」（これ以外のセクションがあれば固有セクションありと判定）
+# ⚠️ 重要：has_project_specific_claude() は「部分一致（any(std in section_name)）」で検索する。
+# 例：「起動シーケンス（必須・スキップ禁止）」も「起動シーケンス」が含まれているため一致する。
+# ただし CLAUDE.md のセクション名を大幅に変更した場合はここも合わせて更新すること。
+# → APP_SHARED_RULES.md §8-3 参照
 STANDARD_CLAUDE_SECTIONS = {
     "起動シーケンス",
     "基本行動原則",
@@ -115,10 +125,11 @@ def sync_app(app_dir: Path, dry_run: bool) -> dict:
         if src.exists():
             copy_file(src, app_dir / fname, fname)
 
-    # scripts/skeletonizer.py を同期
-    src_py = ORIGIN / "scripts" / "skeletonizer.py"
-    if src_py.exists():
-        copy_file(src_py, app_dir / "scripts" / "skeletonizer.py", "scripts/skeletonizer.py")
+    # scripts/ フォルダ内の全 .py ファイルを同期（ループ方式・新規追加スクリプトも自動対応）
+    # ⚠️ 同期しないスクリプトを除外したい場合は SKIP_SCRIPTS セットを追加すること
+    scripts_src = ORIGIN / "scripts"
+    for src_py in sorted(scripts_src.glob("*.py")):
+        copy_file(src_py, app_dir / "scripts" / src_py.name, f"scripts/{src_py.name}")
 
     # CLAUDE.md: プロジェクト固有セクションがなければ同期
     claude_src = ORIGIN / "CLAUDE.md"

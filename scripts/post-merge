@@ -12,5 +12,9 @@ REPO_ROOT="$(git rev-parse --show-toplevel)"
 SYNC_SCRIPT="$REPO_ROOT/scripts/sync_to_apps.py"
 
 echo "🔄 原本フォルダの変更を全アプリへ同期します..."
-python3 "$SYNC_SCRIPT"
-echo "✅ 同期完了（詳細: tail -20 /tmp/appsync.log）"
+if python3 "$SYNC_SCRIPT"; then
+    echo "✅ 同期完了（詳細: tail -20 /tmp/appsync.log）"
+else
+    echo "❌ 同期失敗！詳細: tail -20 /tmp/appsync.log" >&2
+    exit 1
+fi
