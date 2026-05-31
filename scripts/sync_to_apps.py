@@ -131,6 +131,18 @@ def sync_app(app_dir: Path, dry_run: bool) -> dict:
     for src_py in sorted(scripts_src.glob("*.py")):
         copy_file(src_py, app_dir / "scripts" / src_py.name, f"scripts/{src_py.name}")
 
+    # tsconfig.json を同期（tsconfig.app.json → 各アプリの tsconfig.json として上書き）
+    # ⚠️ アプリ側に独自の tsconfig.json がある場合も上書きされる
+    tsconfig_src = ORIGIN / "tsconfig.app.json"
+    if tsconfig_src.exists():
+        copy_file(tsconfig_src, app_dir / "tsconfig.json", "tsconfig.json")
+
+    # .vscode/ の共有設定ファイルを同期（IDE自動型チェック・タスク設定）
+    for vscode_fname in ["tasks.json", "settings.json"]:
+        src = ORIGIN / ".vscode" / vscode_fname
+        if src.exists():
+            copy_file(src, app_dir / ".vscode" / vscode_fname, f".vscode/{vscode_fname}")
+
     # CLAUDE.md: プロジェクト固有セクションがなければ同期
     claude_src = ORIGIN / "CLAUDE.md"
     claude_dst = app_dir / "CLAUDE.md"

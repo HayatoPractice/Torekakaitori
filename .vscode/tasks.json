@@ -4,7 +4,7 @@
     {
       "label": "TypeScript Watch（型チェック）",
       "type": "shell",
-      "command": "npx tsc --noEmit --watch",
+      "command": "[ -f node_modules/.bin/tsc ] && npx tsc --noEmit --watch || echo '[TSC] TypeScript未インストール。npm install typescript --save-dev を実行してください'",
       "isBackground": true,
       "problemMatcher": "$tsc-watch",
       "runOptions": {
