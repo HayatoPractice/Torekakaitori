@@ -120,7 +120,7 @@ def sync_app(app_dir: Path, dry_run: bool) -> dict:
         copy_file(src_file, docs_dst / src_file.name, src_file.name)
 
     # ルートの共有ファイルを同期
-    for fname in ["AGENTS.md", ".antigravityignore", ".geminiignore", ".aiexclude"]:
+    for fname in ["AGENTS.md", "GEMINI.md", ".antigravityignore", ".geminiignore", ".aiexclude"]:
         src = ORIGIN / fname
         if src.exists():
             copy_file(src, app_dir / fname, fname)
