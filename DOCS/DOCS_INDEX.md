@@ -71,6 +71,7 @@
 | **TOOL_REFERENCE.md** | ツール・サービス選定時 | Google Workspace / GCP / AI / 画像生成 / 外部連携ツール全リファレンス |
 | **STARTUP_GUIDE.md** | 環境構築・初回セットアップ時 | 環境セットアップ手順・起動コマンド |
 | **BIO_PIPELINE_INSIGHTS.md** | 自動化パイプライン設計時 | パイプライン構築・複雑な自動化フローの知見 |
+| **TYPESCRIPT_SETUP_GUIDE.md** | TypeScript環境の確認・再構築時 | TS自動型チェック導入経緯・問題6件の解決策・全アプリ配布の仕組み |
 
 ---
 
