@@ -20,7 +20,7 @@ sync_to_apps.py — アプリ作成原本 → 全アプリフォルダへの自�
 
 【注意】
 - 旧方式（launchd: ~/Library/LaunchAgents/com.hayato.appsync.plist）は廃止済み
-- setup_auto_sync.sh も廃止済み。参照のみ可・実行しないこと
+- setup_auto_sync.sh も廃止済みのため削除済み
 """
 
 import sys

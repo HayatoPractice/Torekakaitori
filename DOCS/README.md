@@ -6,6 +6,7 @@
 バージョン  日付          変更内容                                    変更者
 v1.0        初版          ビジネス版から分離・アプリ特化版新規作成       秘書
 v2.0        2026-05-29    2層構造読込方式への移行・新ファイル群の追加反映  秘書
+v2.1        2026-05-31    フォルダ構成図・権限表を現状に合わせて更新     秘書
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ▌このファイル群の用途
@@ -81,20 +82,29 @@ DOCS/AUTO_SYNC_GUIDE.md           自動同期・外部サービス連携設計�
 
 ▌ファイル層別変更権限
 
-ファイル                    層               変更権限                    変更頻度
-AGENTS.md                  🔒 不変層        社長承認必須                ほぼ変えない
-README.md                  🔒 不変層        社長承認必須（構造変更時）   ファイル構成変化時
-SERVICE_ORG_CORE.md        🔒 不変層        社長承認必須                ほぼ変えない
-DOCS_INDEX.md              📌 要更新        秘書変更・社長事後報告       ファイル追加時
-SERVICE_ORG_PHASE.md       📌 フェーズ更新層  秘書変更・社長事後報告      フェーズ移行時
-PROJECT_STATE.md           🔄 随時更新層    PMが変更                    随時
-CONTEXT_BRIDGE.md          🔄 随時更新層    記録チームが自動更新         セッション終了時
-REQUIREMENTS_LOG.md        🔄 随時更新層    PMが変更                    随時
-LEARNING_LOG.md            🔄 随時更新層    記録チームが転記             完了時
-MASTER_LESSONS.md          🔄 随時更新層    記録チームが昇格判断・追記   教訓発生時
-OWNER_DEFAULTS.md          🔄 随時更新層    社長が直接更新              判断基準変更時
-TOOL_REFERENCE.md          🔄 随時更新層    秘書が追記                  ツール情報変更時
-CLAUDE_CODE_GUIDE.md       🔄 随時更新層    秘書が追記                  ツール追加時
+ファイル                       層               変更権限                    変更頻度
+AGENTS.md                     🔒 不変層        社長承認必須                ほぼ変えない
+README.md                     🔒 不変層        社長承認必須（構造変更時）   ファイル構成変化時
+SERVICE_ORG_CORE.md           🔒 不変層        社長承認必須                ほぼ変えない
+CLAUDE.md                     🔒 不変層        社長承認必須                起動シーケンス変更時
+GEMINI.md                     🔒 不変層        社長承認必須                起動シーケンス変更時
+DOCS_INDEX.md                 📌 要更新        秘書変更・社長事後報告       ファイル追加時
+SERVICE_ORG_PHASE.md          📌 フェーズ更新層  秘書変更・社長事後報告      フェーズ移行時
+PROJECT_STATE.md              🔄 随時更新層    PMが変更                    随時
+CONTEXT_BRIDGE.md             🔄 随時更新層    記録チームが自動更新         セッション終了時
+REQUIREMENTS_LOG.md           🔄 随時更新層    PMが変更                    随時
+LEARNING_LOG.md               🔄 随時更新層    記録チームが転記             完了時
+MASTER_LESSONS.md             🔄 随時更新層    記録チームが昇格判断・追記   教訓発生時
+OWNER_DEFAULTS.md             🔄 随時更新層    社長が直接更新              判断基準変更時
+APP_SHARED_RULES.md           🔄 随時更新層    秘書が更新（原本側で変更）   ルール追加・改訂時
+TOOL_REFERENCE.md             🔄 随時更新層    秘書が追記                  ツール情報変更時
+CLAUDE_CODE_GUIDE.md          🔄 随時更新層    秘書が追記                  ツール追加時
+UI_LIBRARY_GUIDE.md           🔄 随時更新層    秘書が更新（原本側で変更）   ライブラリ情報変更時
+MASTER_REFERENCE.md           🔄 随時更新層    秘書が追記                  参照情報変更時
+APP_STRUCTURE_REFERENCE.md    🔄 随時更新層    秘書が更新                  構造パターン変更時
+AUTO_SYNC_GUIDE.md            🔄 随時更新層    秘書が更新                  同期設計変更時
+STARTUP_GUIDE.md              🔄 随時更新層    秘書が更新                  環境変更時
+BIO_PIPELINE_INSIGHTS.md      🔄 随時更新層    秘書が追記                  知見蓄積時
 
 変更マークの定義
 🔄 随時更新可    → 自律的に変更できる
@@ -110,8 +120,12 @@ PROJECT_ROOT/
  ├── 📄 .aiexclude                 ← 静的除外フィルター（原本から複製）
  ├── 📄 AGENTS.md                  ← AI行動規範・トークン削減指示書（ルート直下）
  ├── 📄 CLAUDE.md                  ← Claude Code起動時の最優先指示書（ルート直下）
+ ├── 📄 GEMINI.md                  ← Gemini CLI/Antigravity起動時の最優先指示書（ルート直下）
  ├── 📁 scripts/                   ← 開発ユーティリティスクリプト
- │    └── 📄 skeletonizer.py       ← コードシグネチャ抽出スクリプト（Python）
+ │    ├── 📄 skeletonizer.py       ← コードシグネチャ抽出スクリプト（Python）
+ │    ├── 📄 sync_to_apps.py       ← 原本→各アプリへのファイル同期スクリプト
+ │    ├── 📄 install_hooks.sh      ← Gitフック（post-merge）インストーラ
+ │    └── 📄 post-merge            ← post-mergeフック本体（install_hooks.shで配置）
  ├── 📁 DOCS/                      ← 必須mdファイル格納
  │    ├── README.md                ← 全体地図・ファイル構成（本ファイル）
  │    ├── DOCS_INDEX.md            ← ★第1層：全ファイル索引・タスク別読込先

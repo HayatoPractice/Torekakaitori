@@ -9,11 +9,8 @@
 #   全アプリフォルダへ最新の共有ファイルが配布される
 #
 # 【launchd 方式からの移行】
-#   launchd（常駐プロセス）を使っていた場合は手動で停止する：
-#   bash scripts/setup_auto_sync.sh uninstall
-#   → launchd エージェントが存在しない場合はエラーになるが無視してOK
-
-# set -e を意図的に使わない：launchd停止コマンドの失敗でインストール全体が中断するのを防ぐ
+#   旧 launchd 方式（com.hayato.appsync.plist）は廃止済みです。
+#   移行は完了しています。setup_auto_sync.sh は削除済みです。
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 HOOK_SRC="$REPO_ROOT/scripts/post-merge"
@@ -39,6 +36,5 @@ echo "   登録先: $HOOK_DST"
 echo ""
 echo "   次回から git pull するたびに全アプリへ自動同期されます"
 echo ""
-echo "【launchd 方式を使っていた場合は手動で停止してください】"
-echo "   bash $REPO_ROOT/scripts/setup_auto_sync.sh uninstall"
-echo "   → launchd エージェントがない場合はエラーになるが無視してOK"
+echo "【注意】旧 launchd 方式（setup_auto_sync.sh）は廃止済みです。"
+echo "   現在の同期方式は Git post-merge フックに完全移行されています。"

@@ -29,3 +29,6 @@ build/
 out/
 *.pyc
 __pycache__/
+
+# app-template は独立したgitリポジトリ（サブモジュールではない）
+app-template/

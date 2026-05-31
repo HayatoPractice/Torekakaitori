@@ -14,36 +14,63 @@
 
 ---
 
-## ▌全ファイル一覧（3行サマリ）
+## ▌全ファイル一覧（カテゴリ別）
+
+### 【常時参照】起動時・セッション開始時に読むファイル
 
 | ファイル名 | 読込タイミング | 内容サマリ |
 |---|---|---|
 | **DOCS_INDEX.md**（本ファイル） | 毎回・起動時必須 | 全ファイルの索引。タスク別の読込先を示す |
 | **PROJECT_STATE.md** | セッション開始時 | 現在のプロジェクト進捗・直近の課題・次のアクション |
 | **CONTEXT_BRIDGE.md** | セッション開始時 | 前回セッションの状態スナップショット・引き継ぎ事項 |
+| **APP_SHARED_RULES.md** | 規約・ルール確認時 | 全アプリ共通の行動ルール・禁止事項（§A〜§C の3カテゴリ） |
+
+### 【ルール・標準】技術選定・設計基準のファイル
+
+| ファイル名 | 読込タイミング | 内容サマリ |
+|---|---|---|
 | **OWNER_DEFAULTS.md** | 技術選定・判断時 | スタック標準・Kill基準・収益化・AI/モデル選定基準 |
 | **SERVICE_ORG_CORE.md** | 役割・フロー確認時 | チーム役割定義・開発フロー・ライブラリ採用手順 |
 | **SERVICE_ORG_PHASE.md** | フェーズ確認時 | 開発フェーズ定義・チーム構成・マイルストーン |
-| **REQUIREMENTS_LOG.md** | 要件・バージョン確認時 | 機能要件・技術的負債・バージョンロック記録 |
-| **LEARNING_LOG.md** | 振り返り・記録時 | プロジェクト内の詳細な作業記録・出来事ログ |
-| **MASTER_LESSONS.md** | 実装前・バグ修正前 | 全プロジェクト横断の汎用教訓集（ミス防止・設計パターン・Git安全設計） |
-| **MASTER_REFERENCE.md** | 戦略・アーキテクチャ確認時 | AI活用・プロンプト工学・自動化ワークフロー統合リファレンス |
-| **CLAUDE_CODE_GUIDE.md** | ツール操作・CLI使用時 | Claude Code/Gemini CLIコマンド・Antigravityコマンド・Git黄金パターン |
-| **BIO_PIPELINE_INSIGHTS.md** | 自動化パイプライン設計時 | パイプライン構築・複雑な自動化フローの知見 |
-| **STARTUP_GUIDE.md** | 環境構築・初回セットアップ時 | 環境セットアップ手順・起動コマンド |
-| **UI_LIBRARY_GUIDE.md** | UI実装・ライブラリ選定時 | 6大UIライブラリ共存設計・目的別ライブラリ選定ガイド |
-| **CROSS_REFERENCE.md** | 設計・ライブラリ選定時 / 新プロジェクト開始時 | アプリ種別×UI×ツール×フェーズの横断早見表。他カテゴリからの流用パターン集 |
-| **APP_SHARED_RULES.md** | 規約・ルール確認時 | 全アプリ共通の行動ルール・禁止事項 |
-| **APP_STRUCTURE_REFERENCE.md** | 設計・ファイル配置時 | アプリ構造パターン・ディレクトリ設計規則 |
-| **AUTO_SYNC_GUIDE.md** | データ同期設計時 | 自動同期・外部サービス連携の設計ガイド |
-| **TOOL_REFERENCE.md** | ツール・サービス選定時 | Google Workspace / GCP / AI / 画像生成 / 外部連携ツール全リファレンス |
-| **GITHUB_ACTIONS_GUIDE.md** | CI/CD設計時 / セキュリティ設計時 | Lint・型チェック・テスト・セキュリティスキャン・バージョン確認のYAML実装例 |
-| **AI_TOOLS_REFERENCE.md** | AIモデル選定時 / 自動化設計時 | AIモデル比較（Claude/Gemini）・コスト・用途別選定フロー・背景自動化6パターン |
-| **CODE_ANTI_PATTERNS.md** | コード実装前・レビュー時 | Reactアンチパターン集（useEffect乱用・any型・エラー省略・思考停止デフォルト等） |
-| **APP_UX_STANDARDS.md** | UI実装時 | ローディング/エラー/空状態の標準実装・フォームUX・S/A/Bランク品質定義 |
+| **CROSS_REFERENCE.md** | 設計・ライブラリ選定時 / 新プロジェクト開始時 | アプリ種別×UI×ツール×フェーズの横断早見表 |
+
+### 【実装ガイド】コーディング時に参照するファイル
+
+| ファイル名 | 読込タイミング | 内容サマリ |
+|---|---|---|
+| **CODE_ANTI_PATTERNS.md** | コード実装前・レビュー時 | Reactアンチパターン集（useEffect乱用・any型・エラー省略等） |
+| **APP_UX_STANDARDS.md** | UI実装時 | ローディング/エラー/空状態の標準実装・S/A/Bランク品質定義 |
 | **PERFORMANCE_GUIDE.md** | 実装完了時・最適化時 | ランク別パフォーマンス目標値・next/image・React Query・バンドル最適化 |
-| **LEGAL_COMPLIANCE.md** | リリース前・業種確認時 | 個人情報保護法・特商法・業種別禁止表現（医療・金融・不動産等） |
+| **UI_LIBRARY_GUIDE.md** | UI実装・ライブラリ選定時 | UIライブラリ選定ガイド（承認済み実装可 vs 参照専用の区別） |
+| **APP_STRUCTURE_REFERENCE.md** | 設計・ファイル配置時 | アプリ構造パターン・ディレクトリ設計規則 |
+
+### 【専門ガイド】特定の技術・要件に特化したファイル
+
+| ファイル名 | 読込タイミング | 内容サマリ |
+|---|---|---|
 | **GAS_DEVELOPMENT_GUIDE.md** | GASアプリ開発時（必須） | clasp開発・クォータ制限・バッチ処理・トリガー・HtmlService・テスト戦略 |
+| **LEGAL_COMPLIANCE.md** | リリース前・業種確認時 | 個人情報保護法・特商法・業種別禁止表現（医療・金融・不動産等） |
+| **GITHUB_ACTIONS_GUIDE.md** | CI/CD設計時 / セキュリティ設計時 | Lint・型チェック・テスト・セキュリティスキャン・バージョン確認のYAML実装例 |
+| **AI_TOOLS_REFERENCE.md** | AIモデル選定時 / 自動化設計時 | AIモデル比較（Claude/Gemini）・コスト・用途別選定フロー |
+| **AUTO_SYNC_GUIDE.md** | 同期設計時 | Git post-mergeフックによる自動同期の設計・運用ガイド |
+
+### 【知識・記録】学習・教訓・履歴管理のファイル
+
+| ファイル名 | 読込タイミング | 内容サマリ |
+|---|---|---|
+| **MASTER_LESSONS.md** | 実装前・バグ修正前 | 全プロジェクト横断の汎用教訓集（ミス防止・設計パターン・Git安全設計） |
+| **LEARNING_LOG.md** | 振り返り・記録時 | プロジェクト内の詳細な作業記録・出来事ログ |
+| **REQUIREMENTS_LOG.md** | 要件・バージョン確認時 | 機能要件・技術的負債・バージョンロック記録 |
+| **MASTER_REFERENCE.md** | 戦略・アーキテクチャ確認時 | AI活用・プロンプト工学・自動化ワークフロー統合リファレンス |
+
+### 【ツール・環境】CLI・外部ツール・セットアップのファイル
+
+| ファイル名 | 読込タイミング | 内容サマリ |
+|---|---|---|
+| **CLAUDE_CODE_GUIDE.md** | ツール操作・CLI使用時 | Claude Code/Gemini CLIコマンド・Antigravityコマンド・Git黄金パターン |
+| **TOOL_REFERENCE.md** | ツール・サービス選定時 | Google Workspace / GCP / AI / 画像生成 / 外部連携ツール全リファレンス |
+| **STARTUP_GUIDE.md** | 環境構築・初回セットアップ時 | 環境セットアップ手順・起動コマンド |
+| **BIO_PIPELINE_INSIGHTS.md** | 自動化パイプライン設計時 | パイプライン構築・複雑な自動化フローの知見 |
 
 ---
 
@@ -60,7 +87,7 @@
 | **モデル選定（Claude/Gemini等）** | AI_TOOLS_REFERENCE.md, OWNER_DEFAULTS.md §SECTION10 | TOOL_REFERENCE.md §G |
 | **プロンプト設計** | MASTER_REFERENCE.md | — |
 | **外部ツール・連携先を探す** | TOOL_REFERENCE.md | OWNER_DEFAULTS.md §スタック |
-| **自動化・スケジュール設計** | TOOL_REFERENCE.md §自動化パターン, CLAUDE_CODE_GUIDE.md | BIO_PIPELINE_INSIGHTS.md |
+| **自動化・スケジュール設計** | TOOL_REFERENCE.md §O, CLAUDE_CODE_GUIDE.md | BIO_PIPELINE_INSIGHTS.md |
 | **インフラ・デプロイ選定** | OWNER_DEFAULTS.md §デプロイ, TOOL_REFERENCE.md §E | — |
 | **セキュリティ設計** | TOOL_REFERENCE.md §I, GITHUB_ACTIONS_GUIDE.md §5 | OWNER_DEFAULTS.md §法務 |
 | **CI/CD・自動化設計** | GITHUB_ACTIONS_GUIDE.md | SERVICE_ORG_CORE.md §CI/CD |
