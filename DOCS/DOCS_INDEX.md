@@ -39,6 +39,11 @@
 | **TOOL_REFERENCE.md** | ツール・サービス選定時 | Google Workspace / GCP / AI / 画像生成 / 外部連携ツール全リファレンス |
 | **GITHUB_ACTIONS_GUIDE.md** | CI/CD設計時 / セキュリティ設計時 | Lint・型チェック・テスト・セキュリティスキャン・バージョン確認のYAML実装例 |
 | **AI_TOOLS_REFERENCE.md** | AIモデル選定時 / 自動化設計時 | AIモデル比較（Claude/Gemini）・コスト・用途別選定フロー・背景自動化6パターン |
+| **CODE_ANTI_PATTERNS.md** | コード実装前・レビュー時 | Reactアンチパターン集（useEffect乱用・any型・エラー省略・思考停止デフォルト等） |
+| **APP_UX_STANDARDS.md** | UI実装時 | ローディング/エラー/空状態の標準実装・フォームUX・S/A/Bランク品質定義 |
+| **PERFORMANCE_GUIDE.md** | 実装完了時・最適化時 | ランク別パフォーマンス目標値・next/image・React Query・バンドル最適化 |
+| **LEGAL_COMPLIANCE.md** | リリース前・業種確認時 | 個人情報保護法・特商法・業種別禁止表現（医療・金融・不動産等） |
+| **GAS_DEVELOPMENT_GUIDE.md** | GASアプリ開発時（必須） | clasp開発・クォータ制限・バッチ処理・トリガー・HtmlService・テスト戦略 |
 
 ---
 
@@ -65,6 +70,11 @@
 | **教訓の確認・昇格** | MASTER_LESSONS.md | LEARNING_LOG.md |
 | **要件・スペック確認** | REQUIREMENTS_LOG.md | PROJECT_STATE.md |
 | **CLI操作・コマンド確認** | CLAUDE_CODE_GUIDE.md | — |
+| **GASアプリの開発** | GAS_DEVELOPMENT_GUIDE.md | OWNER_DEFAULTS.md §GAS |
+| **コード品質チェック** | CODE_ANTI_PATTERNS.md | MASTER_LESSONS.md |
+| **UX品質の確認** | APP_UX_STANDARDS.md | — |
+| **パフォーマンス最適化** | PERFORMANCE_GUIDE.md | — |
+| **リリース前の法的確認** | LEGAL_COMPLIANCE.md | SERVICE_ORG_CORE.md §法務 |
 
 ---
 
