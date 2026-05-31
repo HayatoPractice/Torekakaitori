@@ -53,7 +53,7 @@
 | **バグ修正・デバッグ** | MASTER_LESSONS.md | REQUIREMENTS_LOG.md |
 | **AI / LLM 機能の追加** | OWNER_DEFAULTS.md §AI選定, TOOL_REFERENCE.md §G | MASTER_REFERENCE.md |
 | **モデル選定（Claude/Gemini等）** | AI_TOOLS_REFERENCE.md, OWNER_DEFAULTS.md §SECTION10 | TOOL_REFERENCE.md §G |
-| **プロンプト設計** | PROMPT_ENGINEERING_MASTER.md | MASTER_REFERENCE.md |
+| **プロンプト設計** | MASTER_REFERENCE.md | — |
 | **外部ツール・連携先を探す** | TOOL_REFERENCE.md | OWNER_DEFAULTS.md §スタック |
 | **自動化・スケジュール設計** | TOOL_REFERENCE.md §自動化パターン, CLAUDE_CODE_GUIDE.md | BIO_PIPELINE_INSIGHTS.md |
 | **インフラ・デプロイ選定** | OWNER_DEFAULTS.md §デプロイ, TOOL_REFERENCE.md §E | — |
