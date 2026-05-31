@@ -282,18 +282,18 @@ E2Eテスト：
   | Claude Opus 4.8               | 最高水準    | 中速          | $25.00                   | 現時点で最強の知能。複雑バグ・難解ロジック |
   | Claude Opus 4.6               | 80.8%     | 中速          | $25.00                   | 日本語の記述クオリティに定評あり         |
   | Claude Sonnet 4.6（現在使用中） | 79.6%     | 高速          | $3.00                    | コストと性能のバランス型               |
-  | Gemini 3.5 Flash（Thinking時）  | 78.0%     | 284 token/秒  | $1.50                    | 圧倒的な低コスト・高速。24hエージェント向け |
-  | Gemini 3.5 Flash（標準）        | ~45.0%    | 284 token/秒  | $1.50                    | 最速・最安。軽量タスクの足回り          |
+  | Gemini 2.5 Flash（Thinking時）  | 78.0%     | 284 token/秒  | $1.50                    | 圧倒的な低コスト・高速。24hエージェント向け |
+  | Gemini 2.5 Flash（標準）        | ~45.0%    | 284 token/秒  | $1.50                    | 最速・最安。軽量タスクの足回り          |
 
-  ⚠️ コスト注意：Claude Opus は Gemini 3.5 Flash の約16.6倍のAPIコスト。
-  大量データ・長時間エージェント運用では Gemini 3.5 Flash が圧倒的に有利。
+  ⚠️ コスト注意：Claude Opus は Gemini 2.5 Flash の約16.6倍のAPIコスト。
+  大量データ・長時間エージェント運用では Gemini 2.5 Flash が圧倒的に有利。
 
 ━━ 用途別モデル選定フロー
 
   □ 複雑なバグ修正・難解なアーキテクチャ判断 → Claude Opus 4.8
   □ 日本語の高品質な文章生成・ドキュメント → Claude Opus 4.6
   □ 通常の開発作業・バランス重視            → Claude Sonnet 4.6（デフォルト）
-  □ 大量処理・24時間エージェント運用        → Gemini 3.5 Flash（Thinking）
+  □ 大量処理・24時間エージェント運用        → Gemini 2.5 Flash（Thinking）
   □ GASと統合・Google エコシステム         → Gemini API（Google AI）
   □ 高精度な文章生成・業界標準             → OpenAI GPT-4o
 
