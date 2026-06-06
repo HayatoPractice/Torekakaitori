@@ -80,11 +80,11 @@
 |---|---|---|
 | **セッション開始・現状把握** | PROJECT_STATE.md, CONTEXT_BRIDGE.md | OWNER_DEFAULTS.md |
 | **新プロジェクト開始** | OWNER_DEFAULTS.md, SERVICE_ORG_CORE.md, CROSS_REFERENCE.md | SERVICE_ORG_PHASE.md |
-| **UI・フロントエンド実装** | UI_LIBRARY_GUIDE.md, CROSS_REFERENCE.md §2 | MASTER_LESSONS.md |
+| **UI・フロントエンド実装** | UI_LIBRARY_GUIDE.md, CROSS_REFERENCE.md §2 | MASTER_LESSONS.md, scripts/library_config.json（UIイメージ→ライブラリ対応表） |
 | **バックエンド・API実装** | OWNER_DEFAULTS.md §DB | SERVICE_ORG_CORE.md |
 | **バグ修正・デバッグ** | MASTER_LESSONS.md | REQUIREMENTS_LOG.md |
 | **AI / LLM 機能の追加** | OWNER_DEFAULTS.md §AI選定, TOOL_REFERENCE.md §G | MASTER_REFERENCE.md |
-| **モデル選定（Claude/Gemini等）** | AI_TOOLS_REFERENCE.md, OWNER_DEFAULTS.md §SECTION10 | TOOL_REFERENCE.md §G |
+| **モデル選定（Claude/Gemini等）** | AI_TOOLS_REFERENCE.md, OWNER_DEFAULTS.md §SECTION10, APP_SHARED_RULES.md §18 | TOOL_REFERENCE.md §G |
 | **プロンプト設計** | MASTER_REFERENCE.md | — |
 | **外部ツール・連携先を探す** | TOOL_REFERENCE.md | OWNER_DEFAULTS.md §スタック |
 | **自動化・スケジュール設計** | TOOL_REFERENCE.md §O, CLAUDE_CODE_GUIDE.md | BIO_PIPELINE_INSIGHTS.md |

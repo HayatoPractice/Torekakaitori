@@ -131,6 +131,11 @@ def sync_app(app_dir: Path, dry_run: bool) -> dict:
     for src_py in sorted(scripts_src.glob("*.py")):
         copy_file(src_py, app_dir / "scripts" / src_py.name, f"scripts/{src_py.name}")
 
+    # library_config.json を同期（ライブラリ選定ガイド・UIイメージキーワード対応表）
+    lib_config_src = scripts_src / "library_config.json"
+    if lib_config_src.exists():
+        copy_file(lib_config_src, app_dir / "scripts" / "library_config.json", "scripts/library_config.json")
+
     # tsconfig.json を同期（tsconfig.app.json → 各アプリの tsconfig.json として上書き）
     # ⚠️ アプリ側に独自の tsconfig.json がある場合も上書きされる
     tsconfig_src = ORIGIN / "tsconfig.app.json"

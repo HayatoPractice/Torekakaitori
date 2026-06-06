@@ -1,0 +1,315 @@
+{
+  "_update_policy": {
+    "auto_patch": "patch バージョンは自動更新可（例: 1.2.3 → 1.2.4）",
+    "minor_check": "minor バージョンは CHANGELOG を確認してから更新（例: 1.2.x → 1.3.0）",
+    "major_manual": "major バージョンは社長確認必須・移行コスト評価後に更新（例: 1.x.x → 2.0.0）",
+    "lock_policy": "package-lock.json は必ず git 管理する。npm ci を優先使用する"
+  },
+
+  "_image_guide": {
+    "説明": "ユーザーのイメージキーワードからUIライブラリを選ぶためのガイド。§17 UIコード作成前の必須3ステップ Step1 で参照すること。",
+    "キーワード対応": {
+      "シンプル・ミニマル・余白重視": ["shadcn/ui", "Radix UI", "Headless UI"],
+      "高機能・ダッシュボード・データ可視化": ["MUI (Material UI)", "Ant Design", "Mantine"],
+      "デザイン重視・おしゃれ・スタートアップ": ["shadcn/ui + Framer Motion", "Radix UI + カスタム"],
+      "エンタープライズ・業務系": ["Ant Design", "MUI", "TanStack Table"],
+      "アニメーション・インタラクティブ": ["Framer Motion", "React Spring", "AutoAnimate"],
+      "モバイルファースト": ["shadcn/ui", "Headless UI", "Radix UI"],
+      "チャート・グラフ": ["Recharts", "Victory", "Nivo", "Chart.js (react-chartjs-2)"],
+      "フォーム重視": ["React Hook Form + Zod", "Formik + Yup"],
+      "テーブル・データグリッド": ["TanStack Table", "AG Grid (Community)", "React Data Grid"]
+    }
+  },
+
+  "libraries": [
+    {
+      "name": "react",
+      "level": "core",
+      "auto_patch": true,
+      "npm_trackable": true,
+      "description": "UIライブラリの核。全アプリ共通。",
+      "impressions": {
+        "general": "宣言的UI・コンポーネント設計の基礎",
+        "suitable_for": "全Webアプリ"
+      }
+    },
+    {
+      "name": "typescript",
+      "level": "core",
+      "auto_patch": true,
+      "npm_trackable": true,
+      "description": "型安全を保証する言語スーパーセット。全アプリ必須。",
+      "impressions": {
+        "general": "バグの事前検出・リファクタリング安全性・IDEサポート向上",
+        "suitable_for": "全アプリ（特に規模が大きいもの）"
+      }
+    },
+    {
+      "name": "vite",
+      "level": "core",
+      "auto_patch": true,
+      "npm_trackable": true,
+      "description": "React + Vite 構成のビルドツール。SPA の標準。",
+      "impressions": {
+        "general": "HMR が高速・設定が少ない・中小規模アプリに最適",
+        "suitable_for": "SPA・個人ツール・フリーミアムアプリ"
+      }
+    },
+    {
+      "name": "next",
+      "level": "framework",
+      "auto_patch": true,
+      "npm_trackable": true,
+      "description": "SSR・SSG・App Router 対応のフルスタックフレームワーク。",
+      "impressions": {
+        "general": "SEO重視・本番SaaS・ファイルベースルーティング",
+        "suitable_for": "本格SaaS・LP込みのアプリ・SEOが重要な場合"
+      }
+    },
+    {
+      "name": "tailwindcss",
+      "level": "styling",
+      "auto_patch": true,
+      "npm_trackable": true,
+      "description": "ユーティリティファーストのCSSフレームワーク。",
+      "impressions": {
+        "general": "高速開発・カスタマイズ性高い・デザインシステムとの相性良好",
+        "suitable_for": "全アプリ（shadcn/ui との組み合わせが特に有効）"
+      }
+    },
+    {
+      "name": "@shadcn/ui",
+      "level": "ui",
+      "auto_patch": false,
+      "npm_trackable": false,
+      "description": "コピー&ペースト型UIコンポーネント集。Radix UI + Tailwind ベース。",
+      "impressions": {
+        "design_mood": "シンプル・モダン・ミニマル",
+        "suitable_for": "ダッシュボード・フォーム重視・カスタマイズ自由度が必要な場合",
+        "sources": ["https://ui.shadcn.com/"]
+      }
+    },
+    {
+      "name": "@radix-ui/react-*",
+      "level": "ui",
+      "auto_patch": true,
+      "npm_trackable": true,
+      "description": "アクセシビリティ対応のヘッドレスUIプリミティブ。shadcn/ui の基盤。",
+      "impressions": {
+        "general": "WAI-ARIA完全準拠・スタイルは自由・低レベルから制御可能",
+        "suitable_for": "カスタムデザインシステム・shadcn/ui を使わず直接使う場合"
+      }
+    },
+    {
+      "name": "@mui/material",
+      "level": "ui",
+      "auto_patch": false,
+      "npm_trackable": true,
+      "description": "Material Design 準拠の高機能UIライブラリ。",
+      "impressions": {
+        "design_mood": "業務系・エンタープライズ・Googleライク",
+        "user_image_match": ["高機能", "ダッシュボード", "業務ツール", "エンタープライズ"],
+        "suitable_for": "社内ツール・データ管理ダッシュボード・B2Bアプリ"
+      }
+    },
+    {
+      "name": "antd",
+      "level": "ui",
+      "auto_patch": false,
+      "npm_trackable": true,
+      "description": "Ant Design。テーブル・フォームが特に強力。",
+      "impressions": {
+        "design_mood": "エンタープライズ・データ重視",
+        "user_image_match": ["テーブル", "データグリッド", "管理画面", "CRM"],
+        "suitable_for": "複雑なテーブル・管理画面・フォームが多いアプリ"
+      }
+    },
+    {
+      "name": "@mantine/core",
+      "level": "ui",
+      "auto_patch": false,
+      "npm_trackable": true,
+      "description": "フル機能UIライブラリ。ダークモード・アクセシビリティ対応。",
+      "impressions": {
+        "design_mood": "モダン・フルフィーチャー・バランス型",
+        "suitable_for": "MUI より軽量で高機能なものが欲しい場合・SaaS"
+      }
+    },
+    {
+      "name": "framer-motion",
+      "level": "animation",
+      "auto_patch": true,
+      "npm_trackable": true,
+      "description": "React向けアニメーションライブラリ。宣言的で使いやすい。",
+      "impressions": {
+        "general": "ページ遷移・モーダル・リストアニメーション・ジェスチャー対応",
+        "suitable_for": "UX重視アプリ・LP・スタートアップ"
+      }
+    },
+    {
+      "name": "zustand",
+      "level": "state",
+      "auto_patch": true,
+      "npm_trackable": true,
+      "description": "軽量グローバル状態管理。Redux より圧倒的にシンプル。",
+      "impressions": {
+        "general": "ボイラープレート不要・React外からも操作可・学習コスト低",
+        "suitable_for": "中小規模アプリ・Redux が重すぎる場合（デフォルト推奨）"
+      }
+    },
+    {
+      "name": "jotai",
+      "level": "state",
+      "auto_patch": true,
+      "npm_trackable": true,
+      "description": "アトムベースの状態管理。コンポーネント単位で細かく制御できる。",
+      "impressions": {
+        "general": "Recoil の後継・派生状態が多い場合に有効",
+        "suitable_for": "状態の粒度が細かいアプリ・zustand より細かい制御が必要な場合"
+      }
+    },
+    {
+      "name": "@tanstack/react-query",
+      "level": "data-fetching",
+      "auto_patch": true,
+      "npm_trackable": true,
+      "description": "サーバー状態管理。キャッシュ・再取得・楽観的更新を自動化。",
+      "impressions": {
+        "general": "loading/error状態の自動管理・stale-while-revalidate・バックグラウンド同期",
+        "suitable_for": "API通信が多いアプリ・リアルタイム性が必要なダッシュボード（デフォルト推奨）"
+      }
+    },
+    {
+      "name": "@supabase/supabase-js",
+      "level": "backend",
+      "auto_patch": true,
+      "npm_trackable": true,
+      "description": "Supabase クライアント。DB・Auth・Storage・RealtimeをSDKで操作。",
+      "impressions": {
+        "general": "RLS（行レベルセキュリティ）で安全・PostgreSQLベース・無料枠が広い",
+        "suitable_for": "認証付きアプリ・リアルタイムアプリ・個人SaaS（認証の第1選択）"
+      }
+    },
+    {
+      "name": "firebase",
+      "level": "backend",
+      "auto_patch": false,
+      "npm_trackable": true,
+      "description": "Firebase クライアント SDK（Auth/Firestore/Storage/FCM）。",
+      "impressions": {
+        "general": "Googleのインフラ・NoSQL・リアルタイム同期が得意",
+        "suitable_for": "モバイルアプリ・チャット・リアルタイム協調ツール"
+      }
+    },
+    {
+      "name": "stripe",
+      "level": "payment",
+      "auto_patch": false,
+      "npm_trackable": true,
+      "description": "Stripe 決済SDK。PCI DSS準拠・フリーミアム設計に必須。",
+      "impressions": {
+        "general": "カード情報は絶対に自サーバーに持たない。Webhook署名検証を必ず実装する。",
+        "suitable_for": "収益化アプリ・サブスクリプション・フリーミアム（決済は一択）"
+      }
+    },
+    {
+      "name": "zod",
+      "level": "validation",
+      "auto_patch": true,
+      "npm_trackable": true,
+      "description": "TypeScript ファーストのスキーマバリデーション。",
+      "impressions": {
+        "general": "API レスポンス・フォーム入力・環境変数の型チェックに最適",
+        "suitable_for": "全アプリ（React Hook Form との組み合わせがデフォルト）"
+      }
+    },
+    {
+      "name": "react-hook-form",
+      "level": "form",
+      "auto_patch": true,
+      "npm_trackable": true,
+      "description": "パフォーマンスに優れたフォームライブラリ。zod との統合が強力。",
+      "impressions": {
+        "general": "再レンダリング最小化・バリデーション簡単・フォームが多いアプリに最適",
+        "suitable_for": "登録・ログイン・設定画面（zod とセットで使うのがデフォルト）"
+      }
+    },
+    {
+      "name": "date-fns",
+      "level": "utility",
+      "auto_patch": true,
+      "npm_trackable": true,
+      "description": "軽量な日付操作ライブラリ。tree-shakable で bundle size に優しい。",
+      "impressions": {
+        "general": "moment.js の現代版・日本語ロケール対応・型安全",
+        "suitable_for": "日付表示・カレンダー・期間計算が必要なアプリ"
+      }
+    },
+    {
+      "name": "recharts",
+      "level": "chart",
+      "auto_patch": true,
+      "npm_trackable": true,
+      "description": "React用チャートライブラリ。D3ベースで宣言的に書ける。",
+      "impressions": {
+        "general": "ライン・バー・パイ・エリアチャート・レスポンシブ対応",
+        "suitable_for": "投資管理・家計簿・ダッシュボード系アプリ（グラフのデフォルト選択）"
+      }
+    },
+    {
+      "name": "axios",
+      "level": "http",
+      "auto_patch": true,
+      "npm_trackable": true,
+      "description": "Promise ベースの HTTP クライアント。インターセプターが便利。",
+      "impressions": {
+        "general": "認証ヘッダーの自動付与・エラーハンドリングの統一が容易",
+        "suitable_for": "REST API を多用するアプリ・認証トークンの自動挿入が必要な場合"
+      }
+    },
+    {
+      "name": "lucide-react",
+      "level": "icons",
+      "auto_patch": true,
+      "npm_trackable": true,
+      "description": "shadcn/ui と同系統のクリーンなアイコンライブラリ。",
+      "impressions": {
+        "general": "tree-shakable・TypeScript対応・shadcn/ui との相性最良",
+        "suitable_for": "shadcn/ui を使うプロジェクト全て（アイコンのデフォルト選択）"
+      }
+    },
+    {
+      "name": "react-router-dom",
+      "level": "routing",
+      "auto_patch": false,
+      "npm_trackable": true,
+      "description": "React SPA のルーティング標準ライブラリ。",
+      "impressions": {
+        "general": "v6以降はより宣言的・Next.js を使わない SPA のルーティング",
+        "suitable_for": "Vite + React での SPA（Next.js を使わない場合のデフォルト）"
+      }
+    },
+    {
+      "name": "vitest",
+      "level": "testing",
+      "auto_patch": true,
+      "npm_trackable": true,
+      "description": "Vite 統合の高速テストランナー。Jest 互換 API。",
+      "impressions": {
+        "general": "設定ほぼ不要・ESM ネイティブ・型テストも対応",
+        "suitable_for": "Vite + React プロジェクト（テストのデフォルト選択）"
+      }
+    },
+    {
+      "name": "@testing-library/react",
+      "level": "testing",
+      "auto_patch": true,
+      "npm_trackable": true,
+      "description": "ユーザー視点でコンポーネントをテストするライブラリ。",
+      "impressions": {
+        "general": "実装詳細に依存しないテスト・アクセシビリティ的なセレクタ",
+        "suitable_for": "vitest と組み合わせてコンポーネントテストを書く場合"
+      }
+    }
+  ]
+}
