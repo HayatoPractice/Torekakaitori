@@ -90,9 +90,7 @@ v1.0        初版    新規作成      記録チーム
    REQUIREMENTS_LOG.md    ← 要件・技術的負債
    LEARNING_LOG.md        ← 学習記録
    MASTER_LESSONS.md      ← 汎用教訓集
-   MASTER_REFERENCE.md    ← AIエージェント知見
    CLAUDE_CODE_GUIDE.md   ← CLI操作・Git戦略・Antigravityコマンド
-   BIO_PIPELINE_INSIGHTS.md ← パイプライン構築知見
    STARTUP_GUIDE.md       ← このファイル
    UI_LIBRARY_GUIDE.md    ← UIライブラリ共存設計・選定ガイド
    APP_SHARED_RULES.md    ← 全アプリ共通行動ルール

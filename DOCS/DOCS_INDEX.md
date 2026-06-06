@@ -23,7 +23,7 @@
 | **DOCS_INDEX.md**（本ファイル） | 毎回・起動時必須 | 全ファイルの索引。タスク別の読込先を示す |
 | **PROJECT_STATE.md** | セッション開始時 | 現在のプロジェクト進捗・直近の課題・次のアクション |
 | **CONTEXT_BRIDGE.md** | セッション開始時 | 前回セッションの状態スナップショット・引き継ぎ事項 |
-| **APP_SHARED_RULES.md** | 規約・ルール確認時 | 全アプリ共通の行動ルール・禁止事項（§A〜§C の3カテゴリ） |
+| **APP_SHARED_RULES.md** | 規約・ルール確認時 | 全アプリ共通の行動ルール・禁止事項（§A〜§D：AI行動/コード修正/プロジェクト原則/品質・AI活用） |
 
 ### 【ルール・標準】技術選定・設計基準のファイル
 
@@ -61,7 +61,6 @@
 | **MASTER_LESSONS.md** | 実装前・バグ修正前 | 全プロジェクト横断の汎用教訓集（ミス防止・設計パターン・Git安全設計） |
 | **LEARNING_LOG.md** | 振り返り・記録時 | プロジェクト内の詳細な作業記録・出来事ログ |
 | **REQUIREMENTS_LOG.md** | 要件・バージョン確認時 | 機能要件・技術的負債・バージョンロック記録 |
-| **MASTER_REFERENCE.md** | 戦略・アーキテクチャ確認時 | AI活用・プロンプト工学・自動化ワークフロー統合リファレンス |
 
 ### 【ツール・環境】CLI・外部ツール・セットアップのファイル
 
@@ -70,7 +69,6 @@
 | **CLAUDE_CODE_GUIDE.md** | ツール操作・CLI使用時 | Claude Code/Gemini CLIコマンド・Antigravityコマンド・Git黄金パターン |
 | **TOOL_REFERENCE.md** | ツール・サービス選定時 | Google Workspace / GCP / AI / 画像生成 / 外部連携ツール全リファレンス |
 | **STARTUP_GUIDE.md** | 環境構築・初回セットアップ時 | 環境セットアップ手順・起動コマンド |
-| **BIO_PIPELINE_INSIGHTS.md** | 自動化パイプライン設計時 | パイプライン構築・複雑な自動化フローの知見 |
 
 ---
 
@@ -83,11 +81,11 @@
 | **UI・フロントエンド実装** | UI_LIBRARY_GUIDE.md, CROSS_REFERENCE.md §2 | MASTER_LESSONS.md, scripts/library_config.json（UIイメージ→ライブラリ対応表） |
 | **バックエンド・API実装** | OWNER_DEFAULTS.md §DB | SERVICE_ORG_CORE.md |
 | **バグ修正・デバッグ** | MASTER_LESSONS.md | REQUIREMENTS_LOG.md |
-| **AI / LLM 機能の追加** | OWNER_DEFAULTS.md §AI選定, TOOL_REFERENCE.md §G | MASTER_REFERENCE.md |
+| **AI / LLM 機能の追加** | OWNER_DEFAULTS.md §AI選定, TOOL_REFERENCE.md §G | AI_TOOLS_REFERENCE.md |
 | **モデル選定（Claude/Gemini等）** | AI_TOOLS_REFERENCE.md, OWNER_DEFAULTS.md §SECTION10, APP_SHARED_RULES.md §18 | TOOL_REFERENCE.md §G |
-| **プロンプト設計** | MASTER_REFERENCE.md | — |
+| **プロンプト設計** | MASTER_LESSONS.md §PE | AI_TOOLS_REFERENCE.md |
 | **外部ツール・連携先を探す** | TOOL_REFERENCE.md | OWNER_DEFAULTS.md §スタック |
-| **自動化・スケジュール設計** | TOOL_REFERENCE.md §O, CLAUDE_CODE_GUIDE.md | BIO_PIPELINE_INSIGHTS.md |
+| **自動化・スケジュール設計** | TOOL_REFERENCE.md §O, CLAUDE_CODE_GUIDE.md, AI_TOOLS_REFERENCE.md §3 | — |
 | **インフラ・デプロイ選定** | OWNER_DEFAULTS.md §デプロイ, TOOL_REFERENCE.md §E | — |
 | **セキュリティ設計** | TOOL_REFERENCE.md §I, GITHUB_ACTIONS_GUIDE.md §5 | OWNER_DEFAULTS.md §法務 |
 | **CI/CD・自動化設計** | GITHUB_ACTIONS_GUIDE.md | SERVICE_ORG_CORE.md §CI/CD |
