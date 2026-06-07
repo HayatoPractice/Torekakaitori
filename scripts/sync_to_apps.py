@@ -78,6 +78,33 @@ def nfc(s: str) -> str:
     return unicodedata.normalize("NFC", s)
 
 
+def find_app_dirs(apps_dir: Path, origin: Path, exclude_dirs: set) -> list:
+    """DOCSフォルダを持つ全アプリフォルダを再帰的に検索する。
+    直下だけでなく「カテゴリ/アプリ名/」のような1段ネストにも対応。
+    node_modules / .claude/worktrees などの内部フォルダは除外する。
+    """
+    # パスに含まれていたら除外するキーワード（node_modules 等）
+    EXCLUDE_PATH_KEYWORDS = {"node_modules", ".claude"}
+
+    found = []
+    for docs_path in sorted(apps_dir.rglob("DOCS")):
+        if not docs_path.is_dir():
+            continue
+        app_dir = docs_path.parent
+        # 原本フォルダ自体は除外
+        if nfc(str(app_dir.resolve())) == nfc(str(origin.resolve())):
+            continue
+        # パスのいずれかの階層が EXCLUDE_DIRS に一致するフォルダは除外
+        parts = [unicodedata.normalize("NFC", p) for p in app_dir.parts]
+        if any(unicodedata.normalize("NFC", ex) in parts for ex in exclude_dirs):
+            continue
+        # node_modules / .claude 等の内部フォルダは除外
+        if any(kw in parts for kw in EXCLUDE_PATH_KEYWORDS):
+            continue
+        found.append(app_dir)
+    return found
+
+
 def has_project_specific_claude(claude_path: Path) -> bool:
     """CLAUDE.md にプロジェクト固有セクション（## レベル）が含まれるか判定する。"""
     if not claude_path.exists():
@@ -202,22 +229,12 @@ def main():
     synced_apps = []
     all_log_lines = []
 
-    for app_dir in sorted(APPS_DIR.iterdir()):
-        if not app_dir.is_dir():
-            continue
-        # アプリ作成原本自身はスキップ（macOS Unicode NFD/NFC 差異に対応）
-        if nfc(str(app_dir.resolve())) == nfc(str(ORIGIN.resolve())):
-            continue
-        # 除外フォルダはスキップ
-        if any(nfc(excl) == nfc(app_dir.name) for excl in EXCLUDE_DIRS):
-            continue
-        # DOCSフォルダがない = アプリフォルダではない
-        if not (app_dir / "DOCS").exists():
-            continue
-
+    for app_dir in find_app_dirs(APPS_DIR, ORIGIN, EXCLUDE_DIRS):
         result = sync_app(app_dir, dry_run)
-        synced_apps.append(app_dir.name)
-        all_log_lines.extend(format_log(app_dir.name, result, dry_run))
+        # 表示名は APPS_DIR からの相対パス（ネスト時も識別しやすい）
+        rel_name = str(app_dir.relative_to(APPS_DIR))
+        synced_apps.append(rel_name)
+        all_log_lines.extend(format_log(rel_name, result, dry_run))
 
     # サマリー行
     summary = f"[{timestamp}] {mode_label}同期完了: {len(synced_apps)}アプリ"
