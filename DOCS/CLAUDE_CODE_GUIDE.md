@@ -48,6 +48,19 @@ Claude Codeは以下の4ステップを基本単位として動作します。
 
 > **セーブ名を `last` に統一する運用が楽：** 終了時 `/chat save last` → 再開時 `/chat resume last`
 
+**Gemini CLI セッションワークフロー（MINUTES.md と連携）：**
+```
+【セッション開始時】
+  1. gemini を起動する
+  2. /chat resume last でセッションを復元する
+  3. MINUTES.md の TL;DR を読ませて現在地を把握させる
+
+【セッション終了時】
+  1. MINUTES.md の TL;DR を最終状態に更新させる
+  2. /chat save last でセッションを保存する
+  3. 次回は /chat resume last で即座に文脈を復元できる
+```
+
 ### Claude Code コマンド
 
 | コマンド | 機能 | 活用シーン |
