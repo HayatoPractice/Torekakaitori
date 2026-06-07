@@ -4,37 +4,42 @@
 # 【使い方】初回1回だけ実行する
 #   bash scripts/install_hooks.sh
 #
-# 【効果】
-#   以降は git pull するたびに sync_to_apps.py が自動実行され
-#   全アプリフォルダへ最新の共有ファイルが配布される
+# 【インストールされるフック】
+#   post-commit : git commit 完了後に全アプリへ即時同期
+#   post-merge  : git pull 完了後に全アプリへ同期（バックアップ）
 #
 # 【launchd 方式からの移行】
 #   旧 launchd 方式（com.hayato.appsync.plist）は廃止済みです。
-#   移行は完了しています。setup_auto_sync.sh は削除済みです。
+
+set -e
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-HOOK_SRC="$REPO_ROOT/scripts/post-merge"
-HOOK_DST="$REPO_ROOT/.git/hooks/post-merge"
 
-# すでに登録済か確認
-if [ -f "$HOOK_DST" ]; then
-  echo "⚠️  post-merge フックはすでに登録されています: $HOOK_DST"
-  echo "   上書きしますか？ [y/N]"
-  read -r answer
-  if [ "$answer" != "y" ] && [ "$answer" != "Y" ]; then
-    echo "キャンセルしました"
-    exit 0
-  fi
-fi
+install_hook() {
+    local hook_name="$1"
+    local src="$REPO_ROOT/scripts/$hook_name"
+    local dst="$REPO_ROOT/.git/hooks/$hook_name"
 
-cp "$HOOK_SRC" "$HOOK_DST"
-chmod +x "$HOOK_DST"
+    if [ ! -f "$src" ]; then
+        echo "⚠️  $src が見つかりません。スキップします。"
+        return
+    fi
+
+    if [ -f "$dst" ]; then
+        echo "⚠️  $hook_name フックはすでに登録されています。上書きします..."
+    fi
+
+    cp "$src" "$dst"
+    chmod +x "$dst"
+    echo "✅ $hook_name フックを登録しました"
+}
+
+install_hook "post-commit"
+install_hook "post-merge"
 
 echo ""
-echo "✅ post-merge フックを登録しました"
-echo "   登録先: $HOOK_DST"
-echo ""
-echo "   次回から git pull するたびに全アプリへ自動同期されます"
+echo "【同期タイミング】"
+echo "   git commit → post-commit フックが即座に全アプリへ同期"
+echo "   git pull   → post-merge フックが全アプリへ同期（バックアップ）"
 echo ""
 echo "【注意】旧 launchd 方式（setup_auto_sync.sh）は廃止済みです。"
-echo "   現在の同期方式は Git post-merge フックに完全移行されています。"
