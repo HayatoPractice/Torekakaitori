@@ -24,8 +24,10 @@
   現在の作業に必要なファイルだけを選んで読み込む。
 
   セッション開始・現状把握が必要なら必ず読む：
-    → DOCS/PROJECT_STATE.md
-    → DOCS/CONTEXT_BRIDGE.md
+    → MINUTES.md（存在する場合は最初に読む。TL;DR で即座に現在地を把握できる）
+    → DOCS/PROJECT_STATE.md（技術仕様・フェーズ確認が必要な時）
+    → DOCS/CONTEXT_BRIDGE.md（MINUTES.md が存在しない場合のみ）
+  ※ MINUTES.md のルールは DOCS/APP_SHARED_RULES.md §21 を参照
 
   ※ 他のファイルは作業中に必要になった時点で読む。起動時に全読みしない。
 

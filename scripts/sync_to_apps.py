@@ -50,6 +50,12 @@ SKIP_DOCS = {
     "SERVICE_ORG_PHASE.md",
 }
 
+# プロジェクトルートに置く固有ファイル（同期しない）
+SKIP_ROOT = {
+    "MINUTES.md",
+    "MINUTES_ARCHIVE.md",
+}
+
 # CLAUDE.md の「標準セクション」（これ以外のセクションがあれば固有セクションありと判定）
 # ⚠️ 重要：has_project_specific_claude() は「部分一致（any(std in section_name)）」で検索する。
 # 例：「起動シーケンス（必須・スキップ禁止）」も「起動シーケンス」が含まれているため一致する。
