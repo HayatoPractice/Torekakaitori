@@ -46,7 +46,6 @@ SKIP_DOCS = {
     "PROJECT_STATE.md",
     "REQUIREMENTS_LOG.md",
     "LEARNING_LOG.md",
-    "CONTEXT_BRIDGE.md",
     "SERVICE_ORG_PHASE.md",
 }
 
@@ -68,6 +67,7 @@ STANDARD_CLAUDE_SECTIONS = {
     "起動報告フォーマット",
     "型安全スタック標準",
     "AI共通行動指針",
+    "セッション終了プロトコル",
 }
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
