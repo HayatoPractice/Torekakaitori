@@ -103,119 +103,43 @@
 
 #### グループ1：APP_SHARED_RULES.md への追記（§新セクション）
 
-- [ ] **【A】§26 コマンド優先化ルール（hooks > slash > scripts > text）を追記** `[高]` `#docs`
-  - 内容：新しいルール・手順を追加するとき実装方法を4段階で検討する義務をルール化。§18-3（コマンド化しない方が良いケース）も合わせて記載
-  - 対象：`DOCS/APP_SHARED_RULES.md`（APP_SPECIFIC_STARTマーカーより前に追記）
-  - 完了条件：§26として追記され、原本コミット・全アプリ同期・push完了
-  - 見積：15分
-
-- [ ] **【B】§27 忘れ防止メカニズムのセット提案義務を追記** `[高]` `#docs`
-  - 内容：ルール・コマンドを提案するとき「忘れるリスクがある場合は防止策もセットで提案する」義務。手段優先順（hook化 > AIリマインド > TODO組み込み > 目立つ記載）を明記
-  - 対象：`DOCS/APP_SHARED_RULES.md`
-  - 完了条件：§27として追記・同期・push完了
-  - 見積：15分
-
-- [ ] **【E】§28 アーカイブ管理ルール（削除禁止→src/_archive/）を追記** `[中]` `#docs`
-  - 内容：不要になったファイル・コンポーネントを削除せず`src/_archive/`へ移動し理由・日付を記録するルール。tsconfig.app.jsonのexclude設定も合わせて記載
-  - 対象：`DOCS/APP_SHARED_RULES.md`、`tsconfig.app.json`
-  - 完了条件：§28追記・tsconfig更新・同期・push完了
-  - 見積：15分
-
-- [ ] **【F】§29 代替案提案の形式を標準化** `[中]` `#docs`
-  - 内容：複数の選択肢がある場合は必ずメリット・デメリット・推奨の形式で提示する義務（明らかに1択の場合はスキップ可）
-  - 対象：`DOCS/APP_SHARED_RULES.md`
-  - 完了条件：§29追記・同期・push完了
-  - 見積：10分
+- [x] **【A】§26 コマンド優先化ルール（hooks > slash > scripts > text）を追記** `[高]` `#docs` — 完了 2026-06-18 `commit: cc8e2b3`
+- [x] **【B】§27 忘れ防止メカニズムのセット提案義務を追記** `[高]` `#docs` — 完了 2026-06-18
+- [x] **【E】§28 アーカイブ管理ルール（削除禁止→src/_archive/）を追記** `[中]` `#docs` — 完了 2026-06-18
+- [x] **【F】§29 代替案提案の形式を標準化** `[中]` `#docs` — 完了 2026-06-18
 
 ---
 
 #### グループ2：SESSION_LOG導入
 
-- [ ] **【D-1】SESSION_LOG.mdのルールをAPP_SHARED_RULES.md §21に追記** `[中]` `#docs`
-  - 内容：MINUTES.md＝セッション単位要約（引き継ぎ用）、SESSION_LOG＝作業中の詳細ログ（調査・追跡用）として役割を明確化。タグ一覧（[CODE][BUG:OPEN][BUG:RESOLVED][DECISION][NEXT][MILESTONE]）も追加
-  - 対象：`DOCS/APP_SHARED_RULES.md`（§21 MINUTES管理ルールの後ろに追記）
-  - 完了条件：追記・同期・push完了
-  - 見積：15分
-
-- [ ] **【D-2】各アプリフォルダにSESSION_LOG.mdを作成** `[中]` `#setup`
-  - 内容：SKIP_ROOTに`SESSION_LOG.md`を追加（同期対象外にする）。6つの有効アプリフォルダにSESSION_LOG.mdを作成（初期テンプレート）
-  - 対象：`scripts/sync_to_apps.py`（SKIP_ROOT）、各アプリフォルダ
-  - 完了条件：sync_to_apps.pyにSKIP_ROOT追加・各アプリにSESSION_LOG作成・各リポジトリへpush
-  - 見積：20分
+- [x] **【D-1】SESSION_LOG.mdのルールをAPP_SHARED_RULES.md §21に追記** `[中]` `#docs` — 完了 2026-06-18
+- [x] **【D-2】各アプリフォルダにSESSION_LOG.mdを作成** `[中]` `#setup` — 完了 2026-06-18（6アプリ全て作成・push完了）
 
 ---
 
 #### グループ3：カスタムスラッシュコマンド
 
-- [ ] **【C-1】`.claude/commands/`フォルダとコマンドファイルを原本に作成** `[高]` `#setup`
-  - 内容：`project-start.md`（起動手順自動実行）、`project-end.md`（終了手順自動実行）、`project-compact.md`（MINUTES圧縮）の3コマンドを作成。ホームページ版のコマンドを参考に、アプリ版の手順に合わせた内容にする
-  - 対象：`/アプリ作成原本/.claude/commands/` （新規作成）
-  - 完了条件：3コマンドファイル作成完了
-  - 見積：30分
-
-- [ ] **【C-2】sync_to_apps.pyに`.claude/commands/`の同期を追加** `[高]` `#dev`
-  - 内容：sync_to_apps.pyの同期対象に`.claude/commands/*.md`を追加（新規コマンドも自動配布されるようにする）
-  - 対象：`scripts/sync_to_apps.py`
-  - 完了条件：--dry-runで`.claude/commands/`の同期が確認できる
-  - 見積：15分
-
-- [ ] **【C-3】CLAUDE.mdの起動シーケンスにコマンド案内を追記** `[中]` `#docs`
-  - 内容：CLAUDE.mdの起動シーケンスに「`/project:start`を実行すると起動手順が自動化される」旨を追記
-  - 対象：`CLAUDE.md`
-  - 完了条件：CLAUDE.md更新・同期・push完了
-  - 見積：10分
+- [x] **【C-1】`.claude/commands/`フォルダとコマンドファイルを原本に作成** `[高]` `#setup` — 完了 2026-06-18（project-start/project-end をアプリ版に更新）
+- [x] **【C-2】sync_to_apps.pyに`.claude/commands/`の同期を追加** `[高]` `#dev` — 完了 2026-06-18
+- [x] **【C-3】CLAUDE.mdの起動シーケンスにコマンド案内を追記** `[中]` `#docs` — 完了 2026-06-18
 
 ---
 
 #### グループ4：互いの監視システム（compare_origins.py）
 
-- [ ] **【G-1】`compare_origins.py`スクリプトを作成（LAST_CHECK方式）** `[高]` `#dev`
-  - 内容：以下の仕様でスクリプトを`scripts/`に作成する
-    - 状態ファイル：`/Users/sasakihayato/.origin_watch/last_check.txt`（中立地帯・どちらの原本フォルダでもない）
-    - 動作：状態ファイルの日時以降のgit logをアプリ・HP両フォルダから読み取り、変更一覧を出力
-    - 実行後：状態ファイルの日時を現在時刻に更新（新着のみ次回表示するため）
-    - どちらの原本フォルダも一切編集しない（git logの読み取りのみ）
-    - 初回実行時：状態ファイルがなければ過去30日分を表示し、ファイルを新規作成
-    - 出力形式：「【HP側の変更】YYYY-MM-DD コミットメッセージ（変更ファイル名）」の一覧
-  - 対象：`scripts/compare_origins.py`（新規作成）、`/Users/sasakihayato/.origin_watch/`（新規作成）
-  - 完了条件：`python3 scripts/compare_origins.py`で両フォルダの新着変更が表示され、再実行すると「新着なし」と表示される
-  - 見積：30分
-  - 備考：`/project:start`コマンドからこのスクリプトを呼び出す（C-1と連動）
-
-- [ ] **【G-2】APP_SHARED_RULES.mdに監視ルールを追記** `[中]` `#docs`
-  - 内容：§30として「相互監視ルール（セッション開始時に`compare_origins.py`を実行し、相手フォルダの変更を確認する）」を追記。採用判断はAIが行い、相手フォルダは絶対に編集しないことを明記
-  - 対象：`DOCS/APP_SHARED_RULES.md`
-  - 完了条件：§30追記・同期・push完了
-  - 見積：10分
-
-- [ ] **【G-3】CLAUDE.mdの起動シーケンスに監視チェックを追記** `[中]` `#docs`
-  - 内容：STEP4またはSTEP5として「`python3 scripts/compare_origins.py --days 30`を実行し、ホームページ作成原本の変更を確認する」を追記
-  - 対象：`CLAUDE.md`
-  - 完了条件：CLAUDE.md更新・同期・push完了
-  - 見積：10分
-
+- [x] **【G-1】`compare_origins.py`スクリプトを作成（LAST_CHECK方式）** `[高]` `#dev` — 完了 2026-06-18（状態ファイル：`~/.origin_watch/last_check.txt`）
+- [x] **【G-2】APP_SHARED_RULES.mdに監視ルールを追記** `[中]` `#docs` — 完了 2026-06-18（§30追記）
+- [x] **【G-3】CLAUDE.mdの起動シーケンスに監視チェックを追記** `[中]` `#docs` — 完了 2026-06-18（STEP5として追加）
 - [ ] **【G-4】ホームページ作成原本のCLAUDE.mdにも同様の起動ルールを追加依頼として記録** `[低]` `#docs`
-  - 内容：ホームページ側は別フォルダのため直接編集できない。ホームページ側でのセッション開始時に「アプリ作成原本の変更も確認してほしい」旨をメモとして残す
-  - 対象：この手順書（覚書として記録）
+  - 内容：ホームページ側セッションで「アプリ作成原本の変更も compare_origins.py で確認してほしい」旨を伝える
   - 完了条件：ホームページ側のセッションで対応依頼を伝える
-  - 見積：5分
-  - 備考：ホームページ側には `compare_origins.py` と同機能のスクリプトが既にあるか確認すること
 
 ---
 
 #### グループ5：全アプリへの反映・push
 
-- [ ] **【Z-1】原本をコミット・push（自動同期トリガー）** `[高]` `#git`
-  - 内容：グループ1〜4の変更を一括コミット・push。post-commit hookで全アプリへ自動同期される
-  - 対象：アプリ作成原本リポジトリ（`HayatoPractice/app-template`）
-  - 完了条件：push完了・sync_to_apps.pyの同期ログで全アプリへの配布を確認
-  - 見積：5分
-
-- [ ] **【Z-2】各アプリリポジトリへpush（6件）** `[高]` `#git`
-  - 内容：KYGNUS / SNS / mercari / 筋トレ / 英会話 / 貯金管理 の各リポジトリへpush。必ず`git remote get-url origin`でURLを確認してから実施
-  - 対象：6リポジトリ（それぞれの正しいリポジトリのみ）
-  - 完了条件：6件すべてpush完了
-  - 見積：10分
+- [x] **【Z-1】原本をコミット・push（自動同期トリガー）** `[高]` `#git` — 完了 2026-06-18（12アプリへ同期）
+- [x] **【Z-2】各アプリリポジトリへpush（6件）** `[高]` `#git` — 完了 2026-06-18（KYGNUS/SNS/mercari/筋トレ/英会話/貯金管理）
 
 ---
 
@@ -227,9 +151,9 @@
 ## 📅 日次サマリー
 
 ### 2026-06-18
-- 完了：0件
-- 残り：15件
-- 特記：ホームページ作成原本参照・採用候補の精査完了。実装開始待ち
+- 完了：14件（G-4のみ次回ホームページ側セッションで対応）
+- 残り：1件
+- 特記：sync_to_apps.py の mkdir バグ（parents=True 未指定）を発見・修正。筋トレ管理アプリの remote URL に PAT が含まれているため要セキュリティ対応
 
 ---
 
