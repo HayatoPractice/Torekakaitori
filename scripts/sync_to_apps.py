@@ -53,6 +53,8 @@ SKIP_DOCS = {
 SKIP_ROOT = {
     "MINUTES.md",
     "MINUTES_ARCHIVE.md",
+    "SESSION_LOG.md",       # 各プロジェクトの詳細作業ログ（追記専用・上書き禁止）
+    "SESSION_LOG_ARCHIVE.md",
 }
 
 # CLAUDE.md の「標準セクション」（これ以外のセクションがあれば固有セクションありと判定）
@@ -224,6 +226,13 @@ def sync_app(app_dir: Path, dry_run: bool) -> dict:
         src = ORIGIN / ".vscode" / vscode_fname
         if src.exists():
             copy_file(src, app_dir / ".vscode" / vscode_fname, f".vscode/{vscode_fname}")
+
+    # .claude/commands/ フォルダのスラッシュコマンドを同期（§26 コマンド優先化ルール）
+    # ホームページ作成フォルダは対象外（sync_to_apps.py は アプリ作成関連/ 以下のみスキャン）
+    commands_src = ORIGIN / ".claude" / "commands"
+    if commands_src.exists():
+        for src_cmd in sorted(commands_src.glob("*.md")):
+            copy_file(src_cmd, app_dir / ".claude" / "commands" / src_cmd.name, f".claude/commands/{src_cmd.name}")
 
     # CLAUDE.md: プロジェクト固有セクションがなければ同期
     claude_src = ORIGIN / "CLAUDE.md"

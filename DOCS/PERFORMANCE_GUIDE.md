@@ -18,7 +18,7 @@
 | **API応答時間** | 1,000ms以内 | 500ms以内 | 200ms以内 |
 | **初期バンドルサイズ** | 500KB以内 | 300KB以内 | 150KB以内 |
 
-> 目標値は `PROJECT_STATE.md` の `performance_target` フィールドに記録し、社長が上書き可能。
+> 目標値は `MINUTES.md` の `performance_target` フィールドに記録し、社長が上書き可能。
 > 未記載の場合はAランク（商用標準）を適用する。
 
 ---

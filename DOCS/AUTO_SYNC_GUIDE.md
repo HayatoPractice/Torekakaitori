@@ -51,8 +51,8 @@ GitHub にプッシュ（原本フォルダの変更）
 
 | 分類 | ファイル例 | 扱い |
 |---|---|---|
-| **共有ファイル（常に同期）** | APP_SHARED_RULES.md, OWNER_DEFAULTS.md, STARTUP_GUIDE.md, SERVICE_ORG_CORE.md, AGENTS.md など | 原本から全フォルダへ上書きコピー |
-| **プロジェクト固有（同期しない）** | PROJECT_STATE.md, CONTEXT_BRIDGE.md, REQUIREMENTS_LOG.md, LEARNING_LOG.md, SERVICE_ORG_PHASE.md | 各プロジェクトの独自データなので触らない |
+| **共有ファイル（常に同期）** | APP_SHARED_RULES.md, SERVICE_ORG_CORE.md, AGENTS.md など | 原本から全フォルダへ上書きコピー |
+| **プロジェクト固有（同期しない）** | MINUTES.md, REQUIREMENTS_LOG.md, SERVICE_ORG_PHASE.md | 各プロジェクトの独自データなので触らない |
 | **CLAUDE.md（条件付き同期）** | CLAUDE.md | プロジェクト固有セクション（`## `レベル）がなければ同期・あれば保護 |
 
 ### 新規フォルダの自動検出ロジック
@@ -129,9 +129,9 @@ EXCLUDE_DIRS = {"ホームページ作成原本"}  # ← 原本フォルダ名�
 
 # ── 変更箇所 3：同期しないファイル（ホームページ版の固有ファイルに合わせる）──
 SKIP_DOCS = {
-    "PROJECT_STATE.md",
-    "CONTEXT_BRIDGE.md",
-    "LEARNING_LOG.md",
+    "MINUTES.md",
+    "REQUIREMENTS_LOG.md",
+    "SERVICE_ORG_PHASE.md",
     # ← ホームページ版で固有データになるファイルを追加
 }
 
@@ -188,7 +188,7 @@ python3 /Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作�
 出力例：
 ```
 [2026-05-23 12:00:00] 【DRY-RUN】同期完了: 9アプリ
-  [DRY-RUN] 更新: MASTER_LESSONS.md, OWNER_DEFAULTS.md — SNS運用
+  [DRY-RUN] 更新: MASTER_LESSONS.md — SNS運用
   スキップ: CLAUDE.md — 英会話（固有セクションあり）
   ※ --dry-run モード: 実際のコピーは行っていません
 ```

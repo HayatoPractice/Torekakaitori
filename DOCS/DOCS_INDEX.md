@@ -21,16 +21,15 @@
 | ファイル名 | 読込タイミング | 内容サマリ |
 |---|---|---|
 | **DOCS_INDEX.md**（本ファイル） | 毎回・起動時必須 | 全ファイルの索引。タスク別の読込先を示す |
-| **PROJECT_STATE.md** | セッション開始時 | 現在のプロジェクト進捗・直近の課題・次のアクション |
-| **CONTEXT_BRIDGE.md** | セッション開始時 | 前回セッションの状態スナップショット・引き継ぎ事項 |
+| **MINUTES.md** | セッション開始時 | 現在のプロジェクト進捗・引き継ぎ・次のアクション |
 | **APP_SHARED_RULES.md** | 規約・ルール確認時 | 全アプリ共通の行動ルール・禁止事項（§A〜§D + §19 PDCA + §20 CLIコマンド優先 + §21 MINUTES.md議事録） |
-| **MINUTES.md**（各プロジェクトルート） | セッション開始時（最優先） | AIセッション引き継ぎ議事録。TL;DRで即座に現在地把握・CONTEXT_BRIDGE.mdの代替 |
+| **MINUTES.md**（各プロジェクトルート） | セッション開始時（最優先） | AIセッション引き継ぎ議事録。TL;DRで即座に現在地を把握する |
 
 ### 【ルール・標準】技術選定・設計基準のファイル
 
 | ファイル名 | 読込タイミング | 内容サマリ |
 |---|---|---|
-| **OWNER_DEFAULTS.md** | 技術選定・判断時 | スタック標準・Kill基準・収益化・AI/モデル選定基準 |
+| **MASTER_LESSONS.md** | 技術選定・判断時 | スタック標準・Kill基準・収益化・AI/モデル選定基準 |
 | **SERVICE_ORG_CORE.md** | 役割・フロー確認時 | チーム役割定義・開発フロー・ライブラリ採用手順 |
 | **SERVICE_ORG_PHASE.md** | フェーズ確認時 | 開発フェーズ定義・チーム構成・マイルストーン |
 | **CROSS_REFERENCE.md** | 設計・ライブラリ選定時 / 新プロジェクト開始時 | アプリ種別×UI×ツール×フェーズの横断早見表 |
@@ -50,6 +49,8 @@
 | ファイル名 | 読込タイミング | 内容サマリ |
 |---|---|---|
 | **GAS_DEVELOPMENT_GUIDE.md** | GASアプリ開発時（必須） | clasp開発・クォータ制限・バッチ処理・トリガー・HtmlService・テスト戦略 |
+| **APP_DESIGN_STANDARDS.md** | **UIコンポーネントを出力・実装する全ての場面（必須）** | AI生成感排除ルール・カラーパレット・フォント・禁止パターン・CWV品質基準 |
+| **LEGAL_AND_RELEASE.md** | **本番デプロイ・リリース可否判断時（必須）** | リリース前必須確認フロー・承認チェックリスト・デプロイルール・法的確認へのナビゲーター |
 | **LEGAL_COMPLIANCE.md** | リリース前・業種確認時 | 個人情報保護法・特商法・業種別禁止表現（医療・金融・不動産等） |
 | **GITHUB_ACTIONS_GUIDE.md** | CI/CD設計時 / セキュリティ設計時 | Lint・型チェック・テスト・セキュリティスキャン・バージョン確認のYAML実装例 |
 | **AI_TOOLS_REFERENCE.md** | AIモデル選定時 / 自動化設計時 | AIモデル比較（Claude/Gemini）・コスト・用途別選定フロー |
@@ -60,7 +61,7 @@
 | ファイル名 | 読込タイミング | 内容サマリ |
 |---|---|---|
 | **MASTER_LESSONS.md** | 実装前・バグ修正前 | 全プロジェクト横断の汎用教訓集（ミス防止・設計パターン・Git安全設計） |
-| **LEARNING_LOG.md** | 振り返り・記録時 | プロジェクト内の詳細な作業記録・出来事ログ |
+
 | **REQUIREMENTS_LOG.md** | 要件・バージョン確認時 | 機能要件・技術的負債・バージョンロック記録 |
 
 ### 【ツール・環境】CLI・外部ツール・セットアップのファイル
@@ -69,7 +70,7 @@
 |---|---|---|
 | **CLAUDE_CODE_GUIDE.md** | ツール操作・CLI使用時 | Claude Code/Gemini CLIコマンド・Antigravityコマンド・Git黄金パターン |
 | **TOOL_REFERENCE.md** | ツール・サービス選定時 | Google Workspace / GCP / AI / 画像生成 / 外部連携ツール全リファレンス |
-| **STARTUP_GUIDE.md** | 環境構築・初回セットアップ時 | 環境セットアップ手順・起動コマンド |
+| **README.md** | 環境構築・初回セットアップ時 | 環境セットアップ手順・起動コマンド |
 
 ---
 
@@ -77,29 +78,30 @@
 
 | やること | 必読ファイル | 任意参照 |
 |---|---|---|
-| **セッション開始・現状把握** | PROJECT_STATE.md, CONTEXT_BRIDGE.md | OWNER_DEFAULTS.md |
-| **新プロジェクト開始** | OWNER_DEFAULTS.md, SERVICE_ORG_CORE.md, CROSS_REFERENCE.md | SERVICE_ORG_PHASE.md |
-| **UI・フロントエンド実装** | UI_LIBRARY_GUIDE.md, CROSS_REFERENCE.md §2 | MASTER_LESSONS.md, scripts/library_config.json（UIイメージ→ライブラリ対応表） |
-| **バックエンド・API実装** | OWNER_DEFAULTS.md §DB | SERVICE_ORG_CORE.md |
+| **セッション開始・現状把握** | MINUTES.md | MASTER_LESSONS.md |
+| **新プロジェクト開始** | SERVICE_ORG_CORE.md, CROSS_REFERENCE.md | SERVICE_ORG_PHASE.md |
+| **UI・フロントエンド実装** | APP_DESIGN_STANDARDS.md（必須・フル読込）, UI_LIBRARY_GUIDE.md, CROSS_REFERENCE.md §2 | MASTER_LESSONS.md, scripts/library_config.json |
+| **バックエンド・API実装** | MASTER_LESSONS.md | SERVICE_ORG_CORE.md |
 | **バグ修正・デバッグ** | MASTER_LESSONS.md | REQUIREMENTS_LOG.md |
-| **AI / LLM 機能の追加** | OWNER_DEFAULTS.md §AI選定, TOOL_REFERENCE.md §G | AI_TOOLS_REFERENCE.md |
-| **モデル選定（Claude/Gemini等）** | AI_TOOLS_REFERENCE.md, OWNER_DEFAULTS.md §SECTION10, APP_SHARED_RULES.md §18 | TOOL_REFERENCE.md §G |
+| **AI / LLM 機能の追加** | MASTER_LESSONS.md, TOOL_REFERENCE.md §G | AI_TOOLS_REFERENCE.md |
+| **モデル選定（Claude/Gemini等）** | AI_TOOLS_REFERENCE.md §SECTION10, APP_SHARED_RULES.md §18 | TOOL_REFERENCE.md §G |
 | **プロンプト設計** | MASTER_LESSONS.md §PE | AI_TOOLS_REFERENCE.md |
-| **外部ツール・連携先を探す** | TOOL_REFERENCE.md | OWNER_DEFAULTS.md §スタック |
+| **外部ツール・連携先を探す** | TOOL_REFERENCE.md | MASTER_LESSONS.md |
 | **自動化・スケジュール設計** | TOOL_REFERENCE.md §O, CLAUDE_CODE_GUIDE.md, AI_TOOLS_REFERENCE.md §3 | — |
-| **インフラ・デプロイ選定** | OWNER_DEFAULTS.md §デプロイ, TOOL_REFERENCE.md §E | — |
-| **セキュリティ設計** | TOOL_REFERENCE.md §I, GITHUB_ACTIONS_GUIDE.md §5 | OWNER_DEFAULTS.md §法務 |
+| **インフラ・デプロイ選定** | MASTER_LESSONS.md, TOOL_REFERENCE.md §E | — |
+| **セキュリティ設計** | TOOL_REFERENCE.md §I, GITHUB_ACTIONS_GUIDE.md §5 | LEGAL_COMPLIANCE.md |
 | **CI/CD・自動化設計** | GITHUB_ACTIONS_GUIDE.md | SERVICE_ORG_CORE.md §CI/CD |
 | **画像・アセット生成** | TOOL_REFERENCE.md §L | — |
 | **Git操作・ブランチ戦略** | CLAUDE_CODE_GUIDE.md §Git | MASTER_LESSONS.md |
-| **Google Workspace 連携** | TOOL_REFERENCE.md §D | OWNER_DEFAULTS.md §スタック |
-| **教訓の確認・昇格** | MASTER_LESSONS.md | LEARNING_LOG.md |
-| **要件・スペック確認** | REQUIREMENTS_LOG.md | PROJECT_STATE.md |
+| **Google Workspace 連携** | TOOL_REFERENCE.md §D | MASTER_LESSONS.md |
+| **教訓の確認・昇格** | MASTER_LESSONS.md | |
+| **要件・スペック確認** | REQUIREMENTS_LOG.md | MINUTES.md |
 | **CLI操作・コマンド確認** | CLAUDE_CODE_GUIDE.md | — |
-| **GASアプリの開発** | GAS_DEVELOPMENT_GUIDE.md | OWNER_DEFAULTS.md §GAS |
+| **GASアプリの開発** | GAS_DEVELOPMENT_GUIDE.md | GAS_DEVELOPMENT_GUIDE.md |
 | **コード品質チェック** | CODE_ANTI_PATTERNS.md | MASTER_LESSONS.md |
 | **UX品質の確認** | APP_UX_STANDARDS.md | — |
 | **パフォーマンス最適化** | PERFORMANCE_GUIDE.md | — |
+| **リリース前の全体確認（本番デプロイ前）** | **LEGAL_AND_RELEASE.md（必須・フル読込）** | LEGAL_COMPLIANCE.md, APP_DESIGN_STANDARDS.md |
 | **リリース前の法的確認** | LEGAL_COMPLIANCE.md | SERVICE_ORG_CORE.md §法務 |
 
 ---
@@ -121,7 +123,7 @@ Step 4｜類似事例があれば「⚠️ 類似インシデント検出：[INC
 | 読込パターン | 目安トークン | 用途 |
 |---|---|---|
 | INDEX のみ（起動時最小） | ~500 | 作業判断・ファイル特定 |
-| INDEX + PROJECT_STATE + CONTEXT_BRIDGE | ~2,500 | 通常のセッション開始 |
+| INDEX + PROJECT_STATE  | ~2,500 | 通常のセッション開始 |
 | INDEX + タスク関連2〜3ファイル | ~4,000〜6,000 | 実装・設計作業 |
 | 全ファイル一括（旧方式・非推奨） | ~30,000+ | 不要・使わない |
 

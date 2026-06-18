@@ -61,10 +61,10 @@
 
 | フェーズ | 主な目的 | 参照すべきファイル | 完了条件 |
 |---|---|---|---|
-| **設計** | 要件定義・技術選定・アーキテクチャ決定 | OWNER_DEFAULTS.md, CROSS_REFERENCE.md | 実装計画書が承認された |
+| **設計** | 要件定義・技術選定・アーキテクチャ決定 | CROSS_REFERENCE.md | 実装計画書が承認された |
 | **実装** | コーディング・ライブラリ統合 | MASTER_LESSONS.md, UI_LIBRARY_GUIDE.md | ビルドが通り機能が動作する |
 | **検証** | バグ修正・テスト・セキュリティ確認 | SERVICE_ORG_CORE.md, MASTER_LESSONS.md | テストが全件パス |
-| **デモ・リリース** | ユーザー確認・本番デプロイ | OWNER_DEFAULTS.md §デプロイ | 社長がOKを出した |
+| **デモ・リリース** | ユーザー確認・本番デプロイ | MASTER_LESSONS.md | 社長がOKを出した |
 
 ---
 
@@ -84,12 +84,12 @@
 
 | モデル / ツール | ベンチスコア目安 | 最適用途 | コスト感 | 詳細参照 |
 |---|---|---|---|---|
-| **Claude Opus 4.8** | 最高精度 | 複雑な設計・多段階推論・コード生成 | 高 | OWNER_DEFAULTS.md §10 |
-| **Claude Sonnet 4.6** | 高精度・高速 | 日常的なコーディング・レビュー | 中 | OWNER_DEFAULTS.md §10 |
-| **Gemini 3.5 Flash Thinking** | 78.0% | 推論・数学・ロジック問題 | 低〜中 | OWNER_DEFAULTS.md §10 |
-| **Gemini 3.5 Flash（標準）** | 45% | 軽量タスク・高速レスポンス重視 | 低 | OWNER_DEFAULTS.md §10 |
-| **Claude Design** | — | テキスト→UI生成（デザイン用途） | 中 | OWNER_DEFAULTS.md §10 |
-| **Google Pics** | — | 画像検索・ビジュアルリファレンス | 無料 | OWNER_DEFAULTS.md §10 |
+| **Claude Opus 4.8** | 最高精度 | 複雑な設計・多段階推論・コード生成 | 高 | MASTER_LESSONS.md |
+| **Claude Sonnet 4.6** | 高精度・高速 | 日常的なコーディング・レビュー | 中 | MASTER_LESSONS.md |
+| **Gemini 3.5 Flash Thinking** | 78.0% | 推論・数学・ロジック問題 | 低〜中 | MASTER_LESSONS.md |
+| **Gemini 3.5 Flash（標準）** | 45% | 軽量タスク・高速レスポンス重視 | 低 | MASTER_LESSONS.md |
+| **Claude Design** | — | テキスト→UI生成（デザイン用途） | 中 | MASTER_LESSONS.md |
+| **Google Pics** | — | 画像検索・ビジュアルリファレンス | 無料 | MASTER_LESSONS.md |
 
 ---
 
@@ -141,10 +141,10 @@
 
 | フェーズ | 必読ファイル | 確認すべきカテゴリ | よく使うツール |
 |---|---|---|---|
-| **設計** | OWNER_DEFAULTS.md, CROSS_REFERENCE.md | カテゴリA（種別）, B（UI）, C（ツール） | Claude Opus（設計レビュー） |
+| **設計** | CROSS_REFERENCE.md | カテゴリA（種別）, B（UI）, C（ツール） | Claude Opus（設計レビュー） |
 | **実装** | MASTER_LESSONS.md, UI_LIBRARY_GUIDE.md | カテゴリB（UI）, E（自動化） | Claude Sonnet（コーディング） |
 | **検証** | SERVICE_ORG_CORE.md, MASTER_LESSONS.md | カテゴリC（セキュリティ §I） | Sentry, OWASP ZAP |
-| **デモ・リリース** | OWNER_DEFAULTS.md §デプロイ | カテゴリC（GCP §E）, F（AIモデル） | Cloud Run, Firebase Hosting |
+| **デモ・リリース** | MASTER_LESSONS.md | カテゴリC（GCP §E）, F（AIモデル） | Cloud Run, Firebase Hosting |
 
 ---
 

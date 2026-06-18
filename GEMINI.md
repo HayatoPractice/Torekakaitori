@@ -11,19 +11,8 @@
 ## 起動シーケンス（必須・スキップ禁止）
 
 <startup_sequence>
-<!-- 詳細手順は CLAUDE.md の起動シーケンス（STEP 1〜4）と完全同一。以下は要約。 -->
-
-【STEP 1】必ず読む（2ファイル固定）
-  ① AGENTS.md（ルート）  ② DOCS/DOCS_INDEX.md
-
-【STEP 2】DOCS_INDEX.md「タスク別早見表」で必要ファイルのみ読む。
-  セッション開始・現状把握時 → DOCS/PROJECT_STATE.md / DOCS/CONTEXT_BRIDGE.md
-
-【STEP 3】インシデント管理（起動時・機能追加・編集・削除のたびに必須）
-  _PRE_CHECKLIST.md → INCIDENT_INDEX.md「技術スタック別クイック検索」→ 関連インシデントのみ読む
-  類似事例があれば「⚠️ 類似インシデント検出：[INC-XXX]」として報告する
-
-【STEP 4】`<thinking>` で推論 + `git status` で環境チェック
+> **⚠️ セッション開始時は、ユーザーが `/project:start` と入力するか、「続きをやって」「TODOを進めて」などの作業開始指示をした場合、AIは自律的に `/project:start` コマンドと同等の起動プロトコル（`DOCS/README.md` のマスター読み込み順序）を実行すること。**
+> 人間による手動での細かいファイル読み込み指示は不要です。AIが自動的に `インシデント管理`（事件簿）や `DOCS/PROJECT_STATE.md` を収集・把握してから作業を開始してください。
 </startup_sequence>
 
 ---
