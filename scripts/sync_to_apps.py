@@ -184,7 +184,7 @@ def sync_app(app_dir: Path, dry_run: bool) -> dict:
     def copy_file(src: Path, dst: Path, label: str):
         if is_changed(src, dst):
             if not dry_run:
-                dst.parent.mkdir(exist_ok=True)
+                dst.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(src, dst)
             result["updated"].append(label)
         else:
