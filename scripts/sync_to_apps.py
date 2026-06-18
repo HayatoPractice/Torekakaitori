@@ -70,6 +70,10 @@ STANDARD_CLAUDE_SECTIONS = {
     "セッション終了プロトコル",
 }
 
+# .md ファイルのアプリ固有ゾーン保護マーカー
+# このマーカー以降に書いた内容は同期時に上書きされない（§24参照）
+APP_SPECIFIC_MARKER = "<!-- APP_SPECIFIC_START -->"
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ロジック
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -124,6 +128,45 @@ def is_changed(src: Path, dst: Path) -> bool:
     return not filecmp.cmp(str(src), str(dst), shallow=False)
 
 
+def smart_copy_md(src: Path, dst: Path, label: str, result: dict, dry_run: bool):
+    """APP_SPECIFIC_MARKER 以降のアプリ固有コンテンツを保護しながら .md ファイルをコピーする。
+
+    動作：
+    - src（原本）にマーカーがある場合：
+        - dst にマーカーあり → src のマーカー前 + マーカー + dst のマーカー後（アプリ固有部）を結合
+        - dst にマーカーなし → src の全内容をコピー（初回）
+    - src にマーカーがない場合 → 通常コピー（後方互換）
+    """
+    src_content = src.read_text(encoding="utf-8")
+
+    if not dst.exists():
+        if not dry_run:
+            dst.parent.mkdir(exist_ok=True)
+            dst.write_text(src_content, encoding="utf-8")
+        result["updated"].append(label)
+        return
+
+    dst_content = dst.read_text(encoding="utf-8")
+
+    if APP_SPECIFIC_MARKER in src_content:
+        src_shared, _, _ = src_content.partition(APP_SPECIFIC_MARKER)
+        if APP_SPECIFIC_MARKER in dst_content:
+            _, _, dst_app_specific = dst_content.partition(APP_SPECIFIC_MARKER)
+            merged = src_shared + APP_SPECIFIC_MARKER + dst_app_specific
+        else:
+            merged = src_content  # dst にまだマーカーなし → 全体をコピー（マーカーを初期配布）
+    else:
+        merged = src_content  # src にマーカーなし → 通常コピー
+
+    if merged == dst_content:
+        result["unchanged"].append(label)
+        return
+
+    if not dry_run:
+        dst.write_text(merged, encoding="utf-8")
+    result["updated"].append(label)
+
+
 def sync_app(app_dir: Path, dry_run: bool) -> dict:
     """1つのアプリフォルダに対して同期を実行する。"""
     result = {
@@ -146,11 +189,12 @@ def sync_app(app_dir: Path, dry_run: bool) -> dict:
             result["unchanged"].append(label)
 
     # DOCSフォルダ内の共有ファイルを同期
+    # .md ファイルは APP_SPECIFIC_MARKER 以降のアプリ固有コンテンツを保護する（§24参照）
     docs_src = ORIGIN / "DOCS"
     for src_file in sorted(docs_src.glob("*.md")):
         if src_file.name in SKIP_DOCS:
             continue
-        copy_file(src_file, docs_dst / src_file.name, src_file.name)
+        smart_copy_md(src_file, docs_dst / src_file.name, src_file.name, result, dry_run)
 
     # ルートの共有ファイルを同期
     for fname in ["AGENTS.md", "GEMINI.md", ".antigravityignore", ".geminiignore", ".aiexclude"]:
