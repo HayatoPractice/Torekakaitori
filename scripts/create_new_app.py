@@ -37,8 +37,10 @@ APPS_DIR = ORIGIN.parent  # アプリ作成/ 直下に新アプリを作成
 # 本番原本から新アプリへコピーするもの（ホワイトリスト方式）
 TEMPLATE_ITEMS = {
     ".aiexclude", ".antigravityignore", ".geminiignore",
-    "AGENTS.md", "CLAUDE.md", "GEMINI.md", "DOCS", "scripts",
+    "AGENTS.md", "CLAUDE.md", "GEMINI.md", "DOCS",
 }
+# scripts/ の中でコピーするもの（本番原本専用スクリプトは除外）
+APP_SCRIPTS = {"skeletonizer.py", "check_code.sh", "find_impact.py"}
 # コピー時に除外するもの
 COPY_EXCLUDE = {".git", ".DS_Store", "__pycache__", "node_modules"}
 
@@ -119,6 +121,7 @@ MINUTES_TEMPLATE = """\
 
 - create_new_app.py でプロジェクトを新規作成した
 - 規模 [{scale}]、テンプレート [{tech}] で初期化した
+- テンプレート元：アプリ作成原本 @ {origin_commit}
 
 ---
 
@@ -210,6 +213,13 @@ def copy_template(src: Path, dst: Path):
             shutil.copytree(item, target, ignore=shutil.ignore_patterns(*COPY_EXCLUDE))
         else:
             shutil.copy2(item, target)
+    # scripts/ は個別ファイル指定でコピー（本番原本専用スクリプトを除外）
+    scripts_dst = dst / "scripts"
+    scripts_dst.mkdir(exist_ok=True)
+    for name in APP_SCRIPTS:
+        src_file = src / "scripts" / name
+        if src_file.exists():
+            shutil.copy2(src_file, scripts_dst / name)
     print_ok("テンプレートのコピー完了")
 
 def apply_project_scale(app_dir: Path, scale: str):
@@ -231,7 +241,17 @@ def apply_project_scale(app_dir: Path, scale: str):
                 t.unlink()
                 print_skip(f"Lite設定のため削除: {rel}")
 
-def reset_project_files(app_dir: Path, app_name: str, date_str: str, scale: str, tech: str):
+def get_origin_commit() -> str:
+    """本番原本の現在のコミットハッシュ（短縮形）を取得する。"""
+    try:
+        return subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=ORIGIN, capture_output=True, text=True, check=True
+        ).stdout.strip()
+    except Exception:
+        return "unknown"
+
+def reset_project_files(app_dir: Path, app_name: str, date_str: str, scale: str, tech: str, origin_commit: str):
     """プロジェクト固有の管理ファイルを初期状態にリセットする。"""
     templates = {
         "DOCS/REQUIREMENTS_LOG.md": REQUIREMENTS_LOG_TEMPLATE,
@@ -240,7 +260,10 @@ def reset_project_files(app_dir: Path, app_name: str, date_str: str, scale: str,
     for rel_path, template in templates.items():
         target = app_dir / rel_path
         if target.exists():
-            content = template.format(app_name=app_name, date=date_str, scale=scale, tech=tech)
+            content = template.format(
+                app_name=app_name, date=date_str,
+                scale=scale, tech=tech, origin_commit=origin_commit,
+            )
             target.write_text(content, encoding="utf-8")
             print_ok(f"初期化: {rel_path}")
 
@@ -331,6 +354,7 @@ def main():
 
     print("")
     date_str = datetime.now().strftime("%Y-%m-%d")
+    origin_commit = get_origin_commit()
 
     print_step(1, "テンプレートをコピー中...")
     app_dir.mkdir(parents=True)
@@ -342,7 +366,7 @@ def main():
 
     print("")
     print_step(3, "プロジェクト固有ファイルを初期化中...")
-    reset_project_files(app_dir, app_name, date_str, scale, tech)
+    reset_project_files(app_dir, app_name, date_str, scale, tech, origin_commit)
 
     print("")
     print_step(4, "技術スタックの初期コードを生成中...")
