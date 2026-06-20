@@ -74,9 +74,9 @@
 |---|---|---|---|---|
 | **スケジュール実行** | 定期バッチ処理 | GAS / Cloud Scheduler / n8n | 夜間集計・リマインダー | TOOL_REFERENCE.md §O |
 | **イベントドリブン** | 特定アクションを起点に処理 | Cloud Functions / Zapier | フォーム送信後メール送信など | TOOL_REFERENCE.md §O |
-| **パイプライン分解** | タスクを独立ステップに分割 | GAS / Python / Node.js | 複雑な多段階処理 | BIO_PIPELINE_INSIGHTS.md §1 |
-| **外部知識注入** | 最新ドキュメントをLLMに動的投入 | MCP / web_fetch | AI機能・RAG構築 | BIO_PIPELINE_INSIGHTS.md §2 |
-| **構造化出力** | JSON/XMLでパイプライン間データ受渡し | TypeScript型定義 | API連携・データ変換 | BIO_PIPELINE_INSIGHTS.md §5 |
+| **パイプライン分解** | タスクを独立ステップに分割 | GAS / Python / Node.js | 複雑な多段階処理 | MASTER_LESSONS.md PE-006 |
+| **外部知識注入** | 最新ドキュメントをLLMに動的投入 | MCP / web_fetch | AI機能・RAG構築 | MASTER_LESSONS.md PE-006 |
+| **構造化出力** | JSON/XMLでパイプライン間データ受渡し | TypeScript型定義 | API連携・データ変換 | MASTER_LESSONS.md PE-006 |
 
 ---
 

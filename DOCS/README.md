@@ -28,20 +28,7 @@ v2.1        2026-05-31    フォルダ構成図・権限表を現状に合わせ
 - `/project:end`   : セッション終了・ログ保存
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-▌起動時の読込方式：2層構造（トークン最小化）
-
-```
-【旧方式（廃止）】全DOCSファイルを起動時に順番読込 → 約30,000トークン消費
-【新方式（現行）】2層構造でピンポイント読込 → 約1/10以下のトークン消費
-
-第1層（起動時・必ず読む・2ファイル固定）
-  ① AGENTS.md（ルート）     ← AI行動規範・トークン削減規範
-  ② DOCS/DOCS_INDEX.md     ← 全ファイルの索引・タスク別読込先
-
-第2層（作業内容に応じてピンポイントで読む）
-  DOCS_INDEX.md の「タスク別：読むべきファイル早見表」で判断して必要なものだけ読む
-  セッション開始・現状把握時は MINUTES.md も読む
-```
+※ 起動時の読込方式・タスク別読込先は `DOCS/DOCS_INDEX.md` を参照すること（一元管理）。
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ▌セッション開始時のモード（冒頭で必ず確認する）
@@ -90,9 +77,6 @@ DOCS/TOOL_REFERENCE.md          外部ツール全リファレンス（GCP/Works
 【第2層-C：特定作業時のみ読む（オンデマンド）】
 DOCS/REQUIREMENTS_LOG.md          機能要件・技術的負債・バージョンロック記録
 
-DOCS/PROMPT_ENGINEERING_MASTER.md （未作成・将来追加予定。現時点は MASTER_REFERENCE.md を参照）
-DOCS/MASTER_REFERENCE.md          AI活用・アーキテクチャ統合リファレンス
-DOCS/BIO_PIPELINE_INSIGHTS.md     パイプライン構築・複雑な自動化フローの知見
 DOCS/APP_SHARED_RULES.md          全アプリ共通行動ルール・禁止事項
 DOCS/APP_STRUCTURE_REFERENCE.md   アプリ構造パターン・ディレクトリ設計規則
 DOCS/AUTO_SYNC_GUIDE.md           自動同期・外部サービス連携設計ガイド
@@ -116,10 +100,8 @@ APP_SHARED_RULES.md           🔄 随時更新層    秘書が更新（原本�
 TOOL_REFERENCE.md             🔄 随時更新層    秘書が追記                  ツール情報変更時
 CLAUDE_CODE_GUIDE.md          🔄 随時更新層    秘書が追記                  ツール追加時
 UI_LIBRARY_GUIDE.md           🔄 随時更新層    秘書が更新（原本側で変更）   ライブラリ情報変更時
-MASTER_REFERENCE.md           🔄 随時更新層    秘書が追記                  参照情報変更時
 APP_STRUCTURE_REFERENCE.md    🔄 随時更新層    秘書が更新                  構造パターン変更時
 AUTO_SYNC_GUIDE.md            🔄 随時更新層    秘書が更新                  同期設計変更時
-BIO_PIPELINE_INSIGHTS.md      🔄 随時更新層    秘書が追記                  知見蓄積時
 
 変更マークの定義
 🔄 随時更新可    → 自律的に変更できる
@@ -150,17 +132,13 @@ PROJECT_ROOT/
  │    ├── SERVICE_ORG_PHASE.md     ← 開発フェーズ・チーム構成
  │    ├── REQUIREMENTS_LOG.md      ← 要件記録・技術的負債・バージョンロック
 
- │    ├── MASTER_LESSONS.md        ← 全プロジェクト横断の汎用教訓集
- │    ├── MASTER_LESSONS.md        ← 技術スタック・Kill基準・AI選定（原本からコピー）
- │    ├── MASTER_REFERENCE.md      ← AI活用・アーキテクチャ統合リファレンス
+ │    ├── MASTER_LESSONS.md        ← 全プロジェクト横断の汎用教訓集・技術スタック・Kill基準・AI選定
  │    ├── CLAUDE_CODE_GUIDE.md     ← ★CLIコマンド・Git戦略・Antigravityガイド
  │    ├── TOOL_REFERENCE.md        ← ★外部ツール全リファレンス辞書
  │    ├── UI_LIBRARY_GUIDE.md      ← UIライブラリ共存・目的別選定ガイド（原本からコピー）
  │    ├── APP_SHARED_RULES.md      ← AI共通行動指針（原本からコピー）
  │    ├── APP_STRUCTURE_REFERENCE.md ← アプリ構造パターン・設計規則
- │    ├── AUTO_SYNC_GUIDE.md       ← 自動同期・連携設計ガイド
- │    │    （PROMPT_ENGINEERING_MASTER.md は未作成）
- │    └── BIO_PIPELINE_INSIGHTS.md ← パイプライン構築知見
+ │    └── AUTO_SYNC_GUIDE.md       ← 自動同期・連携設計ガイド
  ├── 📁 BDR/                       ← 意思決定記録（Phase別）
  ├── 📁 src/                       ← コードファイル
  ├── 📁 demo/                      ← デモファイル・デモ結果
@@ -179,14 +157,11 @@ PROJECT_ROOT/
 □ README.md            → そのまま使う
 □ DOCS_INDEX.md        → ★そのまま使う（新規ファイルを追加したら更新）
 □ SERVICE_ORG_CORE.md  → そのまま使う
-□ MASTER_LESSONS.md    → 蓄積した教訓ごと持っていく（リセット不要）
-□ MASTER_REFERENCE.md  → そのまま使う
-□ MASTER_LESSONS.md    → 原本から最新版をコピー
+□ MASTER_LESSONS.md    → 蓄積した教訓ごと持っていく（リセット不要・原本から最新版をコピー）
 □ APP_SHARED_RULES.md  → 原本から最新版をコピー
 □ UI_LIBRARY_GUIDE.md  → 原本から最新版をコピー
 □ CLAUDE_CODE_GUIDE.md → ★原本から最新版をコピー
 □ TOOL_REFERENCE.md    → ★原本から最新版をコピー
-□ PROMPT_ENGINEERING_MASTER.md → 未作成（将来追加予定。現時点は MASTER_REFERENCE.md を参照）
 
 【リセットして新規作成する】
 □ MINUTES.md     → 全項目リセット・新プロジェクト情報を記入
