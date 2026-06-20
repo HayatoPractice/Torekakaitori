@@ -6,7 +6,12 @@
 .Trashes
 
 # AIエージェントの内部設定（リポジトリに含めない）
-.claude/
+# ※ディレクトリ全体ではなくワイルドカードで除外（例外指定を有効にするため）
+.claude/*
+# settings.json と commands/ はバージョン管理対象（全アプリへ同期するため）
+!.claude/settings.json
+!.claude/commands
+!.claude/commands/**
 
 # 環境変数・秘密鍵
 .env

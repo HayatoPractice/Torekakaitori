@@ -1,0 +1,95 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/sasakihayato -maxdepth 4 -name \"インシデント管理\" -type d 2>/dev/null)",
+      "Read(//Users/sasakihayato/**)",
+      "Bash(python3 /Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本/scripts/sync_to_apps.py)",
+      "Bash(launchctl list *)",
+      "Read(//private/tmp/**)",
+      "Bash(python3 \"/Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本/scripts/sync_to_apps.py\" --dry-run)",
+      "Bash(python3 scripts/sync_to_apps.py --dry-run)",
+      "Bash(python3 scripts/sync_to_apps.py)",
+      "Bash(bash scripts/install_hooks.sh)",
+      "Bash(git -C '/Users/sasakihayato/アプリ作成関連/アプリ作成/KYGNUS Reservation management app' remote get-url origin)",
+      "Bash(git -C '/Users/sasakihayato/アプリ作成関連/アプリ作成/KYGNUS Reservation management app' add TODO/TODO_KYGNUS予約管理.md)",
+      "Bash(git -C '/Users/sasakihayato/アプリ作成関連/アプリ作成/KYGNUS Reservation management app' commit -m ' *)",
+      "Bash(git -C '/Users/sasakihayato/アプリ作成関連/アプリ作成/KYGNUS Reservation management app' push origin HEAD)",
+      "Bash(git -C /Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本 add CLAUDE.md DOCS/APP_SHARED_RULES.md)",
+      "Bash(git -C /Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本 commit -m ' *)",
+      "Bash(git -C /Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本 push origin HEAD)",
+      "Bash(git -C /Users/sasakihayato/アプリ作成関連/アプリ作成/筋トレ管理アプリ status)",
+      "Bash(git -C /Users/sasakihayato/アプリ作成関連/アプリ作成/筋トレ管理アプリ remote -v)",
+      "Bash(git -C /Users/sasakihayato/アプリ作成関連/アプリ作成/筋トレ管理アプリ fetch origin)",
+      "Bash(git -C /Users/sasakihayato/アプリ作成関連/アプリ作成/筋トレ管理アプリ log --oneline -5)",
+      "Bash(git -C /Users/sasakihayato/アプリ作成関連/アプリ作成/筋トレ管理アプリ gc --prune=now)",
+      "Bash(rm -v '/Users/sasakihayato/アプリ作成関連/アプリ作成/筋トレ管理アプリ/.git/refs/heads/main 2')",
+      "Bash(git -C /Users/sasakihayato/アプリ作成関連/アプリ作成/筋トレ管理アプリ pull)",
+      "Bash(git -C /Users/sasakihayato/アプリ作成関連/アプリ作成/筋トレ管理アプリ diff DOCS/APP_SHARED_RULES.md)",
+      "Bash(git commit -m ' *)",
+      "Bash(grep -n \"^---$\" /Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本/DOCS/APP_SHARED_RULES.md)",
+      "Bash(mkdir -p \"/Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本/.claude/commands\")",
+      "Bash(python3 scripts/compare_origins.py --days 7)",
+      "Bash(git -C /Users/sasakihayato/アプリ作成関連/アプリ作成/筋トレ管理アプリ add -A)",
+      "Bash(git -C /Users/sasakihayato/アプリ作成関連/アプリ作成/筋トレ管理アプリ commit -m 'feat: §26-§30・SESSION_LOG・compare_origins.py・コマンド更新を原本から同期 *)",
+      "Bash(git -C \"/Users/sasakihayato/アプリ作成関連/アプリ作成/筋トレ管理アプリ\" push)"
+    ],
+    "additionalDirectories": [
+      "/Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本/.claude/commands"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/scripts/hooks/session_start.py\"'"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/scripts/hooks/debug_check.py\"'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/scripts/hooks/handoff_reminder.py\"'"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/scripts/hooks/read_guard.py\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"\ntry:\n    with open('/Users/sasakihayato/アプリ作成関連/アプリ作成/インシデント管理/INCIDENT_INDEX.md', encoding='utf-8') as f:\n        txt = f.read()\n    start = txt.find('## 技術スタック別クイック検索')\n    end = txt.find('\\n---', start + 1)\n    section = txt[start:end].strip() if start != -1 else '(INCIDENT_INDEX.md が見つかりません)'\n    print('\\n╔══ [INCIDENTS Before Gate] 修正着手前チェック ══╗')\n    print(section)\n    print('╚══ After Gate: 完了後に新問題があれば INCIDENTS に記録 ══╝\\n')\nexcept Exception as e:\n    print(f'INCIDENTS CHECK ERROR: {e}')\n\""
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -210,6 +210,12 @@ def sync_app(app_dir: Path, dry_run: bool) -> dict:
     for src_py in sorted(scripts_src.glob("*.py")):
         copy_file(src_py, app_dir / "scripts" / src_py.name, f"scripts/{src_py.name}")
 
+    # scripts/hooks/ フォルダの .py ファイルを同期（フック機構を全アプリへ配布）
+    hooks_src = scripts_src / "hooks"
+    if hooks_src.exists():
+        for src_py in sorted(hooks_src.glob("*.py")):
+            copy_file(src_py, app_dir / "scripts" / "hooks" / src_py.name, f"scripts/hooks/{src_py.name}")
+
     # library_config.json を同期（ライブラリ選定ガイド・UIイメージキーワード対応表）
     lib_config_src = scripts_src / "library_config.json"
     if lib_config_src.exists():
@@ -233,6 +239,11 @@ def sync_app(app_dir: Path, dry_run: bool) -> dict:
     if commands_src.exists():
         for src_cmd in sorted(commands_src.glob("*.md")):
             copy_file(src_cmd, app_dir / ".claude" / "commands" / src_cmd.name, f".claude/commands/{src_cmd.name}")
+
+    # .claude/settings.json を同期（ポータブルなフック設定・全アプリに配布）
+    settings_src = ORIGIN / ".claude" / "settings.json"
+    if settings_src.exists():
+        copy_file(settings_src, app_dir / ".claude" / "settings.json", ".claude/settings.json")
 
     # CLAUDE.md: プロジェクト固有セクションがなければ同期
     claude_src = ORIGIN / "CLAUDE.md"

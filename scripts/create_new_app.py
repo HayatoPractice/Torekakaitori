@@ -37,7 +37,7 @@ APPS_DIR = ORIGIN.parent  # アプリ作成/ 直下に新アプリを作成
 # 本番原本から新アプリへコピーするもの（ホワイトリスト方式）
 TEMPLATE_ITEMS = {
     ".aiexclude", ".antigravityignore", ".geminiignore",
-    "AGENTS.md", "CLAUDE.md", "GEMINI.md", "DOCS",
+    "AGENTS.md", "CLAUDE.md", "GEMINI.md", "DOCS", ".claude",
 }
 # scripts/ の中でコピーするもの（本番原本専用スクリプトは除外）
 APP_SCRIPTS = {"skeletonizer.py", "check_code.sh", "find_impact.py"}
