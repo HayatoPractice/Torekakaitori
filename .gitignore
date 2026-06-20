@@ -33,5 +33,3 @@ __pycache__/
 # TypeScript増分ビルドキャッシュ
 *.tsbuildinfo
 
-# app-template は独立したgitリポジトリ（サブモジュールではない）
-app-template/

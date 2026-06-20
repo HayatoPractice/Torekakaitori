@@ -32,11 +32,15 @@ from pathlib import Path
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ORIGIN = Path(__file__).parent.parent  # アプリ作成原本/
-TEMPLATE_DIR = ORIGIN / "app-template"
 APPS_DIR = ORIGIN.parent  # アプリ作成/ 直下に新アプリを作成
 
-# テンプレートから除外するもの（コピーしない）
-EXCLUDE_FROM_TEMPLATE = {".git", ".DS_Store", "__pycache__", "node_modules"}
+# 本番原本から新アプリへコピーするもの（ホワイトリスト方式）
+TEMPLATE_ITEMS = {
+    ".aiexclude", ".antigravityignore", ".geminiignore",
+    "AGENTS.md", "CLAUDE.md", "GEMINI.md", "DOCS", "scripts",
+}
+# コピー時に除外するもの
+COPY_EXCLUDE = {".git", ".DS_Store", "__pycache__", "node_modules"}
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 初期化テンプレート
@@ -197,13 +201,13 @@ def confirm_destination(app_dir: Path) -> bool:
     return answer == 'y'
 
 def copy_template(src: Path, dst: Path):
-    """テンプレートを新しいフォルダへコピーする。"""
+    """本番原本から必要なファイル・フォルダのみ新アプリへコピーする。"""
     for item in src.iterdir():
-        if item.name in EXCLUDE_FROM_TEMPLATE:
+        if item.name not in TEMPLATE_ITEMS:
             continue
         target = dst / item.name
         if item.is_dir():
-            shutil.copytree(item, target, ignore=shutil.ignore_patterns(*EXCLUDE_FROM_TEMPLATE))
+            shutil.copytree(item, target, ignore=shutil.ignore_patterns(*COPY_EXCLUDE))
         else:
             shutil.copy2(item, target)
     print_ok("テンプレートのコピー完了")
@@ -308,8 +312,8 @@ def print_next_steps(app_dir: Path, app_name: str):
 def main():
     print_header()
 
-    if not TEMPLATE_DIR.exists():
-        print_err(f"テンプレートフォルダが見つかりません: {TEMPLATE_DIR}")
+    if not ORIGIN.exists():
+        print_err(f"アプリ作成原本フォルダが見つかりません: {ORIGIN}")
         sys.exit(1)
 
     app_name = get_app_name()
@@ -330,7 +334,7 @@ def main():
 
     print_step(1, "テンプレートをコピー中...")
     app_dir.mkdir(parents=True)
-    copy_template(TEMPLATE_DIR, app_dir)
+    copy_template(ORIGIN, app_dir)
 
     print("")
     print_step(2, "プロジェクト規模の適用...")
