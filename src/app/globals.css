@@ -1,0 +1,151 @@
+@import "tailwindcss";
+
+/* VintVerify Design System & Global Styles */
+
+@layer base {
+  :root {
+    /* Color Palette (Harmonious Vintage Theme) */
+    --bg-main: #0e0d0c; /* 漆黒に近いウォームグレー */
+    --bg-card: rgba(28, 25, 23, 0.75); /* 深いブラウン寄りのダークグレー */
+    --bg-card-hover: rgba(38, 34, 31, 0.9);
+    --border-color: rgba(212, 175, 55, 0.15); /* 微細なゴールド枠線 */
+    --border-color-active: rgba(212, 175, 55, 0.4);
+
+    --text-primary: #f5f2eb; /* 温かみのあるオフホワイト */
+    --text-secondary: #a39c93; /* 色あせたヴィンテージペーパー調のグレー */
+    --text-muted: #6e675f;
+
+    --accent-gold: #d4af37; /* ヴィンテージゴールド */
+    --accent-gold-rgb: 212, 175, 55;
+    --accent-gold-hover: #f3cf65;
+    
+    /* Signal Colors (BUY / SKIP / HOLD) */
+    --color-buy: #10b981; /* 鮮やかすぎないエメラルドグリーン */
+    --color-buy-bg: rgba(16, 185, 129, 0.1);
+    --color-skip: #ef4444; /* 深いクリムゾンレッド */
+    --color-skip-bg: rgba(239, 68, 68, 0.1);
+    --color-hold: #f59e0b; /* アンバーオレンジ */
+    --color-hold-bg: rgba(245, 158, 11, 0.1);
+
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-gold: 0 0 20px rgba(212, 175, 55, 0.15);
+
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-display: 'Outfit', sans-serif;
+  }
+
+  /* Base Reset */
+  * {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    height: 100%;
+    width: 100%;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    position: relative;
+  }
+
+  /* Typography */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  /* Glassmorphism utility */
+  .glass-panel {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px) saturate(120%);
+    -webkit-backdrop-filter: blur(16px) saturate(120%);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glass-panel:hover {
+    border-color: var(--border-color-active);
+    background: var(--bg-card-hover);
+  }
+
+  /* Micro-Animations & Interactivity */
+  .interactive-btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .interactive-btn:active {
+    transform: scale(0.96);
+    opacity: 0.9;
+  }
+
+  .gold-gradient-bg {
+    background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%);
+  }
+
+  .gold-gradient-text {
+    background: linear-gradient(135deg, #f3cf65 0%, #d4af37 50%, #aa820a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Custom Navigation Padding helper */
+  .safe-bottom-nav {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 16px));
+  }
+
+  .animate-spin-slow {
+    animation: spin-slow 3s linear infinite;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+/* Custom Scrollbar (kept as standard global rules) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-gold);
+}
+
+/* Spin animation for Vintage style loader */
+@keyframes spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
