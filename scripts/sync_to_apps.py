@@ -221,11 +221,18 @@ def sync_app(app_dir: Path, dry_run: bool) -> dict:
     if lib_config_src.exists():
         copy_file(lib_config_src, app_dir / "scripts" / "library_config.json", "scripts/library_config.json")
 
-    # tsconfig.json を同期（tsconfig.app.json → 各アプリの tsconfig.json として上書き）
-    # ⚠️ アプリ側に独自の tsconfig.json がある場合も上書きされる
+    # tsconfig.json を同期：⚠️ 既存ファイルは上書きしない（初回配布のみ）。
+    # 理由：Next.js等のアプリは baseUrl / paths(@/*) / next プラグイン等の固有設定が必須であり、
+    #       共通テンプレート(tsconfig.app.json)で上書きすると @/ インポートが全て解決不能になり
+    #       ビルド不可になる（2026-06-21 古着ブランド・年代鑑定ツールで実害発生）。
+    #       既存の tsconfig.json は各アプリの正本として尊重し、存在しない場合のみ雛形を配布する。
     tsconfig_src = ORIGIN / "tsconfig.app.json"
-    if tsconfig_src.exists():
-        copy_file(tsconfig_src, app_dir / "tsconfig.json", "tsconfig.json")
+    tsconfig_dst = app_dir / "tsconfig.json"
+    if tsconfig_src.exists() and not tsconfig_dst.exists():
+        if not dry_run:
+            tsconfig_dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(tsconfig_src, tsconfig_dst)
+        result["updated"].append("tsconfig.json (初回配布)")
 
     # .vscode/ の共有設定ファイルを同期（IDE自動型チェック・タスク設定）
     for vscode_fname in ["tasks.json", "settings.json"]:
