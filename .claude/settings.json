@@ -31,7 +31,10 @@
       "Bash(python3 scripts/compare_origins.py --days 7)",
       "Bash(git -C /Users/sasakihayato/アプリ作成関連/アプリ作成/筋トレ管理アプリ add -A)",
       "Bash(git -C /Users/sasakihayato/アプリ作成関連/アプリ作成/筋トレ管理アプリ commit -m 'feat: §26-§30・SESSION_LOG・compare_origins.py・コマンド更新を原本から同期 *)",
-      "Bash(git -C \"/Users/sasakihayato/アプリ作成関連/アプリ作成/筋トレ管理アプリ\" push)"
+      "Bash(git -C \"/Users/sasakihayato/アプリ作成関連/アプリ作成/筋トレ管理アプリ\" push)",
+      "Bash(python3 scripts/build_essence_index.py)",
+      "Bash(python3 -m py_compile scripts/hooks/debug_check.py)",
+      "Bash(claude doctor *)"
     ],
     "additionalDirectories": [
       "/Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本/.claude/commands"
