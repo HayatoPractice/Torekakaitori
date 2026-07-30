@@ -10,7 +10,7 @@
 | 現在地 | Phase 1 & Phase 2｜開発完了＋品質改善TODO対応済（残TODO #5/#7 を本セッションで実装） |
 | 前回完了 | コミット 24418bb で高/中優先TODOの大半（Server Component化・crypto.randomUUID・error instanceof Error・5MB制限・履歴削除）を実装済 |
 | 本セッション完了 | #5 画像リサイズ/圧縮（src/utils/imageResize.ts 追加・両アップロード画面に組込）、#4 残存catch(err:any)修正、#7 価格集計をPostgres関数 get_price_stats へRPC化＋mockClientにrpc対応追加。`npm run build`（型チェック含む）パス |
-| 次のタスク | Supabaseクラウドへ schema.sql 適用（get_price_stats 関数を含む）、.env.local 設定、Vercel本番デプロイ。残：#9 実売価格の蓄積戦略（戦略課題） |
+| 次のタスク | Supabaseクラウドへ schema.sql 適用（get_price_stats 関数を含む）、.env.local 設定、Vercel本番デプロイ。残：#9 実売価格の蓄積戦略（戦略課題）。／原本ルール整理の続き：別セッションで `/doctor` を実行し、手作業クリーンアップで見落とした重複がないか確認 |
 | 注意事項 | mockClient.ts は環境変数未設定時のフォールバックとして現役使用中（削除禁止）。/api/price-trend は既に存在しない。estimated_price は diagnoses ではなく price_log.price に記録済。本番では schema.sql の get_price_stats 関数の適用を忘れないこと。 |
 
 ---
