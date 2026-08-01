@@ -34,7 +34,11 @@
       "Bash(git -C \"/Users/sasakihayato/アプリ作成関連/アプリ作成/筋トレ管理アプリ\" push)",
       "Bash(python3 scripts/build_essence_index.py)",
       "Bash(python3 -m py_compile scripts/hooks/debug_check.py)",
-      "Bash(claude doctor *)"
+      "Bash(claude doctor *)",
+      "Bash(git commit -m 'fix: MINUTES.md 次タスクの再上書きを復旧（次: 行なしでコミット） *)",
+      "Bash(git -C \"投資管理アプリ\" status --short CLAUDE.md)",
+      "Bash(grep -v \"^d.*\\\\.git$\")",
+      "Bash(git -C \"/Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本\" rev-parse HEAD)"
     ],
     "additionalDirectories": [
       "/Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本/.claude/commands"
