@@ -101,6 +101,12 @@ def check_backup_drift(dirs, do_fetch):
 
 def check_origin_contamination():
     print("── ③ 原本フォルダの混入チェック ──────────────")
+    # このスクリプト自体は子アプリにも配布されるため、本物の原本でのみ判定する
+    # （create_new_app.py は原本にしか存在しない・sync_to_apps.py の配布対象外）
+    if not (ORIGIN / "scripts" / "create_new_app.py").exists():
+        print("  ⏭️  ここは原本フォルダではないためスキップ")
+        print()
+        return
     found = [name for name in FORBIDDEN_IN_ORIGIN if (ORIGIN / name).exists()]
     if found:
         print(f"  ⚠️ 原本直下にアプリ固有ファイルが見つかりました: {', '.join(found)}")
