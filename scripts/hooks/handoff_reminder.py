@@ -21,6 +21,10 @@ handoff_reminder.py — Stop フック（作業完了時の「続き」記録リ
   - ブロック時の reason には「本当に記録すべきインシデントか判断してから、該当すれば記録する。
     軽微な修正なら記録不要と一言添えて続行してよい」という判断の余地を必ず含める
     （キーワード一致だけの粗い判定なので、些末な修正まで強制記録させないため）。
+  - 記録先はインシデント管理フォルダ（横断共有・他アプリにも役立つ内容）と
+    そのアプリの DOCS/LEARNING_LOG.md（このアプリだけに閉じる内容）の2択があるため、
+    reason には両方の選択肢と判断基準（「他アプリを作っている人が読んでも役立つか」）を提示する。
+    どちらかが直近1時間以内に更新されていれば「記録済み」とみなして黙る。
   - フォルダ自動判定：
       プロジェクトフォルダ（TODO/手順書.md あり）→ 手順書.md を促す
       原本フォルダ等（手順書なし）             → MINUTES.md を促す
@@ -96,24 +100,35 @@ def check_incident_reminder(root):
         return None
 
     try:
-        recently_recorded = any(
+        recently_recorded_shared = any(
             f.stat().st_mtime > commit_epoch - RECENT_INCIDENT_WINDOW_SEC
             for f in INCIDENT_DIR.glob("2*.md")
         )
     except Exception:
         return None
 
-    if recently_recorded:
-        return None  # 既に記録済みとみなす
+    learning_log = root / "DOCS" / "LEARNING_LOG.md"
+    recently_recorded_local = (
+        learning_log.exists()
+        and learning_log.stat().st_mtime > commit_epoch - RECENT_INCIDENT_WINDOW_SEC
+    )
+
+    if recently_recorded_shared or recently_recorded_local:
+        return None  # どちらかに既に記録済みとみなす
 
     message = (
         f"直近のコミット「{commit_msg}」はバグ修正・事故対応系に見えますが、"
-        "インシデント管理フォルダ（/Users/sasakihayato/アプリ作成関連/アプリ作成/インシデント管理/）"
-        "への記録が見当たりません。\n"
-        "まず「これは今後も繰り返しうる学びか（＝記録する価値があるか）」を判断してください。\n"
-        "・記録すべきと判断した場合：`_TEMPLATE.md` を使って新規ファイルを作成し、"
-        "`INCIDENT_INDEX.md`（一覧・タグ表・カテゴリ統計）と `_PRE_CHECKLIST.md` も更新してから完了報告する。\n"
-        "・軽微な修正で記録不要と判断した場合：その理由を一言添えて、記録せずに完了報告してよい。"
+        "記録が見当たりません。まず記録先を判断してください：\n"
+        "・「これは全く別のアプリを作っている人が読んでも役に立つか？」を自問する。\n"
+        "  Yes（技術的なパターン・ライブラリの仕様変更等）→ "
+        "インシデント管理フォルダ（/Users/sasakihayato/アプリ作成関連/アプリ作成/インシデント管理/）に"
+        "`_TEMPLATE.md`を使って記録し、`INCIDENT_INDEX.md`（一覧・タグ表・カテゴリ統計）と"
+        "`_PRE_CHECKLIST.md`も更新する。\n"
+        "  No（このアプリのビジネスロジック・UI設計判断・データモデル固有の話）→ "
+        "`DOCS/LEARNING_LOG.md`（このアプリ内、無ければ作成）に記録する。\n"
+        "  判断がつかない → まず`DOCS/LEARNING_LOG.md`に書いておき、"
+        "後で汎用性に気づいたらMASTER_LESSONS.mdへ昇格させればよい（最初から両方に書く必要はない）。\n"
+        "・軽微な修正でどちらにも記録不要と判断した場合：その理由を一言添えて、記録せずに完了報告してよい。"
     )
     return message, commit_hash
 
