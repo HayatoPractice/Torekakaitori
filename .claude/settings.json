@@ -38,10 +38,16 @@
       "Bash(git commit -m 'fix: MINUTES.md 次タスクの再上書きを復旧（次: 行なしでコミット） *)",
       "Bash(git -C \"投資管理アプリ\" status --short CLAUDE.md)",
       "Bash(grep -v \"^d.*\\\\.git$\")",
-      "Bash(git -C \"/Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本\" rev-parse HEAD)"
+      "Bash(git -C \"/Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本\" rev-parse HEAD)",
+      "Bash(python3 -m py_compile scripts/check_ecosystem_health.py scripts/hooks/session_start.py)",
+      "Bash(python3 scripts/check_ecosystem_health.py)",
+      "Bash(python3 scripts/hooks/session_start.py)",
+      "Bash(python3 -m py_compile scripts/check_ecosystem_health.py)",
+      "Bash(rm -rf scripts/__pycache__)"
     ],
     "additionalDirectories": [
-      "/Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本/.claude/commands"
+      "/Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本/.claude/commands",
+      "/Users/sasakihayato/.origin_watch"
     ]
   },
   "hooks": {
@@ -93,7 +99,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 -c \"\ntry:\n    with open('/Users/sasakihayato/アプリ作成関連/アプリ作成/インシデント管理/INCIDENT_INDEX.md', encoding='utf-8') as f:\n        txt = f.read()\n    start = txt.find('## 技術スタック別クイック検索')\n    end = txt.find('\\n---', start + 1)\n    section = txt[start:end].strip() if start != -1 else '(INCIDENT_INDEX.md が見つかりません)'\n    print('\\n╔══ [INCIDENTS Before Gate] 修正着手前チェック ══╗')\n    print(section)\n    print('╚══ After Gate: 完了後に新問題があれば INCIDENTS に記録 ══╝\\n')\nexcept Exception as e:\n    print(f'INCIDENTS CHECK ERROR: {e}')\n\""
+            "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/scripts/hooks/incident_relevance.py\"'"
           }
         ]
       }

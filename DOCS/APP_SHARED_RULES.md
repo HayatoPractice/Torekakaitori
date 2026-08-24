@@ -1684,7 +1684,7 @@ python3 scripts/compare_origins.py
 | 作業 | Claude Code | Gemini CLI / Antigravity |
 |:---|:---|:---|
 | 前回の続きの表示 | `session_start.py`（SessionStart フック）が自動表示 | 起動時に `MINUTES.md` の TL;DR を自分で読む（GEMINI.md 起動手順に明記） |
-| インシデント教訓の参照 | Edit/Write 前に `INCIDENT_INDEX.md`「技術スタック別クイック検索」を自動注入（PreToolUse フック） | 修正着手前に `_PRE_CHECKLIST.md`・`INCIDENT_INDEX.md` を自分で読む（CLAUDE.md STEP3と同じ手順を実施） |
+| インシデント教訓の参照 | Edit/Write 前に `incident_relevance.py`（PreToolUse フック）が編集内容と関連するインシデントだけを自動提示（2026-08-24〜。無関係なら何も出さない） | 修正着手前に `_PRE_CHECKLIST.md`・`INCIDENT_INDEX.md` を自分で読む（CLAUDE.md STEP3と同じ手順を実施） |
 | バグ調査時のプロジェクト固有確認 | プロンプト送信時に `debug_check.py`（UserPromptSubmit フック）が自動提示 | §25-2 の内容を自分で確認する |
 | 重量級ファイルの全文読み抑止 | `read_guard.py`（PreToolUse:Read フック）が自動警告 | 自分で `DOCS_INDEX.md` → 索引 → 該当部分のみ読む徹底が必要 |
 | セッション終了時の未記録検知 | `handoff_reminder.py`（Stop フック）が自動で促す | 「終わります」等の発言を自分で検知し、CLAUDE.md セッション終了プロトコルを自分で開始する |
