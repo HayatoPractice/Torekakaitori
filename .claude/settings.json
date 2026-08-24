@@ -57,7 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/scripts/hooks/session_start.py\"'"
+            "command": "bash -c 'r=\"$(git rev-parse --show-toplevel 2>/dev/null)\"; if [ -n \"$r\" ] && [ -f \"$r/scripts/hooks/session_start.py\" ]; then python3 \"$r/scripts/hooks/session_start.py\"; fi; exit 0'"
           }
         ]
       }
@@ -68,7 +68,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/scripts/hooks/debug_check.py\"'"
+            "command": "bash -c 'r=\"$(git rev-parse --show-toplevel 2>/dev/null)\"; if [ -n \"$r\" ] && [ -f \"$r/scripts/hooks/debug_check.py\" ]; then python3 \"$r/scripts/hooks/debug_check.py\"; fi; exit 0'"
           }
         ]
       }
@@ -79,7 +79,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/scripts/hooks/handoff_reminder.py\"'"
+            "command": "bash -c 'r=\"$(git rev-parse --show-toplevel 2>/dev/null)\"; if [ -n \"$r\" ] && [ -f \"$r/scripts/hooks/handoff_reminder.py\" ]; then python3 \"$r/scripts/hooks/handoff_reminder.py\"; fi; exit 0'"
           }
         ]
       }
@@ -90,7 +90,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/scripts/hooks/read_guard.py\"'"
+            "command": "bash -c 'r=\"$(git rev-parse --show-toplevel 2>/dev/null)\"; if [ -n \"$r\" ] && [ -f \"$r/scripts/hooks/read_guard.py\" ]; then python3 \"$r/scripts/hooks/read_guard.py\"; fi; exit 0'"
           }
         ]
       },
@@ -99,7 +99,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'python3 \"$(git rev-parse --show-toplevel)/scripts/hooks/incident_relevance.py\"'"
+            "command": "bash -c 'r=\"$(git rev-parse --show-toplevel 2>/dev/null)\"; if [ -n \"$r\" ] && [ -f \"$r/scripts/hooks/incident_relevance.py\" ]; then python3 \"$r/scripts/hooks/incident_relevance.py\"; fi; exit 0'"
           }
         ]
       }
