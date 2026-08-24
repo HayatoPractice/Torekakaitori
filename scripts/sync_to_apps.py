@@ -216,6 +216,14 @@ def sync_app(app_dir: Path, dry_run: bool) -> dict:
         for src_py in sorted(hooks_src.glob("*.py")):
             copy_file(src_py, app_dir / "scripts" / "hooks" / src_py.name, f"scripts/hooks/{src_py.name}")
 
+    # guard.template.mjs を同期（インシデント再発の自動検査の雛形／INC-055）
+    # ⚠️ guard.mjs としては配らない。アプリごとにソースの置き場所（src / app / frontend/src）が違い、
+    #    場所がずれたまま置くと「1件も検査せず全項目合格」という最も危険な状態になるため。
+    #    各アプリで scripts/guard.mjs へコピーし、SRC を合わせてから使うこと。
+    guard_src = scripts_src / "guard.template.mjs"
+    if guard_src.exists():
+        copy_file(guard_src, app_dir / "scripts" / "guard.template.mjs", "scripts/guard.template.mjs")
+
     # library_config.json を同期（ライブラリ選定ガイド・UIイメージキーワード対応表）
     lib_config_src = scripts_src / "library_config.json"
     if lib_config_src.exists():
