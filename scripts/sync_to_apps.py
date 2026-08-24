@@ -225,6 +225,13 @@ def sync_app(app_dir: Path, dry_run: bool) -> dict:
     if guard_src.exists():
         copy_file(guard_src, app_dir / "scripts" / "guard.template.mjs", "scripts/guard.template.mjs")
 
+    # guard-selftest.template.sh を同期（検査自体が働くかを確かめる雛形／INC-058）
+    # ⚠️ guard-selftest.sh としては配らない。壊し方はアプリのソースコードに具体的に依存するため。
+    #    各アプリで scripts/guard-selftest.sh へコピーし、check 呼び出しを実際のコードに合わせてから使うこと。
+    selftest_src = scripts_src / "guard-selftest.template.sh"
+    if selftest_src.exists():
+        copy_file(selftest_src, app_dir / "scripts" / "guard-selftest.template.sh", "scripts/guard-selftest.template.sh")
+
     # library_config.json を同期（ライブラリ選定ガイド・UIイメージキーワード対応表）
     lib_config_src = scripts_src / "library_config.json"
     if lib_config_src.exists():

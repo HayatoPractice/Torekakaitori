@@ -15,6 +15,12 @@
  * 【足し方】
  * 新しいインシデントを記録したら「これは機械で検査できるか」を必ず考え、
  * できるなら CHECKS に1件足す。できないなら _PRE_CHECKLIST.md に書く。
+ *
+ * 【重要：検査を足したら、必ず「わざと壊して」確かめること（INC-058）】
+ * 書いただけの検査は働いていないことがある（実績：12件中3件が偽陰性だった）。
+ * 「名前が文字列として存在するか」ではなく「実際に使われているか」を見ること。
+ * 対応する scripts/guard-selftest.template.sh に、壊し方を1行必ず足す（後回し禁止）。
+ * 検査が0件を返したら「本当に問題無し」か「対象を1件も見ていない」かを区別すること。
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -122,7 +128,11 @@ const CHECKS = [
     run() {
       return FILES
         .filter((f) => /onKeyDown|onKeyPress/.test(f.text) && /['"]Enter['"]/.test(f.text))
-        .filter((f) => !/isImeComposing|nativeEvent\.isComposing/.test(f.text))
+        /*
+         * 【INC-058で見逃した】import が残っているだけでは意味がない。
+         * 「呼んでいるか」＝ かっこ付きで使われているかを見る（名前があるだけで合格させない）。
+         */
+        .filter((f) => !/isImeComposing\s*\(|\.isComposing\b/.test(f.text))
         .map((f) => ({ file: f.rel, msg: 'isImeComposing(e) を入れること' }));
     },
   },
@@ -152,9 +162,11 @@ const CHECKS = [
     title: 'サーバー側で、その場の日付を使っていないか',
     why: '日本時間0〜9時に日付が1日ずれる。深夜に使うと学習記録が前日に入る',
     run() {
+      // API ルートだけでなく lib も見る（サーバー側で動く日付処理はどちらにもあるため）
       return FILES
-        .filter((f) => /app\/api\/.*route\.ts$/.test(f.rel))
-        .filter((f) => /new Date\(\)\.toISOString\(\)\.(slice|substring)\(0,\s*10\)/.test(f.text))
+        .filter((f) => /app\/api\/.*route\.ts$/.test(f.rel) || /lib\/.*\.ts$/.test(f.rel))
+        .filter((f) => !/\.test\.ts$/.test(f.rel))
+        .filter((f) => /\.toISOString\(\)\.(slice|substring)\(0,\s*10\)/.test(f.text))
         .map((f) => ({ file: f.rel, msg: 'toDayKeyInZone() を使うこと' }));
     },
   },
@@ -187,7 +199,14 @@ const CHECKS = [
     },
     run() {
       const schema = read('src/lib/schema.ts');
-      const backup = read('src/app/api/backup/route.ts') + read('src/lib/backup.ts') + read('src/app/api/export/route.ts');
+      /*
+       * 【INC-058で見逃した】控えの中身を決めるのは backup.ts だけ。
+       * 書き出し（export）にしか出ていない表は、控えには入らない。
+       * 以前は複数ファイルをまとめて見ていたため、控えから表が抜けても
+       * 別ファイル（書き出し等）に名前が残っていれば合格していた。
+       * 対象は「実際に控えを作るファイル1つだけ」に絞ること。
+       */
+      const backup = read('src/lib/backup.ts');
       const tables = [...schema.matchAll(/CREATE TABLE IF NOT EXISTS\s+(\w+)/g)].map((m) => m[1]);
       return tables
         .filter((t) => !backup.includes(t) && !(t in this.excluded))
