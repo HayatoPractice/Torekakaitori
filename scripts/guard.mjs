@@ -23,6 +23,7 @@
  * 検査が0件を返したら「本当に問題無し」か「対象を1件も見ていない」かを区別すること。
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -198,6 +199,36 @@ const CHECKS = [
   //     return FILES.filter(...).map((f) => ({ file: f.rel, msg: 'こう直すこと' }));
   //   },
   // },
+  // ────────────────────────────────────────────────────────────────
+
+  {
+    /*
+     * 【INC-069】このフォルダは「アプリ作成原本」をcreate_new_app.pyを使わず直接複製して
+     * 作られたため、.gitごとコピーされ origin が複製元（共有テンプレート配布用リポジトリ）を
+     * 指したまま残っていた。気づかずリモート省略でpushすると、このアプリのコードが
+     * 共有テンプレート側へ誤って送られる恐れがある。
+     */
+    id: 'INC-069',
+    title: 'gitのoriginが共有テンプレート配布用リポジトリを指したままになっていないか',
+    why: 'リモート省略でpushすると、このアプリのコードが共有テンプレート側へ誤って送られる',
+    run() {
+      const REAL_TEMPLATE_PATH = '/Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本';
+      if (ROOT.replace(/\/$/, '') === REAL_TEMPLATE_PATH) return []; // 本物の原本では当然originはこれでよい
+
+      let remotes = '';
+      try {
+        remotes = execSync('git remote -v', { cwd: ROOT, encoding: 'utf8' });
+      } catch {
+        return []; // gitが使えない環境では判定不能（何もFILESが無い時と同じ扱い）
+      }
+      const originLine = remotes.split('\n').find((l) => l.startsWith('origin\t') && l.includes('(push)'));
+      if (!originLine) return [];
+      if (/app-template\d*\.git/.test(originLine)) {
+        return [{ file: '(git remote)', msg: `origin(push)が共有テンプレート配布用を指しています: ${originLine.trim()}。デプロイ用の別リモートを追加し、そちらへpushすること` }];
+      }
+      return [];
+    },
+  },
   // ────────────────────────────────────────────────────────────────
 ];
 
