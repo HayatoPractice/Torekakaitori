@@ -163,6 +163,15 @@ const CHECKS = [
         .map((f) => ({ file: f.rel, msg: "export const dynamic = 'force-dynamic' を追加すること" }));
     },
   },
+  /*
+   * 【INC-070を検査化せず断念】Neonドライバがdate型カラムをJSのDateとして返し、
+   * JSON化するとタイムゾーンでずれた日時文字列になる問題（実データのE2E確認で発見・修正済み）。
+   * 「posted_dateという文字列が::textキャスト無しで現れないか」を素朴な行単位の正規表現で
+   * 試したが、TypeScriptの型宣言・INSERT列名・JS変数名など無関係な行まで誤検知し、
+   * わざと壊して確かめる前の時点で既に偽陽性だらけだった（INC-058の教訓通り）。
+   * SQL文脈だけを正しく判定するには簡易な正規表現では不十分なため、検査化を見送り、
+   * インシデント記録と POST_COLUMNS（src/lib/ingest.ts）による一元化に留める。
+   */
   {
     id: 'INC-033',
     title: 'サーバー側で、その場の日付を使っていないか',
