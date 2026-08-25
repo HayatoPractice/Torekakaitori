@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   const sql = getSql();
   const rows = await sql`
     SELECT
-      p.posted_date, a.display_name AS account_name, ei.product_name_raw,
+      p.posted_date::text AS posted_date, a.display_name AS account_name, ei.product_name_raw,
       pr.canonical_name, ei.item_type, ei.price_type, ei.price, ei.confidence,
       ei.review_status, p.source_url
     FROM extracted_items ei

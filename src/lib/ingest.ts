@@ -7,6 +7,13 @@ import type { ExtractedItem, Post } from "@/types/domain";
 /** これ以上の確信度なら自動確定、未満なら要確認（pending_review）にする */
 const CONFIDENCE_AUTO_CONFIRM_THRESHOLD = 0.75;
 
+/**
+ * postsのdate型カラムはNeonドライバがJSのDateとして返し、JSON化すると
+ * タイムゾーンの影響でズレたISO日時文字列になる（例: 2026-08-26 → "2026-08-25T15:00:00.000Z"）。
+ * SELECT/RETURNINGでは必ずこのリストを使い、posted_dateをtextにキャストしてから受け取ること。
+ */
+const POST_COLUMNS = `id, account_id, posted_date::text as posted_date, source_url, raw_text, content_hash, status, error_message, created_at`;
+
 export interface IngestInput {
   accountId: string;
   postedDate: string; // YYYY-MM-DD
@@ -32,7 +39,7 @@ export async function ingestPost(input: IngestInput): Promise<IngestResult> {
 
   // URLが無いテキスト/画像投稿は、内容の完全一致で重複を検知する
   if (!sourceUrl) {
-    const existing = await sql`SELECT * FROM posts WHERE content_hash = ${contentHash} LIMIT 1`;
+    const existing = await sql`SELECT ${sql.unsafe(POST_COLUMNS)} FROM posts WHERE content_hash = ${contentHash} LIMIT 1`;
     if (existing.length > 0) {
       return { post: existing[0] as unknown as Post, items: [], duplicateOf: existing[0].id as string };
     }
@@ -43,12 +50,12 @@ export async function ingestPost(input: IngestInput): Promise<IngestResult> {
     const inserted = await sql`
       INSERT INTO posts (account_id, posted_date, source_url, raw_text, content_hash, status)
       VALUES (${input.accountId}, ${input.postedDate}, ${sourceUrl}, ${rawText}, ${contentHash}, 'pending')
-      RETURNING *
+      RETURNING ${sql.unsafe(POST_COLUMNS)}
     `;
     post = inserted[0] as unknown as Post;
   } catch (err) {
     if (isPgError(err, PG_UNIQUE_VIOLATION)) {
-      const existing = await sql`SELECT * FROM posts WHERE source_url = ${sourceUrl} LIMIT 1`;
+      const existing = await sql`SELECT ${sql.unsafe(POST_COLUMNS)} FROM posts WHERE source_url = ${sourceUrl} LIMIT 1`;
       return { post: existing[0] as unknown as Post, items: [], duplicateOf: existing[0]?.id as string };
     }
     throw new Error(`投稿の登録に失敗しました: ${err instanceof Error ? err.message : "unknown error"}`);

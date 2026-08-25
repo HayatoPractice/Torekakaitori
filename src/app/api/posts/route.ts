@@ -50,7 +50,8 @@ export async function GET(req: NextRequest) {
   const sql = getSql();
   const posts = await sql`
     SELECT
-      p.*,
+      p.id, p.account_id, p.posted_date::text AS posted_date, p.source_url, p.raw_text,
+      p.content_hash, p.status, p.error_message, p.created_at,
       json_build_object('handle', a.handle, 'display_name', a.display_name) AS accounts,
       COALESCE(
         (SELECT json_agg(json_build_object('id', pi.id, 'post_id', pi.post_id, 'mime_type', pi.mime_type, 'created_at', pi.created_at))

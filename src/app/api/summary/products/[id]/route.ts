@@ -18,7 +18,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
   const rows = await sql`
     SELECT ei.id, ei.price, ei.price_type, ei.created_at, a.handle AS account_handle, a.display_name AS account_display_name,
-           p.posted_date
+           p.posted_date::text AS posted_date
     FROM extracted_items ei
     JOIN posts p ON p.id = ei.post_id
     JOIN accounts a ON a.id = ei.account_id

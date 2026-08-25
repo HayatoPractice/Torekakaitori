@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     SELECT
       ei.*,
       json_build_object('handle', a.handle, 'display_name', a.display_name) AS accounts,
-      json_build_object('posted_date', p.posted_date, 'source_url', p.source_url) AS posts,
+      json_build_object('posted_date', p.posted_date::text, 'source_url', p.source_url) AS posts,
       CASE WHEN pr.id IS NULL THEN NULL ELSE json_build_object('canonical_name', pr.canonical_name) END AS products
     FROM extracted_items ei
     JOIN posts p ON p.id = ei.post_id
