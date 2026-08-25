@@ -28,11 +28,21 @@ check_ecosystem_health.py — アプリ作成関連フォルダ全体の定期�
 import re
 import subprocess
 import sys
+import unicodedata
 from pathlib import Path
+
+
+def nfc(s):
+    """macOS(APFS)はパスをNFD正規化して返すため、比較前に必ずNFCへ揃える。"""
+    return unicodedata.normalize("NFC", str(s))
 
 ORIGIN = Path(__file__).resolve().parent.parent
 APPS_DIR = ORIGIN.parent
 EXCLUDE_DIRS = {".git", "node_modules", "__pycache__", ".DS_Store"}
+
+# 本物の原本の絶対パス（③の判定専用）。scripts/create_new_app.py の有無で判定すると、
+# 原本フォルダを丸ごと複製したコピーも「原本」と誤判定してしまうため、パス一致で判定する。
+ORIGIN_CANONICAL_PATH = Path("/Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本")
 
 FORBIDDEN_IN_ORIGIN = [
     "src", "supabase", "public", "package.json", "package-lock.json",
@@ -101,9 +111,14 @@ def check_backup_drift(dirs, do_fetch):
 
 def check_origin_contamination():
     print("── ③ 原本フォルダの混入チェック ──────────────")
-    # このスクリプト自体は子アプリにも配布されるため、本物の原本でのみ判定する
-    # （create_new_app.py は原本にしか存在しない・sync_to_apps.py の配布対象外）
-    if not (ORIGIN / "scripts" / "create_new_app.py").exists():
+    # このスクリプト自体は子アプリにも配布されるため、本物の原本でのみ判定する。
+    # 絶対パスの一致で判定する（ファイルの有無だと、原本を丸ごと複製したフォルダも
+    # 誤って「原本」と判定してしまうため。2026-08-25）
+    try:
+        is_canonical_origin = nfc(ORIGIN.resolve()) == nfc(ORIGIN_CANONICAL_PATH.resolve())
+    except Exception:
+        is_canonical_origin = False
+    if not is_canonical_origin:
         print("  ⏭️  ここは原本フォルダではないためスキップ")
         print()
         return

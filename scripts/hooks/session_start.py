@@ -8,7 +8,11 @@ session_start.py — SessionStart フック（セッション開始時の「続�
   3. compare_origins.py の結果（スクリプトがある場合のみ・要約）
   4. 原本フォルダの場合のみ：アプリ固有ファイル混入チェック
      （2026-08-01 の事故で VintVerify の実コードが原本直下に混入していたことを受けて追加。
-     scripts/create_new_app.py が存在する＝ここは原本、という判定で発火する）
+     判定は「絶対パスが本物の原本と一致するか」で行う（下記ORIGIN_CANONICAL_PATH）。
+     2026-08-25：以前は scripts/create_new_app.py の有無で判定していたが、原本フォルダを
+     Finder等でまるごと複製して新規アプリの土台にすると、複製先にもこのファイルが
+     ついてきてしまい「ここは原本だから実装してはいけない」と誤判定する事故があったため、
+     ファイルの有無ではなく絶対パスの一致に変更した）
   5. 月が変わって最初のセッションでは、check_ecosystem_health.py --fetch を自動実行
      （未コミット放置・バックアップクローンのHEADドリフトをユーザーが手動で確認し忘れないよう、
      状態ファイル ~/.origin_watch/last_ecosystem_check.txt で「今月まだ実行していないか」を判定して発火）
@@ -20,10 +24,17 @@ session_start.py — SessionStart フック（セッション開始時の「続�
 import sys
 import json
 import subprocess
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 
 ECOSYSTEM_CHECK_STATE = Path("/Users/sasakihayato/.origin_watch/last_ecosystem_check.txt")
+ORIGIN_CANONICAL_PATH = Path("/Users/sasakihayato/アプリ作成関連/アプリ作成/アプリ作成原本")
+
+
+def nfc(s):
+    """macOS(APFS)はパスをNFD正規化して返すため、比較前に必ずNFCへ揃える。"""
+    return unicodedata.normalize("NFC", str(s))
 
 
 def run(cmd, timeout=20):
@@ -93,7 +104,13 @@ def main():
             lines.append("【HP原本との差分（要約）】\n" + "\n".join(head) + note)
 
     # 4) 原本フォルダの場合のみ：アプリ固有ファイル混入チェック
-    if (root / "scripts" / "create_new_app.py").exists():
+    #    絶対パスの一致で判定する（ファイルの有無だと、原本を丸ごと複製したフォルダも
+    #    誤って「原本」と判定してしまうため。2026-08-25）
+    try:
+        is_canonical_origin = nfc(root.resolve()) == nfc(ORIGIN_CANONICAL_PATH.resolve())
+    except Exception:
+        is_canonical_origin = False
+    if is_canonical_origin:
         forbidden = [
             "src", "supabase", "public", "package.json", "package-lock.json",
             "next.config.ts", "tsconfig.json", "eslint.config.mjs", "postcss.config.mjs",
