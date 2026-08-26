@@ -1,21 +1,25 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getCredentials, verifyPassword } from "@/lib/auth";
+
+// Proxyは常にNode.jsランタイムで動く（Route segment configのruntime指定は不可・エラーになる）
 
 /**
  * Vercel Hobbyプランでは本番ドメイン自体をVercel Authenticationで保護できないため、
- * アプリ側でBasic認証をかけて非公開にする（BASIC_AUTH_PASSWORD未設定時は何もしない）。
+ * アプリ側でBasic認証をかけて非公開にする。認証情報はDB優先・未設定時は環境変数
+ * （BASIC_AUTH_USER/BASIC_AUTH_PASSWORD）にフォールバックする。どちらも無ければ無防備。
  */
-export function proxy(request: NextRequest): NextResponse {
-  const password = process.env.BASIC_AUTH_PASSWORD;
-  if (!password) return NextResponse.next();
+export async function proxy(request: NextRequest): Promise<NextResponse> {
+  const creds = await getCredentials();
+  if (!creds) return NextResponse.next();
 
-  const user = process.env.BASIC_AUTH_USER || "torecasouba";
   const authHeader = request.headers.get("authorization");
-
   if (authHeader?.startsWith("Basic ")) {
     const decoded = atob(authHeader.slice("Basic ".length));
-    const [inputUser, inputPassword] = decoded.split(":");
-    if (inputUser === user && inputPassword === password) {
+    const separatorIndex = decoded.indexOf(":");
+    const inputUser = decoded.slice(0, separatorIndex);
+    const inputPassword = decoded.slice(separatorIndex + 1);
+    if (inputUser === creds.username && verifyPassword(inputPassword, creds)) {
       return NextResponse.next();
     }
   }

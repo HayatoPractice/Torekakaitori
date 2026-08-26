@@ -10,6 +10,7 @@ const LINKS = [
   { href: "/items", label: "レビュー待ち" },
   { href: "/products", label: "商品・相場比較" },
   { href: "/bookmarklet", label: "ブックマークレット" },
+  { href: "/settings", label: "設定" },
 ];
 
 export default function NavBar() {
