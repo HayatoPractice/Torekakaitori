@@ -3,7 +3,9 @@
 import { useState } from "react";
 import useSWR from "swr";
 import { jsonFetcher, readJson } from "@/lib/api-client";
-import type { ExtractedItem, ReviewStatus } from "@/types/domain";
+import { useSelectedAccounts } from "@/hooks/useSelectedAccounts";
+import AccountCheckboxList from "@/components/AccountCheckboxList";
+import type { Account, ExtractedItem, ReviewStatus } from "@/types/domain";
 
 interface ItemView extends ExtractedItem {
   accounts: { handle: string; display_name: string } | null;
@@ -21,10 +23,16 @@ export default function ItemsPage() {
   const [statusFilter, setStatusFilter] = useState<ReviewStatus | "">("pending_review");
   const [actionError, setActionError] = useState<string | null>(null);
   const [editing, setEditing] = useState<Record<string, { product_name_raw: string; price: number }>>({});
+  const { selectedIds, toggle, setSelectedIds } = useSelectedAccounts();
 
-  const qs = statusFilter ? `?review_status=${statusFilter}` : "";
+  const { data: accountsData } = useSWR<{ accounts: Account[] }>("/api/accounts", jsonFetcher);
+  const accounts = accountsData?.accounts ?? [];
+
+  const qsParams = new URLSearchParams();
+  if (statusFilter) qsParams.set("review_status", statusFilter);
+  if (selectedIds.length > 0) qsParams.set("account_ids", selectedIds.join(","));
   const { data, error: loadError, isLoading, mutate } = useSWR<{ items: ItemView[] }>(
-    `/api/items${qs}`,
+    `/api/items?${qsParams.toString()}`,
     jsonFetcher
   );
   const items = data?.items ?? [];
@@ -72,18 +80,29 @@ export default function ItemsPage() {
         </a>
       </div>
 
-      <div className="flex gap-2">
-        {(["pending_review", "confirmed", "rejected", ""] as const).map((s) => (
-          <button
-            key={s || "all"}
-            onClick={() => setStatusFilter(s)}
-            className={`rounded-md px-3 py-1.5 text-sm ${
-              statusFilter === s ? "bg-foreground text-background" : "border border-black/15 dark:border-white/20"
-            }`}
-          >
-            {s ? STATUS_LABEL[s] : "すべて"}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="flex gap-2">
+          {(["pending_review", "confirmed", "rejected", ""] as const).map((s) => (
+            <button
+              key={s || "all"}
+              onClick={() => setStatusFilter(s)}
+              className={`rounded-md px-3 py-1.5 text-sm ${
+                statusFilter === s ? "bg-foreground text-background" : "border border-black/15 dark:border-white/20"
+              }`}
+            >
+              {s ? STATUS_LABEL[s] : "すべて"}
+            </button>
+          ))}
+        </div>
+        <div className="w-full max-w-xs sm:w-64">
+          <AccountCheckboxList
+            accounts={accounts}
+            selectedIds={selectedIds}
+            onToggle={toggle}
+            onSelectAll={() => setSelectedIds(accounts.map((a) => a.id))}
+            onClearAll={() => setSelectedIds([])}
+          />
+        </div>
       </div>
 
       {error && <p className="text-sm text-red-500">{error}</p>}

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import useSWR from "swr";
 import { jsonFetcher } from "@/lib/api-client";
+import { useSelectedAccounts } from "@/hooks/useSelectedAccounts";
+import AccountCheckboxList from "@/components/AccountCheckboxList";
 import type { Account, ExtractedItem, Post, PostImage } from "@/types/domain";
 
 function todayLocalDate(): string {
@@ -19,13 +21,14 @@ interface PostWithRelations extends Post {
 
 export default function EntriesPage() {
   const [date, setDate] = useState(todayLocalDate());
-  const [accountId, setAccountId] = useState("");
+  const { selectedIds, toggle, setSelectedIds } = useSelectedAccounts();
 
   const { data: accountsData } = useSWR<{ accounts: Account[] }>("/api/accounts", jsonFetcher);
   const accounts = accountsData?.accounts ?? [];
 
+  // 何もチェックしていない場合は「すべて」扱いにする
   const qs = new URLSearchParams({ date });
-  if (accountId) qs.set("account_id", accountId);
+  if (selectedIds.length > 0) qs.set("account_ids", selectedIds.join(","));
   const { data: postsData, error, isLoading } = useSWR<{ posts: PostWithRelations[] }>(
     `/api/posts?${qs.toString()}`,
     jsonFetcher
@@ -46,21 +49,15 @@ export default function EntriesPage() {
             className="rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
           />
         </label>
-        <label className="text-sm">
-          <span className="mb-1 block font-medium">アカウント</span>
-          <select
-            value={accountId}
-            onChange={(e) => setAccountId(e.target.value)}
-            className="rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
-          >
-            <option value="">すべて</option>
-            {accounts.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.display_name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="w-full max-w-xs sm:w-64">
+          <AccountCheckboxList
+            accounts={accounts}
+            selectedIds={selectedIds}
+            onToggle={toggle}
+            onSelectAll={() => setSelectedIds(accounts.map((a) => a.id))}
+            onClearAll={() => setSelectedIds([])}
+          />
+        </div>
       </div>
 
       {error && <p className="text-sm text-red-500">{error.message}</p>}

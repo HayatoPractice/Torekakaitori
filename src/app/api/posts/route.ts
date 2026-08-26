@@ -41,10 +41,14 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/** GET /api/posts?date=YYYY-MM-DD[&account_id=...] — その日の投稿を横断参照 */
+/**
+ * GET /api/posts?date=YYYY-MM-DD[&account_ids=id1,id2,...] — その日の投稿を横断参照
+ * account_ids未指定なら全アカウント対象。
+ */
 export async function GET(req: NextRequest) {
   const date = req.nextUrl.searchParams.get("date");
-  const accountId = req.nextUrl.searchParams.get("account_id");
+  const accountIdsParam = req.nextUrl.searchParams.get("account_ids");
+  const accountIds = accountIdsParam ? accountIdsParam.split(",").filter(Boolean) : null;
   if (!date) return NextResponse.json({ error: "date は必須です" }, { status: 400 });
 
   const sql = getSql();
@@ -65,7 +69,7 @@ export async function GET(req: NextRequest) {
     FROM posts p
     JOIN accounts a ON a.id = p.account_id
     WHERE p.posted_date = ${date}
-      AND (${accountId}::uuid IS NULL OR p.account_id = ${accountId}::uuid)
+      AND (${accountIds}::uuid[] IS NULL OR p.account_id = ANY(${accountIds}::uuid[]))
     ORDER BY p.created_at DESC
   `;
   return NextResponse.json({ posts });
