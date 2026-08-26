@@ -1,64 +1,95 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { getSql } from "@/lib/db";
 
-interface Credentials {
+export interface User {
+  id: string;
   username: string;
-  passwordSalt: string;
-  passwordHash: string;
+  is_admin: boolean;
+  created_at: string;
+}
+
+interface UserWithHash extends User {
+  password_salt: string;
+  password_hash: string;
 }
 
 function hashPassword(password: string, salt: string): string {
   return createHash("sha256").update(`${salt}:${password}`).digest("hex");
 }
 
-/**
- * 現在の認証情報を返す。DBに設定済みならそちらを優先し、無ければ環境変数
- * （BASIC_AUTH_USER/BASIC_AUTH_PASSWORD）にフォールバックする。
- * DB行が無い状態＝一度も設定画面で変更していない初期状態。
- */
-export async function getCredentials(): Promise<Credentials | null> {
-  const sql = getSql();
-  const rows = await sql`SELECT username, password_salt, password_hash FROM auth_credentials WHERE id = true`;
-  if (rows.length > 0) {
-    return {
-      username: rows[0].username as string,
-      passwordSalt: rows[0].password_salt as string,
-      passwordHash: rows[0].password_hash as string,
-    };
-  }
-
-  const envUser = process.env.BASIC_AUTH_USER;
-  const envPassword = process.env.BASIC_AUTH_PASSWORD;
-  if (!envPassword) return null; // 認証設定なし＝保護しない（proxy.ts側の既定動作に委ねる）
-
-  const salt = "env"; // 環境変数フォールバック時は固定salt（DBに保存しないため使い捨て）
-  return {
-    username: envUser || "torecasouba",
-    passwordSalt: salt,
-    passwordHash: hashPassword(envPassword, salt),
-  };
-}
-
-export function verifyPassword(candidate: string, creds: Credentials): boolean {
-  const candidateHash = hashPassword(candidate, creds.passwordSalt);
+function verifyPassword(candidate: string, salt: string, expectedHash: string): boolean {
+  const candidateHash = hashPassword(candidate, salt);
   const a = Buffer.from(candidateHash, "hex");
-  const b = Buffer.from(creds.passwordHash, "hex");
+  const b = Buffer.from(expectedHash, "hex");
   if (a.length !== b.length) return false;
   return timingSafeEqual(a, b);
 }
 
-/** 設定画面から呼ばれる。新しいユーザー名・パスワードをDBへ保存する */
-export async function updateCredentials(username: string, password: string): Promise<void> {
+/** proxy.tsから呼ばれる。Basic認証のユーザー名・パスワードを検証し、一致すればユーザー情報を返す */
+export async function authenticate(username: string, password: string): Promise<User | null> {
+  const sql = getSql();
+  const rows = await sql`
+    SELECT id, username, password_salt, password_hash, is_admin, created_at
+    FROM users WHERE username = ${username}
+  `;
+  if (rows.length === 0) return null;
+  const user = rows[0] as unknown as UserWithHash;
+  if (!verifyPassword(password, user.password_salt, user.password_hash)) return null;
+  return { id: user.id, username: user.username, is_admin: user.is_admin, created_at: user.created_at };
+}
+
+export async function getUserById(userId: string): Promise<User | null> {
+  const sql = getSql();
+  const rows = await sql`SELECT id, username, is_admin, created_at FROM users WHERE id = ${userId}`;
+  if (rows.length === 0) return null;
+  return rows[0] as unknown as User;
+}
+
+export async function listUsers(): Promise<User[]> {
+  const sql = getSql();
+  const rows = await sql`SELECT id, username, is_admin, created_at FROM users ORDER BY created_at`;
+  return rows as unknown as User[];
+}
+
+/** 自分自身のユーザー名・パスワードを変更する（設定画面から） */
+export async function updateOwnCredentials(userId: string, username: string, password: string): Promise<void> {
   const salt = randomBytes(16).toString("hex");
   const passwordHash = hashPassword(password, salt);
   const sql = getSql();
   await sql`
-    INSERT INTO auth_credentials (id, username, password_salt, password_hash, updated_at)
-    VALUES (true, ${username}, ${salt}, ${passwordHash}, now())
-    ON CONFLICT (id) DO UPDATE SET
-      username = EXCLUDED.username,
-      password_salt = EXCLUDED.password_salt,
-      password_hash = EXCLUDED.password_hash,
-      updated_at = now()
+    UPDATE users SET username = ${username}, password_salt = ${salt}, password_hash = ${passwordHash}
+    WHERE id = ${userId}
   `;
+}
+
+/** 管理者がユーザーを追加する */
+export async function createUser(username: string, password: string, isAdmin: boolean): Promise<User> {
+  const salt = randomBytes(16).toString("hex");
+  const passwordHash = hashPassword(password, salt);
+  const sql = getSql();
+  const rows = await sql`
+    INSERT INTO users (username, password_salt, password_hash, is_admin)
+    VALUES (${username}, ${salt}, ${passwordHash}, ${isAdmin})
+    RETURNING id, username, is_admin, created_at
+  `;
+  return rows[0] as unknown as User;
+}
+
+/** 管理者が他ユーザーのパスワードをリセットする */
+export async function resetUserPassword(userId: string, password: string): Promise<void> {
+  const salt = randomBytes(16).toString("hex");
+  const passwordHash = hashPassword(password, salt);
+  const sql = getSql();
+  await sql`UPDATE users SET password_salt = ${salt}, password_hash = ${passwordHash} WHERE id = ${userId}`;
+}
+
+export async function deleteUser(userId: string): Promise<void> {
+  const sql = getSql();
+  await sql`DELETE FROM users WHERE id = ${userId}`;
+}
+
+export async function countAdmins(): Promise<number> {
+  const sql = getSql();
+  const rows = await sql`SELECT count(*)::int AS count FROM users WHERE is_admin = true`;
+  return rows[0].count as number;
 }

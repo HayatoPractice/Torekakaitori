@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSql } from "@/lib/db";
+import { getRequestUser } from "@/lib/request-user";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,8 @@ const REVIEW_STATUSES = new Set(["confirmed", "pending_review", "rejected"]);
 
 /** レビューUIからの確認・修正・却下を受け付ける */
 export async function PATCH(req: NextRequest, { params }: Params) {
+  const me = getRequestUser(req);
+  if (!me) return NextResponse.json({ error: "認証情報が見つかりません" }, { status: 401 });
   const { id } = await params;
   const body = await req.json();
 
@@ -25,23 +28,36 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   const sql = getSql();
   const updated = await sql`
-    UPDATE extracted_items SET
-      price = COALESCE(${price}, price),
-      product_name_raw = COALESCE(${productNameRaw}, product_name_raw),
-      product_id = COALESCE(${productId}::uuid, product_id),
-      price_type = COALESCE(${priceType}, price_type),
-      item_type = COALESCE(${itemType}, item_type),
-      review_status = COALESCE(${reviewStatus}, review_status)
-    WHERE id = ${id}
-    RETURNING *
+    UPDATE extracted_items ei SET
+      price = COALESCE(${price}, ei.price),
+      product_name_raw = COALESCE(${productNameRaw}, ei.product_name_raw),
+      product_id = COALESCE(${productId}::uuid, ei.product_id),
+      price_type = COALESCE(${priceType}, ei.price_type),
+      item_type = COALESCE(${itemType}, ei.item_type),
+      review_status = COALESCE(${reviewStatus}, ei.review_status)
+    WHERE ei.id = ${id}
+      AND EXISTS (
+        SELECT 1 FROM accounts a WHERE a.id = ei.account_id AND (a.owner_user_id = ${me.id} OR a.is_shared = true)
+      )
+    RETURNING ei.*
   `;
-  if (updated.length === 0) return NextResponse.json({ error: "アイテムが見つかりません" }, { status: 404 });
+  if (updated.length === 0) {
+    return NextResponse.json({ error: "アイテムが見つからないか、権限がありません" }, { status: 404 });
+  }
   return NextResponse.json({ item: updated[0] });
 }
 
-export async function DELETE(_req: NextRequest, { params }: Params) {
+export async function DELETE(req: NextRequest, { params }: Params) {
+  const me = getRequestUser(req);
+  if (!me) return NextResponse.json({ error: "認証情報が見つかりません" }, { status: 401 });
   const { id } = await params;
   const sql = getSql();
-  await sql`DELETE FROM extracted_items WHERE id = ${id}`;
+  await sql`
+    DELETE FROM extracted_items ei
+    WHERE ei.id = ${id}
+      AND EXISTS (
+        SELECT 1 FROM accounts a WHERE a.id = ei.account_id AND (a.owner_user_id = ${me.id} OR a.is_shared = true)
+      )
+  `;
   return NextResponse.json({ ok: true });
 }

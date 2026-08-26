@@ -1,9 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
-import { readJson } from "@/lib/api-client";
+import useSWR from "swr";
+import { jsonFetcher, readJson } from "@/lib/api-client";
+import type { User } from "@/lib/auth";
 
 export default function SettingsPage() {
+  const { data: meData, mutate } = useSWR<{ user: User }>("/api/auth/me", jsonFetcher);
+  const me = meData?.user;
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -22,7 +28,7 @@ export default function SettingsPage() {
       const res = await fetch("/api/auth/credentials", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username: username || me?.username, password }),
       });
       await readJson(res);
       setMessage({
@@ -32,6 +38,7 @@ export default function SettingsPage() {
       setUsername("");
       setPassword("");
       setPasswordConfirm("");
+      mutate();
     } catch (err) {
       setMessage({ kind: "error", text: err instanceof Error ? err.message : "変更に失敗しました" });
     } finally {
@@ -44,17 +51,24 @@ export default function SettingsPage() {
       <div>
         <h1 className="text-xl font-bold">ログイン情報の変更</h1>
         <p className="mt-1 text-sm opacity-70">
-          このアプリを開くときに求められるユーザー名・パスワードを変更します。
+          {me ? (
+            <>
+              現在ログイン中：<span className="font-medium">{me.username}</span>
+              {me.is_admin && <span className="ml-1 opacity-60">（管理者）</span>}
+            </>
+          ) : (
+            "読み込み中..."
+          )}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-black/10 p-4 dark:border-white/10">
         <label className="block text-sm">
-          <span className="mb-1 block font-medium">新しいユーザー名</span>
+          <span className="mb-1 block font-medium">新しいユーザー名（変えない場合は空欄でOK）</span>
           <input
-            required
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            placeholder={me?.username}
             autoComplete="off"
             className="w-full rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
           />
@@ -101,6 +115,14 @@ export default function SettingsPage() {
         >
           {message.text}
         </div>
+      )}
+
+      {me?.is_admin && (
+        <p className="text-sm">
+          <Link href="/users" className="hover:underline">
+            → ユーザー管理はこちら
+          </Link>
+        </p>
       )}
     </div>
   );

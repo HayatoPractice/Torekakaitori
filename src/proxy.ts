@@ -1,26 +1,28 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getCredentials, verifyPassword } from "@/lib/auth";
-
-// Proxyは常にNode.jsランタイムで動く（Route segment configのruntime指定は不可・エラーになる）
+import { authenticate } from "@/lib/auth";
 
 /**
- * Vercel Hobbyプランでは本番ドメイン自体をVercel Authenticationで保護できないため、
- * アプリ側でBasic認証をかけて非公開にする。認証情報はDB優先・未設定時は環境変数
- * （BASIC_AUTH_USER/BASIC_AUTH_PASSWORD）にフォールバックする。どちらも無ければ無防備。
+ * 全リクエストをBasic認証で保護する（Vercel Hobbyプランでは本番ドメインをVercel
+ * Authenticationで保護できないため）。認証できたユーザーのid/管理者フラグを
+ * x-user-id / x-is-admin ヘッダーに詰めてAPIルートへ渡す（クライアントからの
+ * 偽装ヘッダーは常に上書きするので信頼してよい）。
  */
 export async function proxy(request: NextRequest): Promise<NextResponse> {
-  const creds = await getCredentials();
-  if (!creds) return NextResponse.next();
-
   const authHeader = request.headers.get("authorization");
+
   if (authHeader?.startsWith("Basic ")) {
     const decoded = atob(authHeader.slice("Basic ".length));
     const separatorIndex = decoded.indexOf(":");
     const inputUser = decoded.slice(0, separatorIndex);
     const inputPassword = decoded.slice(separatorIndex + 1);
-    if (inputUser === creds.username && verifyPassword(inputPassword, creds)) {
-      return NextResponse.next();
+
+    const user = await authenticate(inputUser, inputPassword);
+    if (user) {
+      const headers = new Headers(request.headers);
+      headers.set("x-user-id", user.id);
+      headers.set("x-is-admin", user.is_admin ? "true" : "false");
+      return NextResponse.next({ request: { headers } });
     }
   }
 

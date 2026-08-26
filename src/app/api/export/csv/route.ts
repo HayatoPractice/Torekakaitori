@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSql } from "@/lib/db";
+import { getRequestUser } from "@/lib/request-user";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,9 @@ function csvEscape(value: unknown): string {
 
 /** GET /api/export/csv?date=...&account_id=...&product_id=... （フィルタは任意） */
 export async function GET(req: NextRequest) {
+  const me = getRequestUser(req);
+  if (!me) return NextResponse.json({ error: "認証情報が見つかりません" }, { status: 401 });
+
   const params = req.nextUrl.searchParams;
   const date = params.get("date");
   const accountId = params.get("account_id");
@@ -26,7 +30,8 @@ export async function GET(req: NextRequest) {
     JOIN posts p ON p.id = ei.post_id
     JOIN accounts a ON a.id = ei.account_id
     LEFT JOIN products pr ON pr.id = ei.product_id
-    WHERE (${date}::date IS NULL OR p.posted_date = ${date}::date)
+    WHERE (a.owner_user_id = ${me.id} OR a.is_shared = true)
+      AND (${date}::date IS NULL OR p.posted_date = ${date}::date)
       AND (${accountId}::uuid IS NULL OR ei.account_id = ${accountId}::uuid)
       AND (${productId}::uuid IS NULL OR ei.product_id = ${productId}::uuid)
     ORDER BY ei.created_at DESC

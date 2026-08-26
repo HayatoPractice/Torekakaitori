@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import useSWR from "swr";
+import { jsonFetcher } from "@/lib/api-client";
+import type { User } from "@/lib/auth";
 
 const LINKS = [
   { href: "/", label: "投稿を登録" },
@@ -15,11 +18,14 @@ const LINKS = [
 
 export default function NavBar() {
   const pathname = usePathname();
+  const { data } = useSWR<{ user: User }>("/api/auth/me", jsonFetcher);
+  const links = data?.user.is_admin ? [...LINKS, { href: "/users", label: "ユーザー管理" }] : LINKS;
+
   return (
     <nav className="border-b border-black/10 dark:border-white/10">
       <div className="mx-auto max-w-6xl flex flex-wrap items-center gap-1 px-4 py-3">
         <span className="mr-4 font-bold text-sm tracking-wide">トレカ相場確認</span>
-        {LINKS.map((link) => {
+        {links.map((link) => {
           const active = pathname === link.href;
           return (
             <Link
