@@ -142,9 +142,10 @@ const CHECKS = [
     },
   },
   /*
-   * 【INC-031を除外】このアプリは要件により認証機能を持たない（開発者本人専用・無料運用が前提）。
-   * 公開URLへデプロイする場合は、アプリ内の認証ではなくホスティング側のアクセス制限
-   * （例: Vercel Deployment Protection）で保護すること。README「セットアップ」節を参照。
+   * 【INC-031改訂】Vercel Hobbyプランでは本番ドメイン自体をVercel Authenticationで
+   * 保護できないと判明したため（実際に第三者アクセス可能な状態で発覚）、
+   * src/proxy.tsでBasic認証をかける方式に変更した。BASIC_AUTH_PASSWORD未設定時は
+   * 無防備になるため、本番環境変数の設定を絶対に忘れないこと。
    */
   {
     /*
@@ -185,10 +186,21 @@ const CHECKS = [
         .map((f) => ({ file: f.rel, msg: 'toDayKeyInZone() を使うこと' }));
     },
   },
-  /*
-   * 【INC-035を除外】このアプリに認証は無い（上記INC-031と同じ理由）ため、
-   * 認証用の proxy.ts / middleware.ts という概念自体が存在しない。
-   */
+  {
+    id: 'INC-035',
+    title: 'proxy.ts が正しい名前で存在するか（Basic認証の入口）',
+    why: '旧名(middleware.ts)だとNext.js 16では実行時に無視され、認証が全て素通りになる',
+    run() {
+      const bad = [];
+      if (!existsSync(join(SRC, 'proxy.ts'))) {
+        bad.push({ file: 'src/proxy.ts', msg: '見つからない。Basic認証が働かない恐れ' });
+      }
+      if (existsSync(join(SRC, 'middleware.ts'))) {
+        bad.push({ file: 'src/middleware.ts', msg: 'Next.js 16 では無視される。proxy.ts に統合すること' });
+      }
+      return bad;
+    },
+  },
   /*
    * 【INC-026を除外】このアプリはテーブル定義をTypeScriptのschema.tsではなく
    * db/migrations/*.sql で管理し、データの実体はNeon（マネージドPostgres）が持つ。

@@ -35,6 +35,10 @@ check "GeminiのタイムアウトをmaxDuration以上にする" \
   "sed -i '' 's|GEMINI_TIMEOUT_MS = 45000|GEMINI_TIMEOUT_MS = 65000|' src/lib/gemini.ts" \
   "INC-051"
 
+check "proxy.tsを旧名(middleware.ts)にリネームする" \
+  "mv src/proxy.ts src/middleware.ts" \
+  "INC-035"
+
 # INC-069はsrc/の変更ではなくgit remoteの状態を見る検査のため、専用の壊し方で確認する。
 # originを退避してから検査し、必ず元に戻す（restoreを先に書き、途中で失敗しても残らないようにする）。
 check_inc069() {
