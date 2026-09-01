@@ -186,21 +186,13 @@ const CHECKS = [
         .map((f) => ({ file: f.rel, msg: 'toDayKeyInZone() を使うこと' }));
     },
   },
-  {
-    id: 'INC-035',
-    title: 'proxy.ts が正しい名前で存在するか（Basic認証の入口）',
-    why: '旧名(middleware.ts)だとNext.js 16では実行時に無視され、認証が全て素通りになる',
-    run() {
-      const bad = [];
-      if (!existsSync(join(SRC, 'proxy.ts'))) {
-        bad.push({ file: 'src/proxy.ts', msg: '見つからない。Basic認証が働かない恐れ' });
-      }
-      if (existsSync(join(SRC, 'middleware.ts'))) {
-        bad.push({ file: 'src/middleware.ts', msg: 'Next.js 16 では無視される。proxy.ts に統合すること' });
-      }
-      return bad;
-    },
-  },
+  /*
+   * 【INC-035を除外】このアプリは2026-09-01、ユーザーの明示的な指示によりBasic認証を
+   * 完全に撤廃し、本番URLを知っていれば誰でも認証なしでアクセスできる仕様に変更した
+   * （src/proxy.ts を削除）。この検査は「proxy.tsが無いと意図せず認証が素通りになる」
+   * ことを防ぐためのものだが、今は無いこと自体が意図した状態なので対象外にする。
+   * 将来また保護が必要になったら、この除外を外してproxy.tsを復活させること。
+   */
   /*
    * 【INC-026を除外】このアプリはテーブル定義をTypeScriptのschema.tsではなく
    * db/migrations/*.sql で管理し、データの実体はNeon（マネージドPostgres）が持つ。
