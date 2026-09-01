@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSql } from "@/lib/db";
-import { getRequestUser } from "@/lib/request-user";
 
 export const dynamic = "force-dynamic";
 
@@ -8,10 +7,8 @@ interface Params {
   params: Promise<{ id: string }>;
 }
 
-/** GET /api/summary/products/[id] — 商品の価格推移＋店舗別ランキング（閲覧可能なアカウント分のみ） */
+/** GET /api/summary/products/[id] — 商品の価格推移＋店舗別ランキング */
 export async function GET(req: NextRequest, { params }: Params) {
-  const me = getRequestUser(req);
-  if (!me) return NextResponse.json({ error: "認証情報が見つかりません" }, { status: 401 });
   const { id } = await params;
   const sql = getSql();
 
@@ -26,7 +23,6 @@ export async function GET(req: NextRequest, { params }: Params) {
     JOIN posts p ON p.id = ei.post_id
     JOIN accounts a ON a.id = ei.account_id
     WHERE ei.product_id = ${id} AND ei.review_status != 'rejected'
-      AND (a.owner_user_id = ${me.id} OR a.is_shared = true)
     ORDER BY ei.created_at ASC
   `;
 

@@ -1,14 +1,24 @@
+import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { authenticate } from "@/lib/auth";
 
 /**
- * 全リクエストをBasic認証で保護する（Vercel Hobbyプランでは本番ドメインをVercel
- * Authenticationで保護できないため）。認証できたユーザーのid/管理者フラグを
- * x-user-id / x-is-admin ヘッダーに詰めてAPIルートへ渡す（クライアントからの
- * 偽装ヘッダーは常に上書きするので信頼してよい）。
+ * Vercel Hobbyプランでは本番ドメイン自体をVercel Authenticationで保護できないため、
+ * アプリ側でBasic認証をかけて非公開にする（BASIC_AUTH_PASSWORD未設定時は何もしない）。
+ * ユーザー名・パスワードは環境変数固定（単一ユーザー運用のため、DBでの管理はしない）。
  */
-export async function proxy(request: NextRequest): Promise<NextResponse> {
+function safeEqual(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
+
+export function proxy(request: NextRequest): NextResponse {
+  const password = process.env.BASIC_AUTH_PASSWORD;
+  if (!password) return NextResponse.next();
+
+  const user = process.env.BASIC_AUTH_USER || "torecasouba";
   const authHeader = request.headers.get("authorization");
 
   if (authHeader?.startsWith("Basic ")) {
@@ -16,13 +26,8 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     const separatorIndex = decoded.indexOf(":");
     const inputUser = decoded.slice(0, separatorIndex);
     const inputPassword = decoded.slice(separatorIndex + 1);
-
-    const user = await authenticate(inputUser, inputPassword);
-    if (user) {
-      const headers = new Headers(request.headers);
-      headers.set("x-user-id", user.id);
-      headers.set("x-is-admin", user.is_admin ? "true" : "false");
-      return NextResponse.next({ request: { headers } });
+    if (safeEqual(inputUser, user) && safeEqual(inputPassword, password)) {
+      return NextResponse.next();
     }
   }
 

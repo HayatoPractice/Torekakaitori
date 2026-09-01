@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSql } from "@/lib/db";
 import { ingestPost } from "@/lib/ingest";
-import { getRequestUser } from "@/lib/request-user";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // Gemini解析（複数画像含む）に時間がかかる場合があるため
@@ -13,9 +12,6 @@ interface IncomingImage {
 }
 
 export async function POST(req: NextRequest) {
-  const me = getRequestUser(req);
-  if (!me) return NextResponse.json({ error: "認証情報が見つかりません" }, { status: 401 });
-
   const body = await req.json();
   const accountId = String(body.account_id ?? "");
   const postedDate = String(body.posted_date ?? "");
@@ -31,11 +27,9 @@ export async function POST(req: NextRequest) {
   }
 
   const sql = getSql();
-  const visible = await sql`
-    SELECT 1 FROM accounts WHERE id = ${accountId} AND (owner_user_id = ${me.id} OR is_shared = true)
-  `;
-  if (visible.length === 0) {
-    return NextResponse.json({ error: "このアカウントに投稿する権限がありません" }, { status: 403 });
+  const exists = await sql`SELECT 1 FROM accounts WHERE id = ${accountId}`;
+  if (exists.length === 0) {
+    return NextResponse.json({ error: "アカウントが見つかりません" }, { status: 404 });
   }
 
   try {
@@ -55,13 +49,9 @@ export async function POST(req: NextRequest) {
 
 /**
  * GET /api/posts?date=YYYY-MM-DD[&account_ids=id1,id2,...] — その日の投稿を横断参照
- * account_ids未指定なら閲覧可能な全アカウント対象。閲覧権限（自分の登録 or 共有）の
- * 無いアカウントは指定してもフィルタから除外される。
+ * account_ids未指定なら全アカウント対象。
  */
 export async function GET(req: NextRequest) {
-  const me = getRequestUser(req);
-  if (!me) return NextResponse.json({ error: "認証情報が見つかりません" }, { status: 401 });
-
   const date = req.nextUrl.searchParams.get("date");
   const accountIdsParam = req.nextUrl.searchParams.get("account_ids");
   const accountIds = accountIdsParam ? accountIdsParam.split(",").filter(Boolean) : null;
@@ -85,7 +75,6 @@ export async function GET(req: NextRequest) {
     FROM posts p
     JOIN accounts a ON a.id = p.account_id
     WHERE p.posted_date = ${date}
-      AND (a.owner_user_id = ${me.id} OR a.is_shared = true)
       AND (${accountIds}::uuid[] IS NULL OR p.account_id = ANY(${accountIds}::uuid[]))
     ORDER BY p.created_at DESC
   `;

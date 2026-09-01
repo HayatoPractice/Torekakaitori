@@ -5,13 +5,10 @@ import { useState } from "react";
 import useSWR from "swr";
 import { jsonFetcher, readJson } from "@/lib/api-client";
 import type { Account } from "@/types/domain";
-import type { User } from "@/lib/auth";
 
 export default function AccountsPage() {
   const { data, error: loadError, isLoading, mutate } = useSWR<{ accounts: Account[] }>("/api/accounts", jsonFetcher);
   const accounts = data?.accounts ?? [];
-  const { data: meData } = useSWR<{ user: User }>("/api/auth/me", jsonFetcher);
-  const isAdmin = meData?.user.is_admin ?? false;
 
   const [handle, setHandle] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -45,21 +42,6 @@ export default function AccountsPage() {
       mutate();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "削除に失敗しました");
-    }
-  }
-
-  async function handleToggleShared(a: Account) {
-    setActionError(null);
-    try {
-      const res = await fetch(`/api/accounts/${a.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_shared: !a.is_shared }),
-      });
-      await readJson(res);
-      mutate();
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : "変更に失敗しました");
     }
   }
 
@@ -113,38 +95,20 @@ export default function AccountsPage() {
         <p className="text-sm opacity-60">アカウントが未登録です。上のフォームから追加してください。</p>
       ) : (
         <ul className="divide-y divide-black/5 rounded-lg border border-black/10 dark:divide-white/10 dark:border-white/10">
-          {accounts.map((a) => {
-            const canManage = a.is_mine || isAdmin;
-            return (
-              <li key={a.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-                <div>
-                  <Link href={`/accounts/${a.id}`} className="font-medium hover:underline">
-                    {a.display_name}
-                  </Link>
-                  <span className="ml-2 text-sm opacity-60">{a.handle}</span>
-                  {!a.is_mine && <span className="ml-2 rounded bg-black/5 px-1.5 py-0.5 text-xs dark:bg-white/10">共有</span>}
-                  {a.notes && <p className="text-xs opacity-50">{a.notes}</p>}
-                </div>
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-1.5 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={a.is_shared}
-                      disabled={!canManage}
-                      onChange={() => handleToggleShared(a)}
-                      className="h-4 w-4"
-                    />
-                    <span className={canManage ? "" : "opacity-50"}>共有する</span>
-                  </label>
-                  {canManage && (
-                    <button onClick={() => handleDelete(a.id)} className="text-sm text-red-500 hover:underline">
-                      削除
-                    </button>
-                  )}
-                </div>
-              </li>
-            );
-          })}
+          {accounts.map((a) => (
+            <li key={a.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+              <div>
+                <Link href={`/accounts/${a.id}`} className="font-medium hover:underline">
+                  {a.display_name}
+                </Link>
+                <span className="ml-2 text-sm opacity-60">{a.handle}</span>
+                {a.notes && <p className="text-xs opacity-50">{a.notes}</p>}
+              </div>
+              <button onClick={() => handleDelete(a.id)} className="text-sm text-red-500 hover:underline">
+                削除
+              </button>
+            </li>
+          ))}
         </ul>
       )}
     </div>

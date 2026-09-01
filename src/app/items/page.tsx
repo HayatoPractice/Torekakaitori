@@ -5,7 +5,7 @@ import useSWR from "swr";
 import { jsonFetcher, readJson } from "@/lib/api-client";
 import { useSelectedAccounts } from "@/hooks/useSelectedAccounts";
 import AccountCheckboxList from "@/components/AccountCheckboxList";
-import type { Account, ExtractedItem, ReviewStatus } from "@/types/domain";
+import type { Account, ExtractedItem, Product, ReviewStatus } from "@/types/domain";
 
 interface ItemView extends ExtractedItem {
   accounts: { handle: string; display_name: string } | null;
@@ -22,11 +22,13 @@ const STATUS_LABEL: Record<ReviewStatus, string> = {
 export default function ItemsPage() {
   const [statusFilter, setStatusFilter] = useState<ReviewStatus | "">("pending_review");
   const [actionError, setActionError] = useState<string | null>(null);
-  const [editing, setEditing] = useState<Record<string, { product_name_raw: string; price: number }>>({});
+  const [editing, setEditing] = useState<Record<string, { product_name_raw: string; price: number; product_id: string }>>({});
   const { selectedIds, toggle, setSelectedIds } = useSelectedAccounts();
 
   const { data: accountsData } = useSWR<{ accounts: Account[] }>("/api/accounts", jsonFetcher);
   const accounts = accountsData?.accounts ?? [];
+  const { data: productsData } = useSWR<{ products: Product[] }>("/api/products", jsonFetcher);
+  const products = productsData?.products ?? [];
 
   const qsParams = new URLSearchParams();
   if (statusFilter) qsParams.set("review_status", statusFilter);
@@ -54,17 +56,36 @@ export default function ItemsPage() {
   }
 
   function startEdit(item: ItemView) {
-    setEditing((prev) => ({ ...prev, [item.id]: { product_name_raw: item.product_name_raw, price: item.price } }));
+    setEditing((prev) => ({
+      ...prev,
+      [item.id]: { product_name_raw: item.product_name_raw, price: item.price, product_id: item.product_id ?? "" },
+    }));
   }
 
   function saveEdit(id: string) {
     const draft = editing[id];
     if (!draft) return;
-    updateItem(id, { product_name_raw: draft.product_name_raw, price: draft.price });
+    updateItem(id, {
+      product_name_raw: draft.product_name_raw,
+      price: draft.price,
+      product_id: draft.product_id || null,
+    });
     setEditing((prev) => {
       const next = { ...prev };
       delete next[id];
       return next;
+    });
+  }
+
+  function selectExistingProduct(id: string, productId: string) {
+    const product = products.find((p) => p.id === productId);
+    setEditing((prev) => {
+      const draft = prev[id];
+      if (!draft) return prev;
+      return {
+        ...prev,
+        [id]: { ...draft, product_id: productId, product_name_raw: product?.canonical_name ?? draft.product_name_raw },
+      };
     });
   }
 
@@ -134,13 +155,28 @@ export default function ItemsPage() {
                     <td className="px-3 py-2 whitespace-nowrap">{item.accounts?.display_name}</td>
                     <td className="px-3 py-2">
                       {draft ? (
-                        <input
-                          value={draft.product_name_raw}
-                          onChange={(e) =>
-                            setEditing((prev) => ({ ...prev, [item.id]: { ...draft, product_name_raw: e.target.value } }))
-                          }
-                          className="w-full rounded border border-black/15 bg-transparent px-2 py-1 dark:border-white/20"
-                        />
+                        <div className="space-y-1">
+                          <select
+                            value={draft.product_id}
+                            onChange={(e) => selectExistingProduct(item.id, e.target.value)}
+                            className="w-full rounded border border-black/15 bg-transparent px-2 py-1 dark:border-white/20"
+                          >
+                            <option value="">既存の商品から選択...</option>
+                            {products.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.canonical_name}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            value={draft.product_name_raw}
+                            onChange={(e) =>
+                              setEditing((prev) => ({ ...prev, [item.id]: { ...draft, product_name_raw: e.target.value } }))
+                            }
+                            placeholder="該当する商品が無い場合は商品名を入力"
+                            className="w-full rounded border border-black/15 bg-transparent px-2 py-1 text-xs dark:border-white/20"
+                          />
+                        </div>
                       ) : (
                         item.products?.canonical_name ?? item.product_name_raw
                       )}

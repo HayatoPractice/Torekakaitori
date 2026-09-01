@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSql } from "@/lib/db";
-import { getRequestUser } from "@/lib/request-user";
 import type { ExtractedItem } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
@@ -32,14 +31,10 @@ function aggregate(items: ExtractedItem[]): Aggregate {
 
 /** GET /api/summary/accounts/[id] — アカウント別まとめ（商品ごとの販売⇔買取比較） */
 export async function GET(req: NextRequest, { params }: Params) {
-  const me = getRequestUser(req);
-  if (!me) return NextResponse.json({ error: "認証情報が見つかりません" }, { status: 401 });
   const { id } = await params;
   const sql = getSql();
 
-  const accountRows = await sql`
-    SELECT * FROM accounts WHERE id = ${id} AND (owner_user_id = ${me.id} OR is_shared = true)
-  `;
+  const accountRows = await sql`SELECT * FROM accounts WHERE id = ${id}`;
   if (accountRows.length === 0) return NextResponse.json({ error: "アカウントが見つかりません" }, { status: 404 });
   const account = accountRows[0];
 

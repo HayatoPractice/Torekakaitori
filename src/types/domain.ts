@@ -8,11 +8,7 @@ export interface Account {
   handle: string;
   display_name: string;
   notes: string | null;
-  owner_user_id: string;
-  is_shared: boolean;
   created_at: string;
-  /** GET /api/accounts のみが返す計算値。自分の登録かどうか */
-  is_mine?: boolean;
 }
 
 export interface Product {
