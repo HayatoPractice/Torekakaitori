@@ -13,10 +13,23 @@ GitHub: https://github.com/HayatoPractice/Torekakaitori
 撤廃。URLを知っていれば誰でも認証なしでアクセスできる公開状態。`torekakaitori-souba.vercel.app` は廃止）
 
 ## 直近の決定事項
-- Xの自動巡回は行わない（有料APIが前提になるため。手動投入方式を採用）
+- Xの自動巡回は行わない（有料APIが前提になるため。手動投入方式を採用）。
+  「投稿URL」欄（page.tsx・bookmarklet）はXのAPIを一切呼ばない単なる文字列貼り付けで、
+  重複チェックと元投稿リンク表示にのみ使う。この用途である限り無料枠の制約は受けないため
+  削除不要と2026-09-01に確認済み。**未使用に見えても削除しないこと**（コード側にも
+  同趣旨のコメントあり）。将来Xの有料APIを導入する場合は、この欄を自動取得へ
+  切り替える拡張ポイントとして残している
 - マルチユーザー機能（ユーザーごとのログイン・データ分離）を2026-09-01に撤廃し、単一ユーザー
   運用に戻した。続けてBasic認証（`src/proxy.ts`）も同日ユーザーの指示で完全に撤廃し、
   本番URLは無認証で誰でもアクセス可能になっている（guard.mjsのINC-035は対象外化済み）
+- 2026-09-02、ホーム画面（`/`）を投稿登録フォームから商品・相場比較ページへ入れ替えた。
+  投稿登録は `/post` に移動（ナビゲーションの左から2番目）。旧`/products`（一覧）は削除済み
+  （`/products/[id]`の商品詳細はそのまま）
+- 2026-09-02、ブックマークレットを拡張し、Xのタイムライン/プロフィールページで直近の投稿を
+  まとめて読み取れるようにした（`/api/scrape-import`が一時保存→`/post/bulk`でレビューして
+  1件ずつ`/api/posts`へ登録）。DOMの`data-testid`に依存するため、Xの仕様変更で壊れる可能性が
+  ある点はユーザー了承済み。画像はpbs.twimg.com等のURLを`/api/fetch-image`（ホスト許可制の
+  プロキシ）経由でサーバー側から取得している（ブラウザから直接fetchするとCORSで失敗するため）
 - スタック：Next.js(App Router) + TypeScript + Tailwind + Neon(Postgres, `@neondatabase/serverless`で直接SQL) + Gemini API(`gemini-3.6-flash`)
 - 投稿画像はNeonにファイルストレージが無いため、DBにbytea（バイナリ）として直接保存
 - データ取得はSWR（useEffect+fetchの直書きは避ける方針。CODE_ANTI_PATTERNS.md AP-A1準拠）
@@ -27,12 +40,14 @@ GitHub: https://github.com/HayatoPractice/Torekakaitori
 - 商品名の名寄せ（表記ゆれ統合UI・マージAPI）、重複投稿検知（URL一致・内容ハッシュ一致）
 - 日別横断参照、アカウント別まとめ（販売⇔買取比較・スプレッド表示）
 - 商品別の価格推移グラフ・店舗ランキング
-- CSVエクスポート、画像の保存・配信（/api/images/[id]）、Xブックマークレット
+- CSVエクスポート、画像の保存・配信（/api/images/[id]）
+- Xブックマークレット（単一投稿の取り込みに加え、タイムラインからの一括取り込み・レビュー画面）
 - scripts/guard.mjs をこのアプリ向けに書き換え、self-testで実際に検知することを確認済み
 
 ## デプロイ状態
-- Neonプロジェクト作成・マイグレーション実行済み（0001〜0004。0004でusers/owner_user_id/
-  is_shared を削除し、マルチユーザー機能を撤廃）
+- Neonプロジェクト作成・マイグレーション実行済み（0001〜0006。0004でusers/owner_user_id/
+  is_shared を削除しマルチユーザー機能を撤廃、0005でaccounts.url追加、0006でscrape_batches
+  （ブックマークレット一括取り込みの一時テーブル）追加）
 - Vercelプロジェクト `torekakaitori` に環境変数（DATABASE_URL/GEMINI_API_KEY/GEMINI_MODEL）設定済み。
   BASIC_AUTH_PASSWORD/BASIC_AUTH_USER はコード側で参照しなくなったため、Vercel側の環境変数
   設定も不要になった（残っていても無害だが、整理するなら削除してよい）
@@ -59,3 +74,7 @@ GitHub: https://github.com/HayatoPractice/Torekakaitori
 - 本番URLは無認証（誰でもアクセス可能）。ユーザーの明示的な指示による仕様であり不具合ではない。
   再度保護が必要になった場合はsrc/proxy.tsによるBasic認証を復活させ、guard.mjsのINC-035除外も
   元に戻すこと
+- ブックマークレットの一括取り込みは、実際のXページ上でのDOM読み取り部分（bookmarklet/page.tsx
+  内のスクリプト）を実機ブラウザでは未検証（この開発環境にヘッドレスブラウザが無いため）。
+  バックエンド側（/api/scrape-import・/api/fetch-image・/post/bulk）はcurlでの手動検証のみ実施済み。
+  実際にXのタイムラインで動くかは、ユーザーによる初回利用時の確認が必要
