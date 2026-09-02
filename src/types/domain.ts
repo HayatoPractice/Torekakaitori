@@ -8,6 +8,7 @@ export interface Account {
   handle: string;
   display_name: string;
   notes: string | null;
+  url: string | null;
   created_at: string;
 }
 

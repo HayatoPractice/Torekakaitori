@@ -102,7 +102,7 @@ export default function ItemsPage() {
       </div>
 
       <div className="flex flex-wrap items-start gap-4">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {(["pending_review", "confirmed", "rejected", ""] as const).map((s) => (
             <button
               key={s || "all"}
@@ -151,7 +151,19 @@ export default function ItemsPage() {
                 const draft = editing[item.id];
                 return (
                   <tr key={item.id} className="border-b border-black/5 last:border-0 dark:border-white/10">
-                    <td className="px-3 py-2 whitespace-nowrap">{item.posts?.posted_date}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      {item.posts?.posted_date}
+                      {item.posts?.source_url && (
+                        <a
+                          href={item.posts.source_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="ml-1 text-xs opacity-60 hover:underline"
+                        >
+                          元投稿
+                        </a>
+                      )}
+                    </td>
                     <td className="px-3 py-2 whitespace-nowrap">{item.accounts?.display_name}</td>
                     <td className="px-3 py-2">
                       {draft ? (

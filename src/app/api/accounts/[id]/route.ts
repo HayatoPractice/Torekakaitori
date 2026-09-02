@@ -16,13 +16,16 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const displayName = typeof body.display_name === "string" ? body.display_name.trim() : null;
   const hasNotes = "notes" in body;
   const notes = hasNotes ? (body.notes ? String(body.notes).trim() : null) : null;
+  const hasUrl = "url" in body;
+  const url = hasUrl ? (body.url ? String(body.url).trim() : null) : null;
 
   try {
     const updated = await sql`
       UPDATE accounts SET
         handle = COALESCE(${handle}, handle),
         display_name = COALESCE(${displayName}, display_name),
-        notes = CASE WHEN ${hasNotes} THEN ${notes} ELSE notes END
+        notes = CASE WHEN ${hasNotes} THEN ${notes} ELSE notes END,
+        url = CASE WHEN ${hasUrl} THEN ${url} ELSE url END
       WHERE id = ${id}
       RETURNING *
     `;

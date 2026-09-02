@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
   const handle = String(body.handle ?? "").trim();
   const displayName = String(body.display_name ?? "").trim();
   const notes = body.notes ? String(body.notes).trim() : null;
+  const url = body.url ? String(body.url).trim() : null;
 
   if (!handle || !displayName) {
     return NextResponse.json({ error: "handle と display_name は必須です" }, { status: 400 });
@@ -22,8 +23,8 @@ export async function POST(req: NextRequest) {
   const sql = getSql();
   try {
     const created = await sql`
-      INSERT INTO accounts (handle, display_name, notes)
-      VALUES (${handle}, ${displayName}, ${notes})
+      INSERT INTO accounts (handle, display_name, notes, url)
+      VALUES (${handle}, ${displayName}, ${notes}, ${url})
       RETURNING *
     `;
     return NextResponse.json({ account: created[0] }, { status: 201 });

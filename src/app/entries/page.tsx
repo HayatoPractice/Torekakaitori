@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import useSWR from "swr";
-import { jsonFetcher } from "@/lib/api-client";
+import { jsonFetcher, readJson } from "@/lib/api-client";
 import { useSelectedAccounts } from "@/hooks/useSelectedAccounts";
 import AccountCheckboxList from "@/components/AccountCheckboxList";
 import type { Account, ExtractedItem, Post, PostImage } from "@/types/domain";
@@ -22,6 +22,9 @@ interface PostWithRelations extends Post {
 export default function EntriesPage() {
   const [date, setDate] = useState(todayLocalDate());
   const { selectedIds, toggle, setSelectedIds } = useSelectedAccounts();
+  const [editingAccountFor, setEditingAccountFor] = useState<string | null>(null);
+  const [accountDraft, setAccountDraft] = useState("");
+  const [accountError, setAccountError] = useState<string | null>(null);
 
   const { data: accountsData } = useSWR<{ accounts: Account[] }>("/api/accounts", jsonFetcher);
   const accounts = accountsData?.accounts ?? [];
@@ -29,11 +32,33 @@ export default function EntriesPage() {
   // 何もチェックしていない場合は「すべて」扱いにする
   const qs = new URLSearchParams({ date });
   if (selectedIds.length > 0) qs.set("account_ids", selectedIds.join(","));
-  const { data: postsData, error, isLoading } = useSWR<{ posts: PostWithRelations[] }>(
+  const { data: postsData, error, isLoading, mutate } = useSWR<{ posts: PostWithRelations[] }>(
     `/api/posts?${qs.toString()}`,
     jsonFetcher
   );
   const posts = postsData?.posts ?? [];
+
+  function startEditAccount(post: PostWithRelations) {
+    setAccountError(null);
+    setEditingAccountFor(post.id);
+    setAccountDraft(post.account_id);
+  }
+
+  async function saveAccount(postId: string) {
+    setAccountError(null);
+    try {
+      const res = await fetch(`/api/posts/${postId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ account_id: accountDraft }),
+      });
+      await readJson(res);
+      setEditingAccountFor(null);
+      mutate();
+    } catch (err) {
+      setAccountError(err instanceof Error ? err.message : "変更に失敗しました");
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -61,6 +86,7 @@ export default function EntriesPage() {
       </div>
 
       {error && <p className="text-sm text-red-500">{error.message}</p>}
+      {accountError && <p className="text-sm text-red-500">{accountError}</p>}
       {isLoading && <p className="text-sm opacity-60">読み込み中...</p>}
 
       {!isLoading && posts.length === 0 && (
@@ -71,10 +97,38 @@ export default function EntriesPage() {
         {posts.map((post) => (
           <div key={post.id} className="rounded-lg border border-black/10 p-4 dark:border-white/10">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-sm">
-              <span className="font-medium">
-                {post.accounts?.display_name ?? "不明なアカウント"}
-                <span className="ml-2 opacity-50">{post.accounts?.handle}</span>
-              </span>
+              {editingAccountFor === post.id ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    value={accountDraft}
+                    onChange={(e) => setAccountDraft(e.target.value)}
+                    className="max-w-full rounded-md border border-black/15 bg-transparent px-2 py-1 text-sm dark:border-white/20"
+                  >
+                    {accounts.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.display_name}（{a.handle}）
+                      </option>
+                    ))}
+                  </select>
+                  <button onClick={() => saveAccount(post.id)} className="text-xs text-emerald-600 hover:underline dark:text-emerald-400">
+                    保存
+                  </button>
+                  <button onClick={() => setEditingAccountFor(null)} className="text-xs hover:underline">
+                    キャンセル
+                  </button>
+                </div>
+              ) : (
+                <span className="font-medium">
+                  {post.accounts?.display_name ?? "不明なアカウント"}
+                  <span className="ml-2 opacity-50">{post.accounts?.handle}</span>
+                  <button
+                    onClick={() => startEditAccount(post)}
+                    className="ml-2 text-xs opacity-60 hover:underline"
+                  >
+                    アカウントを変更
+                  </button>
+                </span>
+              )}
               <div className="flex items-center gap-2">
                 {post.status === "error" && <span className="text-red-500">解析エラー</span>}
                 {post.status === "pending" && <span className="opacity-50">解析中...</span>}
@@ -103,20 +157,22 @@ export default function EntriesPage() {
             )}
 
             {post.extracted_items.length > 0 && (
-              <table className="mt-2 w-full text-sm">
-                <tbody>
-                  {post.extracted_items.map((item) => (
-                    <tr key={item.id} className="border-t border-black/5 dark:border-white/10">
-                      <td className="py-1.5">{item.product_name_raw}</td>
-                      <td className="py-1.5">{item.price_type === "buy" ? "買取" : "販売"}</td>
-                      <td className="py-1.5">¥{item.price.toLocaleString()}</td>
-                      <td className="py-1.5 text-xs opacity-60">
-                        {item.review_status === "pending_review" ? "要確認" : ""}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="mt-2 overflow-x-auto">
+                <table className="w-full min-w-[420px] text-sm">
+                  <tbody>
+                    {post.extracted_items.map((item) => (
+                      <tr key={item.id} className="border-t border-black/5 dark:border-white/10">
+                        <td className="py-1.5">{item.product_name_raw}</td>
+                        <td className="py-1.5">{item.price_type === "buy" ? "買取" : "販売"}</td>
+                        <td className="py-1.5">¥{item.price.toLocaleString()}</td>
+                        <td className="py-1.5 text-xs opacity-60">
+                          {item.review_status === "pending_review" ? "要確認" : ""}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         ))}

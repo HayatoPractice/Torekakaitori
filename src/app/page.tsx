@@ -1,264 +1,128 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useState } from "react";
 import useSWR from "swr";
 import { jsonFetcher, readJson } from "@/lib/api-client";
-import type { Account, ExtractedItem } from "@/types/domain";
+import type { Product, ProductAlias } from "@/types/domain";
 
-function todayLocalDate(): string {
-  const d = new Date();
-  const offset = d.getTimezoneOffset();
-  const local = new Date(d.getTime() - offset * 60_000);
-  return local.toISOString().slice(0, 10);
+interface ProductWithAliases extends Product {
+  product_aliases: ProductAlias[];
 }
 
-interface PendingImage {
-  file: File;
-  base64Data: string;
-  mimeType: string;
-  previewUrl: string;
-}
+export default function ProductsPage() {
+  const { data, error: loadError, mutate } = useSWR<{ products: ProductWithAliases[] }>(
+    "/api/products",
+    jsonFetcher
+  );
+  const products = data?.products ?? [];
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      resolve(result.split(",")[1] ?? "");
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+  const [search, setSearch] = useState("");
+  const [mergeFrom, setMergeFrom] = useState("");
+  const [mergeInto, setMergeInto] = useState("");
+  const [mergeMessage, setMergeMessage] = useState<string | null>(null);
 
-function DashboardForm() {
-  const searchParams = useSearchParams();
-  const { data: accountsData, error: accountsError } = useSWR<{ accounts: Account[] }>("/api/accounts", jsonFetcher);
-  const accounts = accountsData?.accounts ?? [];
+  const filtered = products.filter((p) => p.canonical_name.toLowerCase().includes(search.toLowerCase()));
 
-  // ブックマークレットからの遷移（?url=...&text=...&account=...）でフォームを事前入力する
-  const [accountId, setAccountId] = useState(() => searchParams.get("account") ?? "");
-  const [postedDate, setPostedDate] = useState(todayLocalDate());
-  const [sourceUrl, setSourceUrl] = useState(() => searchParams.get("url") ?? "");
-  const [rawText, setRawText] = useState(() => searchParams.get("text") ?? "");
-  const [images, setImages] = useState<PendingImage[]>([]);
-  const [submitting, setSubmitting] = useState(false);
-  const [resultItems, setResultItems] = useState<ExtractedItem[] | null>(null);
-  const [message, setMessage] = useState<{ kind: "info" | "error"; text: string } | null>(null);
-  const displayedMessage =
-    message ?? (accountsError ? { kind: "error" as const, text: accountsError.message } : null);
-
-  async function handleFiles(fileList: FileList | null) {
-    if (!fileList) return;
-    const newImages: PendingImage[] = [];
-    for (const file of Array.from(fileList)) {
-      if (!file.type.startsWith("image/")) continue;
-      const base64Data = await fileToBase64(file);
-      newImages.push({ file, base64Data, mimeType: file.type, previewUrl: URL.createObjectURL(file) });
-    }
-    setImages((prev) => [...prev, ...newImages]);
-  }
-
-  function removeImage(index: number) {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleMerge(e: React.FormEvent) {
     e.preventDefault();
-    setMessage(null);
-    if (!accountId) {
-      setMessage({ kind: "error", text: "対象アカウントを選択してください" });
+    setMergeMessage(null);
+    if (!mergeFrom || !mergeInto || mergeFrom === mergeInto) {
+      setMergeMessage("統合元と統合先に異なる商品を選択してください");
       return;
     }
-    if (!sourceUrl.trim() && !rawText.trim() && images.length === 0) {
-      setMessage({ kind: "error", text: "URL・テキスト・画像のいずれかを入力してください" });
-      return;
-    }
-    setSubmitting(true);
-    setResultItems(null);
     try {
-      const res = await fetch("/api/posts", {
+      const res = await fetch("/api/products/merge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          account_id: accountId,
-          posted_date: postedDate,
-          source_url: sourceUrl.trim() || null,
-          raw_text: rawText.trim() || null,
-          images: images.map((img) => ({ base64Data: img.base64Data, mimeType: img.mimeType })),
-        }),
+        body: JSON.stringify({ from_product_id: mergeFrom, into_product_id: mergeInto }),
       });
-      const data = await readJson<{ items: ExtractedItem[]; duplicate: boolean; message?: string }>(res);
-      if (data.duplicate) {
-        setMessage({ kind: "info", text: data.message ?? "同一の投稿が既に登録されています" });
-      } else {
-        setMessage({ kind: "info", text: `${data.items.length}件の価格情報を抽出しました` });
-        setResultItems(data.items);
-      }
-      // 連続投入しやすいよう、アカウント・投稿日は維持したまま入力欄だけ空にする
-      setSourceUrl("");
-      setRawText("");
-      setImages([]);
+      await readJson(res);
+      setMergeMessage("統合しました");
+      setMergeFrom("");
+      setMergeInto("");
+      mutate();
     } catch (err) {
-      setMessage({ kind: "error", text: err instanceof Error ? err.message : "登録に失敗しました" });
-    } finally {
-      setSubmitting(false);
+      setMergeMessage(err instanceof Error ? err.message : "統合に失敗しました");
     }
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold">投稿を登録</h1>
-        <p className="mt-1 text-sm opacity-70">
-          Xの投稿URL・テキスト・画像を貼り付けると、AIがBOX/パックの価格情報を自動抽出します。
-          複数投稿分のテキストをまとめて貼っても、画像を複数枚まとめてアップロードしても構いません。
-        </p>
-      </div>
+      <h1 className="text-xl font-bold">商品・相場比較</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-black/10 p-4 dark:border-white/10">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium">対象アカウント</span>
+      <input
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="商品名で絞り込み"
+        className="w-full max-w-sm rounded-md border border-black/15 bg-transparent px-3 py-2 text-sm dark:border-white/20"
+      />
+
+      {loadError && <p className="text-sm text-red-500">{loadError.message}</p>}
+
+      <ul className="divide-y divide-black/5 rounded-lg border border-black/10 dark:divide-white/10 dark:border-white/10">
+        {filtered.map((p) => (
+          <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
+            <div className="min-w-0">
+              <Link href={`/products/${p.id}`} className="font-medium hover:underline">
+                {p.canonical_name}
+              </Link>
+              {p.product_aliases.length > 0 && (
+                <p className="text-xs opacity-50">
+                  表記ゆれ: {p.product_aliases.map((a) => a.alias_text).join(" / ")}
+                </p>
+              )}
+            </div>
+            <span className="shrink-0 rounded bg-black/5 px-2 py-0.5 text-xs dark:bg-white/10">
+              {p.item_type === "box" ? "BOX" : p.item_type === "pack" ? "パック" : "その他"}
+            </span>
+          </li>
+        ))}
+        {filtered.length === 0 && <li className="px-4 py-3 text-sm opacity-60">商品がありません</li>}
+      </ul>
+
+      <div className="rounded-lg border border-black/10 p-4 dark:border-white/10">
+        <h2 className="mb-3 text-sm font-semibold">表記ゆれの統合</h2>
+        <p className="mb-3 text-xs opacity-60">
+          同じ商品が別名で登録されてしまった場合、統合元を統合先へまとめられます（統合元は削除されます）。
+        </p>
+        <form onSubmit={handleMerge} className="flex flex-wrap items-end gap-3">
+          <label className="text-sm">
+            <span className="mb-1 block">統合元（消える方）</span>
             <select
-              value={accountId}
-              onChange={(e) => setAccountId(e.target.value)}
-              className="w-full rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
+              value={mergeFrom}
+              onChange={(e) => setMergeFrom(e.target.value)}
+              className="rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
             >
-              <option value="">選択してください</option>
-              {accounts.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.display_name}（{a.handle}）
+              <option value="">選択</option>
+              {products.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.canonical_name}
                 </option>
               ))}
             </select>
-            {accounts.length === 0 && (
-              <span className="mt-1 block text-xs opacity-60">
-                アカウントが未登録です。先に「アカウント管理」から登録してください。
-              </span>
-            )}
           </label>
-
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium">投稿日</span>
-            <input
-              type="date"
-              value={postedDate}
-              onChange={(e) => setPostedDate(e.target.value)}
-              className="w-full rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
-            />
+          <label className="text-sm">
+            <span className="mb-1 block">統合先（残る方）</span>
+            <select
+              value={mergeInto}
+              onChange={(e) => setMergeInto(e.target.value)}
+              className="rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
+            >
+              <option value="">選択</option>
+              {products.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.canonical_name}
+                </option>
+              ))}
+            </select>
           </label>
-        </div>
-
-        <label className="block text-sm">
-          <span className="mb-1 block font-medium">投稿URL（任意・重複チェックや引用元の記録に使用）</span>
-          <input
-            type="url"
-            value={sourceUrl}
-            onChange={(e) => setSourceUrl(e.target.value)}
-            placeholder="https://x.com/..."
-            className="w-full rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
-          />
-        </label>
-
-        <label className="block text-sm">
-          <span className="mb-1 block font-medium">テキスト（複数投稿分をまとめて貼り付け可）</span>
-          <textarea
-            value={rawText}
-            onChange={(e) => setRawText(e.target.value)}
-            rows={6}
-            placeholder="投稿本文をそのまま貼り付けてください"
-            className="w-full rounded-md border border-black/15 bg-transparent px-3 py-2 font-mono text-xs dark:border-white/20"
-          />
-        </label>
-
-        <div className="text-sm">
-          <span className="mb-1 block font-medium">画像（複数枚まとめてアップロード可）</span>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={(e) => handleFiles(e.target.files)}
-            className="block w-full text-sm"
-          />
-          {images.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {images.map((img, i) => (
-                <div key={i} className="relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img.previewUrl} alt="" className="h-20 w-20 rounded-md object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(i)}
-                    className="absolute -right-1 -top-1 rounded-full bg-black/70 px-1.5 text-xs text-white"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
-        >
-          {submitting ? "解析中..." : "登録してAI解析する"}
-        </button>
-      </form>
-
-      {displayedMessage && (
-        <div
-          className={`rounded-md px-4 py-3 text-sm ${
-            displayedMessage.kind === "error"
-              ? "bg-red-500/10 text-red-600 dark:text-red-400"
-              : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-          }`}
-        >
-          {displayedMessage.text}
-        </div>
-      )}
-
-      {resultItems && resultItems.length > 0 && (
-        <div className="rounded-lg border border-black/10 p-4 dark:border-white/10">
-          <h2 className="mb-3 text-sm font-semibold">抽出結果</h2>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left opacity-60">
-                <th className="pb-2">商品名</th>
-                <th className="pb-2">種別</th>
-                <th className="pb-2">価格</th>
-                <th className="pb-2">確信度</th>
-                <th className="pb-2">状態</th>
-              </tr>
-            </thead>
-            <tbody>
-              {resultItems.map((item) => (
-                <tr key={item.id} className="border-t border-black/5 dark:border-white/10">
-                  <td className="py-2">{item.product_name_raw}</td>
-                  <td className="py-2">{item.price_type === "buy" ? "買取" : "販売"}</td>
-                  <td className="py-2">¥{item.price.toLocaleString()}</td>
-                  <td className="py-2">{Math.round(item.confidence * 100)}%</td>
-                  <td className="py-2">
-                    {item.review_status === "confirmed" ? "確定" : item.review_status === "pending_review" ? "要確認" : "却下"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+          <button type="submit" className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background">
+            統合する
+          </button>
+        </form>
+        {mergeMessage && <p className="mt-2 text-sm">{mergeMessage}</p>}
+      </div>
     </div>
-  );
-}
-
-export default function DashboardPage() {
-  return (
-    <Suspense fallback={null}>
-      <DashboardForm />
-    </Suspense>
   );
 }

@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
-  { href: "/", label: "投稿を登録" },
+  { href: "/", label: "商品・相場比較" },
+  { href: "/post", label: "投稿を登録" },
   { href: "/entries", label: "日別に見る" },
   { href: "/accounts", label: "アカウント管理" },
   { href: "/items", label: "レビュー待ち" },
-  { href: "/products", label: "商品・相場比較" },
   { href: "/bookmarklet", label: "ブックマークレット" },
 ];
 

@@ -44,7 +44,14 @@ export default function AccountSummaryPage({ params }: { params: Promise<{ id: s
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold">{account.display_name}</h1>
-        <p className="text-sm opacity-60">{account.handle}</p>
+        <p className="text-sm opacity-60">
+          {account.handle}
+          {account.url && (
+            <a href={account.url} target="_blank" rel="noreferrer" className="ml-2 text-xs hover:underline">
+              アカウントページを開く
+            </a>
+          )}
+        </p>
       </div>
 
       {products.length === 0 ? (

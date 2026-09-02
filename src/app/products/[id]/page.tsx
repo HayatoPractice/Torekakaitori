@@ -99,11 +99,11 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           ) : (
             <ol className="space-y-1 text-sm">
               {sellRanking.map((r, i) => (
-                <li key={`${r.account}-${i}`} className="flex justify-between">
-                  <span>
+                <li key={`${r.account}-${i}`} className="flex justify-between gap-2">
+                  <span className="min-w-0 break-words">
                     {i + 1}. {r.account}
                   </span>
-                  <span>¥{r.price.toLocaleString()}</span>
+                  <span className="shrink-0">¥{r.price.toLocaleString()}</span>
                 </li>
               ))}
             </ol>
@@ -116,11 +116,11 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           ) : (
             <ol className="space-y-1 text-sm">
               {buyRanking.map((r, i) => (
-                <li key={`${r.account}-${i}`} className="flex justify-between">
-                  <span>
+                <li key={`${r.account}-${i}`} className="flex justify-between gap-2">
+                  <span className="min-w-0 break-words">
                     {i + 1}. {r.account}
                   </span>
-                  <span>¥{r.price.toLocaleString()}</span>
+                  <span className="shrink-0">¥{r.price.toLocaleString()}</span>
                 </li>
               ))}
             </ol>

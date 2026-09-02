@@ -14,9 +14,9 @@ interface Props {
 export default function AccountCheckboxList({ accounts, selectedIds, onToggle, onSelectAll, onClearAll }: Props) {
   return (
     <div className="rounded-lg border border-black/10 dark:border-white/10">
-      <div className="flex items-center justify-between border-b border-black/10 px-3 py-2 text-xs dark:border-white/10">
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-black/10 px-3 py-2 text-xs dark:border-white/10">
         <span className="font-medium opacity-70">アカウント（チェックしたものだけ表示）</span>
-        <div className="space-x-3">
+        <div className="shrink-0 space-x-3">
           {onSelectAll && (
             <button type="button" onClick={onSelectAll} className="hover:underline">
               すべて選択
@@ -37,10 +37,11 @@ export default function AccountCheckboxList({ accounts, selectedIds, onToggle, o
                 type="checkbox"
                 checked={selectedIds.includes(a.id)}
                 onChange={() => onToggle(a.id)}
-                className="h-4 w-4"
+                className="h-4 w-4 shrink-0"
               />
-              <span>{a.display_name}</span>
-              <span className="opacity-50">{a.handle}</span>
+              <span className="min-w-0 break-words">
+                {a.display_name} <span className="opacity-50">{a.handle}</span>
+              </span>
             </label>
           </li>
         ))}
