@@ -16,6 +16,7 @@ export interface Product {
   id: string;
   canonical_name: string;
   item_type: ItemType;
+  has_image: boolean;
   created_at: string;
 }
 

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import { jsonFetcher, readJson } from "@/lib/api-client";
 import { todayLocalDate } from "@/lib/date";
+import { fileToBase64 } from "@/lib/file";
 import { formatYen, priceTypeLabel } from "@/lib/format";
 import type { Account, ExtractedItem } from "@/types/domain";
 
@@ -13,18 +14,6 @@ interface PendingImage {
   base64Data: string;
   mimeType: string;
   previewUrl: string;
-}
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      resolve(result.split(",")[1] ?? "");
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
 }
 
 function PostForm() {

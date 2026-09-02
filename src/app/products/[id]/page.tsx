@@ -61,7 +61,17 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-xl font-bold">{product.canonical_name}</h1>
+        <div className="flex items-center gap-3">
+          {product.has_image && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={`/api/products/${id}/image`}
+              alt=""
+              className="h-16 w-16 shrink-0 rounded-md object-cover"
+            />
+          )}
+          <h1 className="text-xl font-bold">{product.canonical_name}</h1>
+        </div>
         <a
           href={`/api/export/csv?product_id=${id}`}
           className="rounded-md border border-black/15 px-3 py-1.5 text-sm hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"

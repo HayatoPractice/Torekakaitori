@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import useSWR from "swr";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { jsonFetcher, readJson } from "@/lib/api-client";
+import { fileToBase64 } from "@/lib/file";
 import { formatYen } from "@/lib/format";
 import type { PriceType, Product, ProductAlias } from "@/types/domain";
 
@@ -48,9 +49,42 @@ export default function ProductsPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [granularity, setGranularity] = useState<Granularity>("day");
   const [priceType, setPriceType] = useState<PriceType>("sell");
+  const [uploadingFor, setUploadingFor] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadTargetRef = useRef<string | null>(null);
 
   const filtered = products.filter((p) => p.canonical_name.toLowerCase().includes(search.toLowerCase()));
   const selectedProducts = products.filter((p) => selectedIds.includes(p.id));
+
+  function startImageUpload(productId: string) {
+    uploadTargetRef.current = productId;
+    fileInputRef.current?.click();
+  }
+
+  async function handleImageSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    const productId = uploadTargetRef.current;
+    e.target.value = ""; // 同じファイルを選び直しても発火するように毎回空に戻す
+    if (!file || !productId) return;
+
+    setImageError(null);
+    setUploadingFor(productId);
+    try {
+      const base64Data = await fileToBase64(file);
+      const res = await fetch(`/api/products/${productId}/image`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ base64Data, mimeType: file.type }),
+      });
+      await readJson(res);
+      mutate();
+    } catch (err) {
+      setImageError(err instanceof Error ? err.message : "画像のアップロードに失敗しました");
+    } finally {
+      setUploadingFor(null);
+    }
+  }
 
   const compareQs = new URLSearchParams({ product_ids: selectedIds.join(","), granularity, price_type: priceType });
   const { data: compareData, error: compareError } = useSWR<{ rows: CompareRow[] }>(
@@ -97,7 +131,16 @@ export default function ProductsPage() {
         className="w-full max-w-sm rounded-md border border-black/15 bg-transparent px-3 py-2 text-sm dark:border-white/20"
       />
 
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageSelected}
+        className="hidden"
+      />
+
       {loadError && <p className="text-sm text-red-500">{loadError.message}</p>}
+      {imageError && <p className="text-sm text-red-500">{imageError}</p>}
 
       <ul className="divide-y divide-black/5 rounded-lg border border-black/10 dark:divide-white/10 dark:border-white/10">
         {filtered.map((p) => (
@@ -110,6 +153,18 @@ export default function ProductsPage() {
                 className="mt-1 h-4 w-4 shrink-0"
                 aria-label={`${p.canonical_name}をトレンド比較に追加`}
               />
+              {p.has_image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={`/api/products/${p.id}/image`}
+                  alt=""
+                  className="h-10 w-10 shrink-0 rounded object-cover"
+                />
+              ) : (
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-black/5 text-[10px] opacity-40 dark:bg-white/10">
+                  画像無し
+                </div>
+              )}
               <div className="min-w-0">
                 <Link href={`/products/${p.id}`} className="font-medium hover:underline">
                   {p.canonical_name}
@@ -119,6 +174,14 @@ export default function ProductsPage() {
                     表記ゆれ: {p.product_aliases.map((a) => a.alias_text).join(" / ")}
                   </p>
                 )}
+                <button
+                  type="button"
+                  onClick={() => startImageUpload(p.id)}
+                  disabled={uploadingFor === p.id}
+                  className="block text-xs opacity-60 hover:underline disabled:opacity-30"
+                >
+                  {uploadingFor === p.id ? "アップロード中..." : p.has_image ? "画像を変更" : "画像を追加"}
+                </button>
               </div>
             </div>
             <span className="shrink-0 rounded bg-black/5 px-2 py-0.5 text-xs dark:bg-white/10">
@@ -140,6 +203,23 @@ export default function ProductsPage() {
             >
               選択解除
             </button>
+          </div>
+
+          <div className="mb-4 flex flex-wrap gap-2">
+            {selectedProducts.map((p) => (
+              <span
+                key={p.id}
+                className="flex items-center gap-1.5 rounded-full bg-black/5 py-1 pl-1 pr-2.5 text-xs dark:bg-white/10"
+              >
+                {p.has_image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={`/api/products/${p.id}/image`} alt="" className="h-5 w-5 rounded-full object-cover" />
+                ) : (
+                  <span className="h-5 w-5 rounded-full bg-black/10 dark:bg-white/20" />
+                )}
+                {p.canonical_name}
+              </span>
+            ))}
           </div>
 
           <div className="mb-4 flex flex-wrap gap-3">

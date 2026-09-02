@@ -33,6 +33,11 @@ GitHub: https://github.com/HayatoPractice/Torekakaitori
 - 2026-09-02、ホーム画面（商品・相場比較）に複数商品選択のトレンド比較棒グラフを追加。
   一覧の各商品にチェックボックスを追加し、選択すると`/api/summary/products/compare`
   （1日単位/年単位で平均価格を集計、価格区分は販売/買取を切り替え可能）を叩いて表示する
+- 2026-09-02、商品に代表画像（1枚・任意）を持たせられるように。投稿画像と同じくbytea保存
+  （`/api/products/[id]/image`）。アップロードはホーム画面の商品一覧の各行から行う設計にし、
+  画像はユーザー自身が用意したものを使う方針（著作権・誤マッチのリスクがあるため、AIによる
+  ネット検索での自動収集は採用しなかった）。一覧・詳細APIは`has_image`フラグのみ返し、
+  画像本体（bytea）を一覧に含めない設計にしている（post_imagesと同じ理由）
 - 2026-09-02、コード監査＆整理を実施。①`@types/node`を実際の本番Node（Vercel=24.x）に合わせて
   `^24`へ、`engines.node`を明記、②zodを実際に導入し主要APIルート（accounts/posts/items/
   products merge/scrape-import）の手書きバリデーションを`src/lib/validation.ts`のスキーマへ
