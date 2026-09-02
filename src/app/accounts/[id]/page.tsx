@@ -4,6 +4,7 @@ import Link from "next/link";
 import { use } from "react";
 import useSWR from "swr";
 import { jsonFetcher } from "@/lib/api-client";
+import { formatYen } from "@/lib/format";
 import type { Account } from "@/types/domain";
 
 interface Aggregate {
@@ -25,7 +26,7 @@ interface ProductSummary {
 const HIGHLIGHT_SPREAD_RATIO = 0.3;
 
 function yen(v: number | null): string {
-  return v === null ? "—" : `¥${v.toLocaleString()}`;
+  return v === null ? "—" : formatYen(v);
 }
 
 export default function AccountSummaryPage({ params }: { params: Promise<{ id: string }> }) {
@@ -94,7 +95,7 @@ export default function AccountSummaryPage({ params }: { params: Promise<{ id: s
                         highlight ? "bg-amber-500/20 text-amber-700 dark:text-amber-400" : ""
                       }`}
                     >
-                      {p.spread !== null ? `¥${p.spread.toLocaleString()}` : "—"}
+                      {yen(p.spread)}
                     </td>
                   </tr>
                 );

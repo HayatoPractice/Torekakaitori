@@ -3,15 +3,11 @@
 import { useState } from "react";
 import useSWR from "swr";
 import { jsonFetcher, readJson } from "@/lib/api-client";
+import { todayLocalDate } from "@/lib/date";
+import { formatYen, priceTypeLabel } from "@/lib/format";
 import { useSelectedAccounts } from "@/hooks/useSelectedAccounts";
 import AccountCheckboxList from "@/components/AccountCheckboxList";
 import type { Account, ExtractedItem, Post, PostImage } from "@/types/domain";
-
-function todayLocalDate(): string {
-  const d = new Date();
-  const offset = d.getTimezoneOffset();
-  return new Date(d.getTime() - offset * 60_000).toISOString().slice(0, 10);
-}
 
 interface PostWithRelations extends Post {
   accounts: { handle: string; display_name: string } | null;
@@ -163,8 +159,8 @@ export default function EntriesPage() {
                     {post.extracted_items.map((item) => (
                       <tr key={item.id} className="border-t border-black/5 dark:border-white/10">
                         <td className="py-1.5">{item.product_name_raw}</td>
-                        <td className="py-1.5">{item.price_type === "buy" ? "買取" : "販売"}</td>
-                        <td className="py-1.5">¥{item.price.toLocaleString()}</td>
+                        <td className="py-1.5">{priceTypeLabel(item.price_type)}</td>
+                        <td className="py-1.5">{formatYen(item.price)}</td>
                         <td className="py-1.5 text-xs opacity-60">
                           {item.review_status === "pending_review" ? "要確認" : ""}
                         </td>

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getSql } from "@/lib/db";
+import { parseBody } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
 
@@ -7,31 +9,47 @@ interface Params {
   params: Promise<{ id: string }>;
 }
 
-const ITEM_TYPES = new Set(["box", "pack", "other"]);
-const PRICE_TYPES = new Set(["sell", "buy"]);
-const REVIEW_STATUSES = new Set(["confirmed", "pending_review", "rejected"]);
+const patchItemSchema = z.object({
+  price: z
+    .number({ message: "価格は数値で指定してください" })
+    .int("価格は整数で指定してください")
+    .min(0, "価格は0以上にしてください")
+    .optional(),
+  product_name_raw: z
+    .string({ message: "product_name_raw は文字列で指定してください" })
+    .trim()
+    .min(1, "product_name_raw は空にできません")
+    .optional(),
+  product_id: z
+    .string({ message: "product_id は文字列で指定してください" })
+    .uuid("product_id の形式が不正です")
+    .optional(),
+  price_type: z.enum(["sell", "buy"], { message: "price_type は sell か buy を指定してください" }).optional(),
+  item_type: z
+    .enum(["box", "pack", "other"], { message: "item_type は box・pack・other のいずれかを指定してください" })
+    .optional(),
+  review_status: z
+    .enum(["confirmed", "pending_review", "rejected"], { message: "review_status の値が不正です" })
+    .optional(),
+});
 
 /** レビューUIからの確認・修正・却下を受け付ける */
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params;
-  const body = await req.json();
-
-  const price = typeof body.price === "number" ? Math.round(body.price) : null;
-  const productNameRaw = typeof body.product_name_raw === "string" ? body.product_name_raw.trim() : null;
-  const productId = typeof body.product_id === "string" ? body.product_id : null;
-  const priceType = PRICE_TYPES.has(body.price_type) ? (body.price_type as string) : null;
-  const itemType = ITEM_TYPES.has(body.item_type) ? (body.item_type as string) : null;
-  const reviewStatus = REVIEW_STATUSES.has(body.review_status) ? (body.review_status as string) : null;
+  const parsed = parseBody(patchItemSchema, await req.json());
+  if ("error" in parsed) return parsed.error;
+  const { price, product_name_raw: productNameRaw, product_id: productId, price_type: priceType, item_type: itemType, review_status: reviewStatus } =
+    parsed.data;
 
   const sql = getSql();
   const updated = await sql`
     UPDATE extracted_items ei SET
-      price = COALESCE(${price}, ei.price),
-      product_name_raw = COALESCE(${productNameRaw}, ei.product_name_raw),
-      product_id = COALESCE(${productId}::uuid, ei.product_id),
-      price_type = COALESCE(${priceType}, ei.price_type),
-      item_type = COALESCE(${itemType}, ei.item_type),
-      review_status = COALESCE(${reviewStatus}, ei.review_status)
+      price = COALESCE(${price ?? null}, ei.price),
+      product_name_raw = COALESCE(${productNameRaw ?? null}, ei.product_name_raw),
+      product_id = COALESCE(${productId ?? null}::uuid, ei.product_id),
+      price_type = COALESCE(${priceType ?? null}, ei.price_type),
+      item_type = COALESCE(${itemType ?? null}, ei.item_type),
+      review_status = COALESCE(${reviewStatus ?? null}, ei.review_status)
     WHERE ei.id = ${id}
     RETURNING ei.*
   `;

@@ -30,6 +30,17 @@ GitHub: https://github.com/HayatoPractice/Torekakaitori
   1件ずつ`/api/posts`へ登録）。DOMの`data-testid`に依存するため、Xの仕様変更で壊れる可能性が
   ある点はユーザー了承済み。画像はpbs.twimg.com等のURLを`/api/fetch-image`（ホスト許可制の
   プロキシ）経由でサーバー側から取得している（ブラウザから直接fetchするとCORSで失敗するため）
+- 2026-09-02、ホーム画面（商品・相場比較）に複数商品選択のトレンド比較棒グラフを追加。
+  一覧の各商品にチェックボックスを追加し、選択すると`/api/summary/products/compare`
+  （1日単位/年単位で平均価格を集計、価格区分は販売/買取を切り替え可能）を叩いて表示する
+- 2026-09-02、コード監査＆整理を実施。①`@types/node`を実際の本番Node（Vercel=24.x）に合わせて
+  `^24`へ、`engines.node`を明記、②zodを実際に導入し主要APIルート（accounts/posts/items/
+  products merge/scrape-import）の手書きバリデーションを`src/lib/validation.ts`のスキーマへ
+  置き換え（エラーメッセージは全て日本語で統一）、③`todayLocalDate`等の重複を`src/lib/date.ts`へ、
+  `¥`表示・価格区分ラベルの重複を`src/lib/format.ts`へ集約、④未使用の`ExtractedItemView`型を削除
+  （`ItemType`/`PostStatus`は他の型定義内部で使われているため残置）、⑤`scrape_batches`に
+  「新規作成のたびに24時間より古い行を掃除する」使い捨てクリーンアップを追加、
+  ⑥tsconfigの`target`をES2017→ES2022に更新
 - スタック：Next.js(App Router) + TypeScript + Tailwind + Neon(Postgres, `@neondatabase/serverless`で直接SQL) + Gemini API(`gemini-3.6-flash`)
 - 投稿画像はNeonにファイルストレージが無いため、DBにbytea（バイナリ）として直接保存
 - データ取得はSWR（useEffect+fetchの直書きは避ける方針。CODE_ANTI_PATTERNS.md AP-A1準拠）

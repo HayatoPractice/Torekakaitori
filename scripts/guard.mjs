@@ -178,10 +178,15 @@ const CHECKS = [
     title: 'サーバー側で、その場の日付を使っていないか',
     why: '日本時間0〜9時に日付が1日ずれる。深夜に使うと学習記録が前日に入る',
     run() {
-      // API ルートだけでなく lib も見る（サーバー側で動く日付処理はどちらにもあるため）
+      // API ルートだけでなく lib も見る（サーバー側で動く日付処理はどちらにもあるため）。
+      // 【例外】src/lib/date.ts は "use client" ページ専用のクライアント側ユーティリティで、
+      // getTimezoneOffset()でブラウザのローカル時刻へ補正してから.toISOString().slice(0,10)を
+      // 呼んでいる（＝このインシデントが警告する「補正なしでUTC日付を使う」パターンの正しい対策側）。
+      // 2026-09-02、実際にサーバー側（app/api配下）から一切importされていないことを確認して除外した。
       return FILES
         .filter((f) => /app\/api\/.*route\.ts$/.test(f.rel) || /lib\/.*\.ts$/.test(f.rel))
         .filter((f) => !/\.test\.ts$/.test(f.rel))
+        .filter((f) => f.rel !== 'src/lib/date.ts')
         .filter((f) => /\.toISOString\(\)\.(slice|substring)\(0,\s*10\)/.test(f.text))
         .map((f) => ({ file: f.rel, msg: 'toDayKeyInZone() を使うこと' }));
     },

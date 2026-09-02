@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getSql } from "@/lib/db";
+import { parseBody, requiredText } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
 
 interface Params {
   params: Promise<{ id: string }>;
 }
+
+const patchPostSchema = z.object({
+  account_id: requiredText("account_id は必須です"),
+});
 
 /**
  * PATCH /api/posts/[id] { account_id } — 投稿の対象アカウントを登録し直す
@@ -14,11 +20,9 @@ interface Params {
  */
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params;
-  const body = await req.json();
-  const accountId = typeof body.account_id === "string" ? body.account_id : null;
-  if (!accountId) {
-    return NextResponse.json({ error: "account_id は必須です" }, { status: 400 });
-  }
+  const parsed = parseBody(patchPostSchema, await req.json());
+  if ("error" in parsed) return parsed.error;
+  const { account_id: accountId } = parsed.data;
 
   const sql = getSql();
   const accountExists = await sql`SELECT 1 FROM accounts WHERE id = ${accountId}`;

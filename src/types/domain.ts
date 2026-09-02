@@ -60,14 +60,6 @@ export interface ExtractedItem {
   created_at: string;
 }
 
-/** extracted_items にアカウント名・投稿情報を結合した表示用の型 */
-export interface ExtractedItemView extends ExtractedItem {
-  account_handle: string;
-  account_display_name: string;
-  posted_date: string;
-  source_url: string | null;
-}
-
 /** Gemini解析が1件の投稿から返す構造化データ */
 export interface AnalyzedItem {
   product_name_raw: string;

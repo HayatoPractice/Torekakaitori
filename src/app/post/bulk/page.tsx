@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import { jsonFetcher, readJson } from "@/lib/api-client";
+import { todayLocalDate, toLocalDate } from "@/lib/date";
 import type { Account, ExtractedItem } from "@/types/domain";
 
 interface ScrapedItem {
@@ -21,21 +22,6 @@ interface BatchPayload {
 interface ItemResult {
   ok: boolean;
   message: string;
-}
-
-function todayLocalDate(): string {
-  const d = new Date();
-  const offset = d.getTimezoneOffset();
-  return new Date(d.getTime() - offset * 60_000).toISOString().slice(0, 10);
-}
-
-/** ISO日時（UTC）をこの端末のローカル日付（YYYY-MM-DD）に変換する。壊れていれば今日を返す */
-function toLocalDate(iso: string | null): string {
-  if (!iso) return todayLocalDate();
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return todayLocalDate();
-  const offset = d.getTimezoneOffset();
-  return new Date(d.getTime() - offset * 60_000).toISOString().slice(0, 10);
 }
 
 /** 取り込み元URL（例: https://x.com/example_shop/status/123）からXハンドルらしき部分を拾う */

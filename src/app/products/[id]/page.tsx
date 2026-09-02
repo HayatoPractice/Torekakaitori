@@ -4,6 +4,7 @@ import { use, useMemo } from "react";
 import useSWR from "swr";
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { jsonFetcher } from "@/lib/api-client";
+import { formatYen } from "@/lib/format";
 import type { Product } from "@/types/domain";
 
 interface TrendPoint {
@@ -79,8 +80,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
               <XAxis dataKey="date" fontSize={12} />
-              <YAxis fontSize={12} tickFormatter={(v) => `¥${v.toLocaleString()}`} />
-              <Tooltip formatter={(v) => `¥${Math.round(Number(v)).toLocaleString()}`} />
+              <YAxis fontSize={12} tickFormatter={(v) => formatYen(v)} />
+              <Tooltip formatter={(v) => formatYen(v)} />
               <Legend />
               <Line type="monotone" dataKey="販売" stroke="#2563eb" connectNulls dot={{ r: 3 }} />
               <Line type="monotone" dataKey="買取" stroke="#dc2626" connectNulls dot={{ r: 3 }} />
@@ -103,7 +104,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   <span className="min-w-0 break-words">
                     {i + 1}. {r.account}
                   </span>
-                  <span className="shrink-0">¥{r.price.toLocaleString()}</span>
+                  <span className="shrink-0">{formatYen(r.price)}</span>
                 </li>
               ))}
             </ol>
@@ -120,7 +121,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   <span className="min-w-0 break-words">
                     {i + 1}. {r.account}
                   </span>
-                  <span className="shrink-0">¥{r.price.toLocaleString()}</span>
+                  <span className="shrink-0">{formatYen(r.price)}</span>
                 </li>
               ))}
             </ol>

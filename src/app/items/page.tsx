@@ -3,6 +3,7 @@
 import { useState } from "react";
 import useSWR from "swr";
 import { jsonFetcher, readJson } from "@/lib/api-client";
+import { formatYen, priceTypeLabel } from "@/lib/format";
 import { useSelectedAccounts } from "@/hooks/useSelectedAccounts";
 import AccountCheckboxList from "@/components/AccountCheckboxList";
 import type { Account, ExtractedItem, Product, ReviewStatus } from "@/types/domain";
@@ -193,7 +194,7 @@ export default function ItemsPage() {
                         item.products?.canonical_name ?? item.product_name_raw
                       )}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap">{item.price_type === "buy" ? "買取" : "販売"}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">{priceTypeLabel(item.price_type)}</td>
                     <td className="px-3 py-2 whitespace-nowrap">
                       {draft ? (
                         <input
@@ -203,7 +204,7 @@ export default function ItemsPage() {
                           className="w-24 rounded border border-black/15 bg-transparent px-2 py-1 dark:border-white/20"
                         />
                       ) : (
-                        `¥${item.price.toLocaleString()}`
+                        formatYen(item.price)
                       )}
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap">{Math.round(item.confidence * 100)}%</td>

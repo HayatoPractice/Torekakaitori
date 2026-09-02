@@ -1,30 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { ingestPost } from "@/lib/ingest";
+import { optionalText, parseBody, requiredText } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // Gemini解析（複数画像含む）に時間がかかる場合があるため
 
-interface IncomingImage {
-  base64Data: string;
-  mimeType: string;
-  fileName?: string;
-}
+const imageSchema = z.object({
+  base64Data: z.string({ message: "base64Data は文字列で指定してください" }).min(1, "base64Data は必須です"),
+  mimeType: z.string({ message: "mimeType は文字列で指定してください" }).min(1, "mimeType は必須です"),
+  fileName: z.string().optional(),
+});
+
+const createPostSchema = z
+  .object({
+    account_id: requiredText("account_id は必須です"),
+    posted_date: requiredText("posted_date は必須です"),
+    source_url: optionalText,
+    raw_text: z.string({ message: "raw_text は文字列で指定してください" }).nullable().optional(),
+    images: z.array(imageSchema, { message: "images の形式が不正です" }).optional().default([]),
+  })
+  .refine((data) => !!(data.source_url || data.raw_text?.trim() || data.images.length > 0), {
+    message: "URL・テキスト・画像のいずれかを入力してください",
+  });
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const accountId = String(body.account_id ?? "");
-  const postedDate = String(body.posted_date ?? "");
-  const sourceUrl = body.source_url ? String(body.source_url).trim() : null;
-  const rawText = body.raw_text ? String(body.raw_text) : null;
-  const images: IncomingImage[] = Array.isArray(body.images) ? body.images : [];
-
-  if (!accountId || !postedDate) {
-    return NextResponse.json({ error: "account_id と posted_date は必須です" }, { status: 400 });
-  }
-  if (!sourceUrl && !rawText?.trim() && images.length === 0) {
-    return NextResponse.json({ error: "URL・テキスト・画像のいずれかを入力してください" }, { status: 400 });
-  }
+  const parsed = parseBody(createPostSchema, await req.json());
+  if ("error" in parsed) return parsed.error;
+  const { account_id: accountId, posted_date: postedDate, source_url: sourceUrl, raw_text: rawText, images } = parsed.data;
 
   const sql = getSql();
   const exists = await sql`SELECT 1 FROM accounts WHERE id = ${accountId}`;
@@ -33,7 +37,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const result = await ingestPost({ accountId, postedDate, sourceUrl, rawText, images });
+    const result = await ingestPost({ accountId, postedDate, sourceUrl, rawText: rawText ?? null, images });
     if (result.duplicateOf) {
       return NextResponse.json(
         { post: result.post, items: result.items, duplicate: true, message: "同一の投稿が既に登録されています" },
