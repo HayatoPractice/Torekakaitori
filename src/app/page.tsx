@@ -5,7 +5,7 @@ import { useMemo, useRef, useState } from "react";
 import useSWR from "swr";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { jsonFetcher, readJson } from "@/lib/api-client";
-import { fileToBase64 } from "@/lib/file";
+import { prepareImageForUpload } from "@/lib/file";
 import { formatYen } from "@/lib/format";
 import type { PriceType, Product, ProductAlias } from "@/types/domain";
 
@@ -71,11 +71,11 @@ export default function ProductsPage() {
     setImageError(null);
     setUploadingFor(productId);
     try {
-      const base64Data = await fileToBase64(file);
+      const { base64Data, mimeType } = await prepareImageForUpload(file);
       const res = await fetch(`/api/products/${productId}/image`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ base64Data, mimeType: file.type }),
+        body: JSON.stringify({ base64Data, mimeType }),
       });
       await readJson(res);
       mutate();

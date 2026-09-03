@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import { jsonFetcher, readJson } from "@/lib/api-client";
 import { todayLocalDate } from "@/lib/date";
-import { fileToBase64 } from "@/lib/file";
+import { prepareImageForUpload } from "@/lib/file";
 import { formatYen, priceTypeLabel } from "@/lib/format";
 import type { Account, ExtractedItem } from "@/types/domain";
 
@@ -38,8 +38,10 @@ function PostForm() {
     const newImages: PendingImage[] = [];
     for (const file of Array.from(fileList)) {
       if (!file.type.startsWith("image/")) continue;
-      const base64Data = await fileToBase64(file);
-      newImages.push({ file, base64Data, mimeType: file.type, previewUrl: URL.createObjectURL(file) });
+      // スマホカメラの未圧縮写真（数MB）をそのまま送るとアップロード・AI解析が遅くなり
+      // サーバー側のタイムアウト（504）を招くことがあるため、大きい画像はここで圧縮する
+      const { base64Data, mimeType } = await prepareImageForUpload(file);
+      newImages.push({ file, base64Data, mimeType, previewUrl: URL.createObjectURL(file) });
     }
     setImages((prev) => [...prev, ...newImages]);
   }
@@ -73,9 +75,24 @@ function PostForm() {
           images: images.map((img) => ({ base64Data: img.base64Data, mimeType: img.mimeType })),
         }),
       });
-      const data = await readJson<{ items: ExtractedItem[]; duplicate: boolean; message?: string }>(res);
+      const data = await readJson<{
+        items: ExtractedItem[];
+        duplicate: boolean;
+        noContentFound?: boolean;
+        message?: string;
+      }>(res);
       if (data.duplicate) {
         setMessage({ kind: "info", text: data.message ?? "同一の投稿が既に登録されています" });
+      } else if (data.noContentFound) {
+        // AIには内容を渡せたが、カード/BOXの価格情報として認識できなかった場合。
+        // 無関係な写真・雑談テキスト等をDBに残しても意味が無いため、サーバー側で登録自体を
+        // 取り消している。その旨を利用者にもはっきり伝える
+        setMessage({
+          kind: "info",
+          text:
+            data.message ??
+            "アップロードした内容（画像・テキスト）はカード・BOXの価格情報として認識できませんでした。登録は行っていません。",
+        });
       } else if (data.items.length === 0 && sourceUrl.trim() && !rawText.trim() && images.length === 0) {
         // URLはページ取得しない（無料枠の制約を受けない設計。DOCS/PROJECT_STATE.md参照）ため、
         // URLのみの投稿ではAIが読み取れる材料が無く必ず0件になる。原因を具体的に案内する

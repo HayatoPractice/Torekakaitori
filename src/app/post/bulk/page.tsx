@@ -125,10 +125,14 @@ function BulkReview() {
             images,
           }),
         });
-        const data = await readJson<{ items: ExtractedItem[]; duplicate: boolean }>(res);
-        nextResults[i] = data.duplicate
-          ? { ok: true, message: "重複のためスキップ" }
-          : { ok: true, message: `${data.items.length}件の価格情報を抽出` };
+        const data = await readJson<{ items: ExtractedItem[]; duplicate: boolean; noContentFound?: boolean }>(res);
+        if (data.duplicate) {
+          nextResults[i] = { ok: true, message: "重複のためスキップ" };
+        } else if (data.noContentFound) {
+          nextResults[i] = { ok: true, message: "カード関連の内容が見つからず未登録" };
+        } else {
+          nextResults[i] = { ok: true, message: `${data.items.length}件の価格情報を抽出` };
+        }
       } catch (err) {
         nextResults[i] = { ok: false, message: err instanceof Error ? err.message : "登録に失敗しました" };
       }

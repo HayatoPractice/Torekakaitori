@@ -7,8 +7,19 @@ import { optionalText, parseBody, requiredText } from "@/lib/validation";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // Gemini解析（複数画像含む）に時間がかかる場合があるため
 
+/**
+ * 圧縮済みの画像（クライアント側でsrc/lib/file.tsのprepareImageForUploadを通している）なら
+ * 通常これよりずっと小さくなる。極端に大きい画像はAI解析に時間がかかりすぎてサーバー側の
+ * タイムアウト（504）を招くため、Gemini呼び出しを試みる前にここで弾く
+ * （base64は元データの約4/3倍になるため、10MBの元データはおよそ1330万文字）
+ */
+const MAX_IMAGE_BASE64_CHARS = 13_300_000;
+
 const imageSchema = z.object({
-  base64Data: z.string({ message: "base64Data は文字列で指定してください" }).min(1, "base64Data は必須です"),
+  base64Data: z
+    .string({ message: "base64Data は文字列で指定してください" })
+    .min(1, "base64Data は必須です")
+    .max(MAX_IMAGE_BASE64_CHARS, "画像サイズが大きすぎます（10MBまで）。撮り直すか別の画像をお試しください"),
   mimeType: z.string({ message: "mimeType は文字列で指定してください" }).min(1, "mimeType は必須です"),
   fileName: z.string().optional(),
 });
@@ -41,6 +52,18 @@ export async function POST(req: NextRequest) {
     if (result.duplicateOf) {
       return NextResponse.json(
         { post: result.post, items: result.items, duplicate: true, message: "同一の投稿が既に登録されています" },
+        { status: 200 }
+      );
+    }
+    if (result.noContentFound) {
+      return NextResponse.json(
+        {
+          post: null,
+          items: [],
+          duplicate: false,
+          noContentFound: true,
+          message: "カード・BOXの商品や価格に関する内容が見つからなかったため、登録していません",
+        },
         { status: 200 }
       );
     }

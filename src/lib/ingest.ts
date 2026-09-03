@@ -23,9 +23,11 @@ export interface IngestInput {
 }
 
 export interface IngestResult {
-  post: Post;
+  post: Post | null; // noContentFoundの場合は登録を取り消すためnull
   items: ExtractedItem[];
   duplicateOf?: string; // 既存postのid（重複判定時のみ）
+  /** AI解析はできたが、カード/BOXの商品・価格に関する内容が1件も無かった場合true。この場合postは保存せず取り消す */
+  noContentFound?: boolean;
 }
 
 export async function ingestPost(input: IngestInput): Promise<IngestResult> {
@@ -75,6 +77,17 @@ export async function ingestPost(input: IngestInput): Promise<IngestResult> {
       rawText,
       images.map((img) => ({ base64Data: img.base64Data, mimeType: img.mimeType }))
     );
+
+    // カード/BOXの商品・価格情報が1件も無い投稿（無関係な写真・雑談テキスト等）は
+    // 空のpostとして残しても後で見返す価値が無いため、登録自体を取り消す。
+    // ただしAIに渡す材料（テキスト/画像）が最初から無かった場合（URL単体の投稿）は対象外。
+    // その場合はanalyzeCombinedがGeminiを呼ばずに[]を返しており、意味が異なる
+    // （URL単体は「読み取れる材料が無い」という別の案内をフロント側で表示する）
+    const hadMaterial = Boolean(rawText) || images.length > 0;
+    if (analyzed.length === 0 && hadMaterial) {
+      await sql`DELETE FROM posts WHERE id = ${post.id}`; // post_imagesはON DELETE CASCADEで一緒に消える
+      return { post: null, items: [], noContentFound: true };
+    }
 
     const items: ExtractedItem[] = [];
     for (const item of analyzed) {
