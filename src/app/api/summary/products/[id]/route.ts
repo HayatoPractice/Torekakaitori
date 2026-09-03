@@ -13,7 +13,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   const sql = getSql();
 
   const productRows = await sql`
-    SELECT id, canonical_name, item_type, created_at, (image_data IS NOT NULL) AS has_image
+    SELECT id, canonical_name, item_type, created_at, resale_notes, (image_data IS NOT NULL) AS has_image
     FROM products WHERE id = ${id}
   `;
   if (productRows.length === 0) return NextResponse.json({ error: "商品が見つかりません" }, { status: 404 });

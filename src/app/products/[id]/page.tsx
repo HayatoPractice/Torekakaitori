@@ -70,7 +70,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               className="h-16 w-16 shrink-0 rounded-md object-cover"
             />
           )}
-          <h1 className="text-xl font-bold">{product.canonical_name}</h1>
+          <div>
+            <h1 className="text-xl font-bold">{product.canonical_name}</h1>
+            {product.resale_notes && (
+              <p className="whitespace-pre-wrap text-xs opacity-60">再販: {product.resale_notes}</p>
+            )}
+          </div>
         </div>
         <a
           href={`/api/export/csv?product_id=${id}`}

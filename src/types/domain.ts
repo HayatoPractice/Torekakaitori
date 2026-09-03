@@ -17,6 +17,7 @@ export interface Product {
   canonical_name: string;
   item_type: ItemType;
   has_image: boolean;
+  resale_notes: string | null;
   created_at: string;
 }
 

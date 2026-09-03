@@ -53,6 +53,8 @@ export default function ProductsPage() {
   const [imageError, setImageError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadTargetRef = useRef<string | null>(null);
+  const [editing, setEditing] = useState<Record<string, { canonical_name: string; resale_notes: string }>>({});
+  const [editError, setEditError] = useState<string | null>(null);
 
   const filtered = products.filter((p) => p.canonical_name.toLowerCase().includes(search.toLowerCase()));
   const selectedProducts = products.filter((p) => selectedIds.includes(p.id));
@@ -83,6 +85,40 @@ export default function ProductsPage() {
       setImageError(err instanceof Error ? err.message : "画像のアップロードに失敗しました");
     } finally {
       setUploadingFor(null);
+    }
+  }
+
+  function startEdit(p: Product) {
+    setEditError(null);
+    setEditing((prev) => ({ ...prev, [p.id]: { canonical_name: p.canonical_name, resale_notes: p.resale_notes ?? "" } }));
+  }
+
+  function cancelEdit(id: string) {
+    setEditing((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }
+
+  async function saveEdit(id: string) {
+    const draft = editing[id];
+    if (!draft) return;
+    setEditError(null);
+    try {
+      const res = await fetch(`/api/products/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          canonical_name: draft.canonical_name.trim(),
+          resale_notes: draft.resale_notes.trim() || null,
+        }),
+      });
+      await readJson(res);
+      cancelEdit(id);
+      mutate();
+    } catch (err) {
+      setEditError(err instanceof Error ? err.message : "更新に失敗しました");
     }
   }
 
@@ -141,54 +177,98 @@ export default function ProductsPage() {
 
       {loadError && <p className="text-sm text-red-500">{loadError.message}</p>}
       {imageError && <p className="text-sm text-red-500">{imageError}</p>}
+      {editError && <p className="text-sm text-red-500">{editError}</p>}
 
       <ul className="divide-y divide-black/5 rounded-lg border border-black/10 dark:divide-white/10 dark:border-white/10">
-        {filtered.map((p) => (
-          <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
-            <div className="flex min-w-0 items-start gap-2">
-              <input
-                type="checkbox"
-                checked={selectedIds.includes(p.id)}
-                onChange={() => toggleProduct(p.id)}
-                className="mt-1 h-4 w-4 shrink-0"
-                aria-label={`${p.canonical_name}をトレンド比較に追加`}
-              />
-              {p.has_image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={`/api/products/${p.id}/image`}
-                  alt=""
-                  className="h-10 w-10 shrink-0 rounded object-cover"
+        {filtered.map((p) => {
+          const draft = editing[p.id];
+          return (
+            <li key={p.id} className="flex flex-wrap items-start justify-between gap-2 px-4 py-3 text-sm">
+              <div className="flex min-w-0 flex-1 items-start gap-2">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(p.id)}
+                  onChange={() => toggleProduct(p.id)}
+                  className="mt-1 h-4 w-4 shrink-0"
+                  aria-label={`${p.canonical_name}をトレンド比較に追加`}
                 />
-              ) : (
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-black/5 text-[10px] opacity-40 dark:bg-white/10">
-                  画像無し
-                </div>
-              )}
-              <div className="min-w-0">
-                <Link href={`/products/${p.id}`} className="font-medium hover:underline">
-                  {p.canonical_name}
-                </Link>
-                {p.product_aliases.length > 0 && (
-                  <p className="text-xs opacity-50">
-                    表記ゆれ: {p.product_aliases.map((a) => a.alias_text).join(" / ")}
-                  </p>
+                {p.has_image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={`/api/products/${p.id}/image`}
+                    alt=""
+                    className="h-10 w-10 shrink-0 rounded object-cover"
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-black/5 text-[10px] opacity-40 dark:bg-white/10">
+                    画像無し
+                  </div>
                 )}
-                <button
-                  type="button"
-                  onClick={() => startImageUpload(p.id)}
-                  disabled={uploadingFor === p.id}
-                  className="block text-xs opacity-60 hover:underline disabled:opacity-30"
-                >
-                  {uploadingFor === p.id ? "アップロード中..." : p.has_image ? "画像を変更" : "画像を追加"}
-                </button>
+                <div className="min-w-0 flex-1">
+                  {draft ? (
+                    <div className="space-y-1">
+                      <input
+                        value={draft.canonical_name}
+                        onChange={(e) =>
+                          setEditing((prev) => ({ ...prev, [p.id]: { ...draft, canonical_name: e.target.value } }))
+                        }
+                        placeholder="商品名"
+                        className="w-full rounded border border-black/15 bg-transparent px-2 py-1 text-sm dark:border-white/20"
+                      />
+                      <textarea
+                        value={draft.resale_notes}
+                        onChange={(e) =>
+                          setEditing((prev) => ({ ...prev, [p.id]: { ...draft, resale_notes: e.target.value } }))
+                        }
+                        placeholder="再販履歴等のメモ（任意）"
+                        rows={2}
+                        className="w-full rounded border border-black/15 bg-transparent px-2 py-1 text-xs dark:border-white/20"
+                      />
+                      <div className="flex gap-3">
+                        <button onClick={() => saveEdit(p.id)} className="text-xs text-emerald-600 hover:underline dark:text-emerald-400">
+                          保存
+                        </button>
+                        <button onClick={() => cancelEdit(p.id)} className="text-xs hover:underline">
+                          キャンセル
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <Link href={`/products/${p.id}`} className="font-medium hover:underline">
+                        {p.canonical_name}
+                      </Link>
+                      {p.product_aliases.length > 0 && (
+                        <p className="text-xs opacity-50">
+                          表記ゆれ: {p.product_aliases.map((a) => a.alias_text).join(" / ")}
+                        </p>
+                      )}
+                      {p.resale_notes && (
+                        <p className="whitespace-pre-wrap text-xs opacity-50">再販: {p.resale_notes}</p>
+                      )}
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          onClick={() => startImageUpload(p.id)}
+                          disabled={uploadingFor === p.id}
+                          className="text-xs opacity-60 hover:underline disabled:opacity-30"
+                        >
+                          {uploadingFor === p.id ? "アップロード中..." : p.has_image ? "画像を変更" : "画像を追加"}
+                        </button>
+                        <button type="button" onClick={() => startEdit(p)} className="text-xs opacity-60 hover:underline">
+                          編集
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-            <span className="shrink-0 rounded bg-black/5 px-2 py-0.5 text-xs dark:bg-white/10">
-              {p.item_type === "box" ? "BOX" : p.item_type === "pack" ? "パック" : "その他"}
-            </span>
-          </li>
-        ))}
+              <span className="shrink-0 rounded bg-black/5 px-2 py-0.5 text-xs dark:bg-white/10">
+                {p.item_type === "box" ? "BOX" : p.item_type === "pack" ? "パック" : "その他"}
+              </span>
+            </li>
+          );
+        })}
         {filtered.length === 0 && <li className="px-4 py-3 text-sm opacity-60">商品がありません</li>}
       </ul>
 
