@@ -26,3 +26,16 @@ body {
   /* 個々の要素側でoverflow-x-autoを付け忘れても、ページ全体が横スクロールしないようにする保険 */
   overflow-x: hidden;
 }
+
+/*
+ * iOSのSafariは、フォーカスした入力欄の文字サイズが16px未満だと画面を自動拡大する
+ * （text-sm/text-xs等、16px未満のTailwindクラスが入力欄に付いていると発生する）。
+ * この@importの外側（レイヤー無し）に書くことで、Tailwindのユーティリティクラス
+ * （@layerで囲まれている）より詳細度に関係なく優先され、個々の入力欄のクラスを
+ * 1つずつ探して直す必要が無い
+ */
+input,
+textarea,
+select {
+  font-size: 16px;
+}
