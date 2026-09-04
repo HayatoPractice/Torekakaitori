@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import useSWR from "swr";
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, LabelList, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { jsonFetcher, readJson } from "@/lib/api-client";
 import { prepareImageForUpload } from "@/lib/file";
 import { formatYen } from "@/lib/format";
@@ -26,8 +26,33 @@ type ShrinkView = "shrink" | "noshrink";
 
 const YEAR_UNKNOWN = "不明";
 
-/** 棒グラフの色（選択商品数ぶん順番に使う。8色を超えたら循環させる） */
-const BAR_COLORS = ["#2563eb", "#dc2626", "#16a34a", "#d97706", "#7c3aed", "#0891b2", "#db2777", "#65a30d"];
+/** 棒グラフの色。選択数ぶん色相を均等に割るので、何色選んでも重複しない */
+function colorForSeries(index: number, total: number): string {
+  const hue = Math.round((360 * index) / Math.max(total, 1));
+  return `hsl(${hue}, 65%, 45%)`;
+}
+
+/** バーの上に商品名を斜めに小さく表示する（凡例だけだと色の対応が追いにくいため） */
+function renderBarNameLabel(name: string) {
+  return function BarNameLabel(props: { x?: string | number; y?: string | number; width?: string | number }) {
+    const x = Number(props.x ?? 0);
+    const y = Number(props.y ?? 0);
+    const width = Number(props.width ?? 0);
+    return (
+      <text
+        x={x + width / 2}
+        y={y - 4}
+        textAnchor="start"
+        fontSize={8}
+        fill="currentColor"
+        opacity={0.6}
+        transform={`rotate(-60, ${x + width / 2}, ${y - 4})`}
+      >
+        {name}
+      </text>
+    );
+  };
+}
 
 function pivotRows(rows: CompareRow[]): Array<{ bucket: string } & Record<string, number | string>> {
   const map = new Map<string, { bucket: string } & Record<string, number | string>>();
@@ -81,6 +106,10 @@ export default function ProductsPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [granularity, setGranularity] = useState<Granularity>("day");
   const [priceType, setPriceType] = useState<PriceType>("sell");
+  const [trendYMin, setTrendYMin] = useState("");
+  const [trendYMax, setTrendYMax] = useState("");
+  const [trendXFrom, setTrendXFrom] = useState("");
+  const [trendXTo, setTrendXTo] = useState("");
   const [compareSeries, setCompareSeries] = useState({ individual: true, buybackShrink: true, buybackNoshrink: false });
   const [shrinkView, setShrinkView] = useState<Record<string, ShrinkView>>({});
   const [uploadingFor, setUploadingFor] = useState<string | null>(null);
@@ -118,6 +147,12 @@ export default function ProductsPage() {
   function goToYear(newIndex: number) {
     setYearIndexOverride(Math.min(Math.max(newIndex, 0), years.length - 1));
     setVisibleCount(30);
+  }
+
+  /** 今表示中の年（検索中は検索結果）に含まれる選択だけを外す。他の年の選択は残す */
+  function clearSelectionInView() {
+    const idsInView = new Set(listSource.map((p) => p.id));
+    setSelectedIds((prev) => prev.filter((id) => !idsInView.has(id)));
   }
 
   function startImageUpload(productId: string) {
@@ -219,7 +254,18 @@ export default function ProductsPage() {
     selectedIds.length > 0 ? `/api/summary/products/compare?${compareQs.toString()}` : null,
     jsonFetcher
   );
-  const chartData = useMemo(() => pivotRows(compareData?.rows ?? []), [compareData]);
+  const chartDataAll = useMemo(() => pivotRows(compareData?.rows ?? []), [compareData]);
+  const chartData = useMemo(
+    () =>
+      chartDataAll.filter(
+        (row) => (!trendXFrom || row.bucket >= trendXFrom) && (!trendXTo || row.bucket <= trendXTo)
+      ),
+    [chartDataAll, trendXFrom, trendXTo]
+  );
+  const trendYDomain: [number | "auto", number | "auto"] = [
+    trendYMin.trim() ? Number(trendYMin) : "auto",
+    trendYMax.trim() ? Number(trendYMax) : "auto",
+  ];
 
   const secondaryCompareData = useMemo(
     () =>
@@ -312,9 +358,21 @@ export default function ProductsPage() {
         </div>
       )}
 
-      <p className="text-xs opacity-50">
-        {listSource.length}件中 {visibleProducts.length}件を表示
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs opacity-50">
+          {listSource.length}件中 {visibleProducts.length}件を表示（選択中：全体{selectedIds.length}件）
+        </p>
+        {selectedIds.length > 0 && (
+          <div className="flex gap-3 text-xs">
+            <button type="button" onClick={clearSelectionInView} className="opacity-60 hover:underline">
+              表示中の選択だけ解除
+            </button>
+            <button type="button" onClick={() => setSelectedIds([])} className="opacity-60 hover:underline">
+              全年代の選択を解除
+            </button>
+          </div>
+        )}
+      </div>
 
       <ul className="divide-y divide-black/5 rounded-lg border border-black/10 dark:divide-white/10 dark:border-white/10">
         {visibleProducts.map((p) => {
@@ -579,6 +637,58 @@ export default function ProductsPage() {
                 <option value="buy">買取</option>
               </select>
             </label>
+            <label className="text-sm">
+              <span className="mb-1 block opacity-60">期間（{granularity === "year" ? "年" : "日付"}・任意）From</span>
+              <input
+                value={trendXFrom}
+                onChange={(e) => setTrendXFrom(e.target.value)}
+                placeholder={granularity === "year" ? "2024" : "2026-01-01"}
+                className="w-32 rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
+              />
+            </label>
+            <label className="text-sm">
+              <span className="mb-1 block opacity-60">期間 To</span>
+              <input
+                value={trendXTo}
+                onChange={(e) => setTrendXTo(e.target.value)}
+                placeholder={granularity === "year" ? "2026" : "2026-12-31"}
+                className="w-32 rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
+              />
+            </label>
+            <label className="text-sm">
+              <span className="mb-1 block opacity-60">金額の範囲（円・任意）下限</span>
+              <input
+                type="number"
+                value={trendYMin}
+                onChange={(e) => setTrendYMin(e.target.value)}
+                placeholder="自動"
+                className="w-28 rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
+              />
+            </label>
+            <label className="text-sm">
+              <span className="mb-1 block opacity-60">上限</span>
+              <input
+                type="number"
+                value={trendYMax}
+                onChange={(e) => setTrendYMax(e.target.value)}
+                placeholder="自動"
+                className="w-28 rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
+              />
+            </label>
+            {(trendXFrom || trendXTo || trendYMin || trendYMax) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setTrendXFrom("");
+                  setTrendXTo("");
+                  setTrendYMin("");
+                  setTrendYMax("");
+                }}
+                className="self-end rounded-md border border-black/15 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+              >
+                範囲指定を解除
+              </button>
+            )}
           </div>
 
           {compareError && <p className="text-sm text-red-500">{compareError.message}</p>}
@@ -590,11 +700,13 @@ export default function ProductsPage() {
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                     <XAxis dataKey="bucket" fontSize={12} />
-                    <YAxis fontSize={12} tickFormatter={(v) => formatYen(v)} />
+                    <YAxis fontSize={12} domain={trendYDomain} tickFormatter={(v) => formatYen(v)} />
                     <Tooltip formatter={(v) => formatYen(v)} />
                     <Legend />
                     {selectedProducts.map((p, i) => (
-                      <Bar key={p.id} dataKey={p.canonical_name} fill={BAR_COLORS[i % BAR_COLORS.length]} />
+                      <Bar key={p.id} dataKey={p.canonical_name} fill={colorForSeries(i, selectedProducts.length)}>
+                        <LabelList dataKey={p.canonical_name} content={renderBarNameLabel(p.canonical_name)} />
+                      </Bar>
                     ))}
                   </BarChart>
                 </ResponsiveContainer>

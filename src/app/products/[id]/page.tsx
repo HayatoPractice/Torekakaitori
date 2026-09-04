@@ -38,7 +38,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const trend = useMemo(() => data?.trend ?? [], [data]);
   const ranking = data?.ranking ?? [];
 
-  const chartData = useMemo(() => {
+  const chartDataAll = useMemo(() => {
     const byDate = new Map<string, { date: string; 販売?: number; 買取?: number; sellCount: number; buyCount: number }>();
     for (const p of trend) {
       if (!byDate.has(p.date)) byDate.set(p.date, { date: p.date, sellCount: 0, buyCount: 0 });
@@ -53,6 +53,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     }
     return Array.from(byDate.values()).sort((a, b) => a.date.localeCompare(b.date));
   }, [trend]);
+
+  const [xFrom, setXFrom] = useState("");
+  const [xTo, setXTo] = useState("");
+  const [yMin, setYMin] = useState("");
+  const [yMax, setYMax] = useState("");
+  const chartData = useMemo(
+    () => chartDataAll.filter((row) => (!xFrom || row.date >= xFrom) && (!xTo || row.date <= xTo)),
+    [chartDataAll, xFrom, xTo]
+  );
+  const yDomain: [number | "auto", number | "auto"] = [yMin.trim() ? Number(yMin) : "auto", yMax.trim() ? Number(yMax) : "auto"];
 
   const sellRanking = ranking.filter((r) => r.price_type === "sell").sort((a, b) => a.price - b.price);
   const buyRanking = ranking.filter((r) => r.price_type === "buy").sort((a, b) => b.price - a.price);
@@ -152,12 +162,66 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               )}
             </div>
           )}
+          <div className="flex flex-wrap items-end gap-3 text-xs">
+            <label>
+              <span className="mb-1 block opacity-60">期間 From</span>
+              <input
+                value={xFrom}
+                onChange={(e) => setXFrom(e.target.value)}
+                placeholder="2026-01-01"
+                className="w-28 rounded border border-black/15 bg-transparent px-2 py-1 dark:border-white/20"
+              />
+            </label>
+            <label>
+              <span className="mb-1 block opacity-60">To</span>
+              <input
+                value={xTo}
+                onChange={(e) => setXTo(e.target.value)}
+                placeholder="2026-12-31"
+                className="w-28 rounded border border-black/15 bg-transparent px-2 py-1 dark:border-white/20"
+              />
+            </label>
+            <label>
+              <span className="mb-1 block opacity-60">金額 下限</span>
+              <input
+                type="number"
+                value={yMin}
+                onChange={(e) => setYMin(e.target.value)}
+                placeholder="自動"
+                className="w-24 rounded border border-black/15 bg-transparent px-2 py-1 dark:border-white/20"
+              />
+            </label>
+            <label>
+              <span className="mb-1 block opacity-60">上限</span>
+              <input
+                type="number"
+                value={yMax}
+                onChange={(e) => setYMax(e.target.value)}
+                placeholder="自動"
+                className="w-24 rounded border border-black/15 bg-transparent px-2 py-1 dark:border-white/20"
+              />
+            </label>
+            {(xFrom || xTo || yMin || yMax) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setXFrom("");
+                  setXTo("");
+                  setYMin("");
+                  setYMax("");
+                }}
+                className="rounded border border-black/15 px-2 py-1 hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+              >
+                範囲指定を解除
+              </button>
+            )}
+          </div>
           <div className="h-72 rounded-lg border border-black/10 p-4 dark:border-white/10">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                 <XAxis dataKey="date" fontSize={12} />
-                <YAxis fontSize={12} tickFormatter={(v) => formatYen(v)} />
+                <YAxis fontSize={12} domain={yDomain} tickFormatter={(v) => formatYen(v)} />
                 <Tooltip formatter={(v) => formatYen(v)} />
                 <Legend />
                 <Bar dataKey="販売" fill="#2563eb" />
