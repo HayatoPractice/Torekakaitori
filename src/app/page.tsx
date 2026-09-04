@@ -314,6 +314,200 @@ export default function ProductsPage() {
     <div className="space-y-6">
       <h1 className="text-xl font-bold">商品・相場比較</h1>
 
+      <div className="rounded-lg border border-black/10 p-4 dark:border-white/10">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold">選択した商品の比較（{selectedProducts.length}件）</h2>
+          {selectedIds.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setSelectedIds([])}
+              className="text-xs opacity-60 hover:underline"
+            >
+              選択解除
+            </button>
+          )}
+        </div>
+
+        {selectedIds.length === 0 ? (
+          <p className="text-sm opacity-60">
+            商品名の左にあるチェックボックスにチェックを入れると、ここに価格推移や2次流通の比較が棒グラフで表示されます。
+          </p>
+        ) : (
+          <>
+          <div className="mb-4 flex flex-wrap gap-2">
+            {selectedProducts.map((p) => (
+              <span
+                key={p.id}
+                className="flex items-center gap-1.5 rounded-full bg-black/5 py-1 pl-1 pr-2.5 text-xs dark:bg-white/10"
+              >
+                {p.has_image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={`/api/products/${p.id}/image`} alt="" className="h-5 w-5 rounded-full object-cover" />
+                ) : (
+                  <span className="h-5 w-5 rounded-full bg-black/10 dark:bg-white/20" />
+                )}
+                {p.canonical_name}
+              </span>
+            ))}
+          </div>
+
+          <h3 className="mb-2 text-xs font-semibold opacity-70">投稿ベースのトレンド比較</h3>
+          <div className="mb-4 flex flex-wrap gap-3">
+            <label className="text-sm">
+              <span className="mb-1 block opacity-60">時間の単位</span>
+              <select
+                value={granularity}
+                onChange={(e) => setGranularity(e.target.value as Granularity)}
+                className="rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
+              >
+                <option value="day">1日単位</option>
+                <option value="year">年単位</option>
+              </select>
+            </label>
+            <label className="text-sm">
+              <span className="mb-1 block opacity-60">価格区分</span>
+              <select
+                value={priceType}
+                onChange={(e) => setPriceType(e.target.value as PriceType)}
+                className="rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
+              >
+                <option value="sell">販売</option>
+                <option value="buy">買取</option>
+              </select>
+            </label>
+            <label className="text-sm">
+              <span className="mb-1 block opacity-60">期間（{granularity === "year" ? "年" : "日付"}・任意）From</span>
+              <input
+                value={trendXFrom}
+                onChange={(e) => setTrendXFrom(e.target.value)}
+                placeholder={granularity === "year" ? "2024" : "2026-01-01"}
+                className="w-32 rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
+              />
+            </label>
+            <label className="text-sm">
+              <span className="mb-1 block opacity-60">期間 To</span>
+              <input
+                value={trendXTo}
+                onChange={(e) => setTrendXTo(e.target.value)}
+                placeholder={granularity === "year" ? "2026" : "2026-12-31"}
+                className="w-32 rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
+              />
+            </label>
+            <label className="text-sm">
+              <span className="mb-1 block opacity-60">金額の範囲（円・任意）下限</span>
+              <input
+                type="number"
+                value={trendYMin}
+                onChange={(e) => setTrendYMin(e.target.value)}
+                placeholder="自動"
+                className="w-28 rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
+              />
+            </label>
+            <label className="text-sm">
+              <span className="mb-1 block opacity-60">上限</span>
+              <input
+                type="number"
+                value={trendYMax}
+                onChange={(e) => setTrendYMax(e.target.value)}
+                placeholder="自動"
+                className="w-28 rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
+              />
+            </label>
+            {(trendXFrom || trendXTo || trendYMin || trendYMax) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setTrendXFrom("");
+                  setTrendXTo("");
+                  setTrendYMin("");
+                  setTrendYMax("");
+                }}
+                className="self-end rounded-md border border-black/15 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+              >
+                範囲指定を解除
+              </button>
+            )}
+          </div>
+
+          {compareError && <p className="text-sm text-red-500">{compareError.message}</p>}
+
+          {chartData.length > 0 ? (
+            <div className="mb-6 h-80 overflow-x-auto">
+              <div className="h-full" style={{ minWidth: Math.max(chartData.length * 60, 320) }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                    <XAxis dataKey="bucket" fontSize={12} />
+                    <YAxis fontSize={12} domain={trendYDomain} tickFormatter={(v) => formatYen(v)} />
+                    <Tooltip formatter={(v) => formatYen(v)} />
+                    <Legend />
+                    {selectedProducts.map((p, i) => (
+                      <Bar key={p.id} dataKey={p.canonical_name} fill={colorForSeries(i, selectedProducts.length)}>
+                        <LabelList dataKey={p.canonical_name} content={renderBarNameLabel(p.canonical_name)} />
+                      </Bar>
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          ) : (
+            <p className="mb-6 text-sm opacity-60">
+              選択した商品・価格区分（{priceType === "sell" ? "販売" : "買取"}）の投稿データがまだありません。
+            </p>
+          )}
+
+          <h3 className="mb-2 text-xs font-semibold opacity-70">2次流通の比較</h3>
+          <div className="mb-3 flex flex-wrap gap-4 text-sm">
+            <label className="flex items-center gap-1.5">
+              <input
+                type="checkbox"
+                checked={compareSeries.individual}
+                onChange={(e) => setCompareSeries((prev) => ({ ...prev, individual: e.target.checked }))}
+              />
+              個人間
+            </label>
+            <label className="flex items-center gap-1.5">
+              <input
+                type="checkbox"
+                checked={compareSeries.buybackShrink}
+                onChange={(e) => setCompareSeries((prev) => ({ ...prev, buybackShrink: e.target.checked }))}
+              />
+              買取（シュリンク有）
+            </label>
+            <label className="flex items-center gap-1.5">
+              <input
+                type="checkbox"
+                checked={compareSeries.buybackNoshrink}
+                onChange={(e) => setCompareSeries((prev) => ({ ...prev, buybackNoshrink: e.target.checked }))}
+              />
+              買取（シュリンク無）
+            </label>
+          </div>
+
+          {hasSecondaryData ? (
+            <div className="h-72 overflow-x-auto">
+              <div className="h-full" style={{ minWidth: Math.max(secondaryCompareData.length * 100, 320) }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={secondaryCompareData}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                    <XAxis dataKey="name" fontSize={11} />
+                    <YAxis fontSize={12} tickFormatter={(v) => formatYen(v)} />
+                    <Tooltip formatter={(v) => formatYen(v as number)} />
+                    <Legend />
+                    {compareSeries.individual && <Bar dataKey="個人間" fill="#16a34a" />}
+                    {compareSeries.buybackShrink && <Bar dataKey="買取(有)" fill="#2563eb" />}
+                    {compareSeries.buybackNoshrink && <Bar dataKey="買取(無)" fill="#d97706" />}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm opacity-60">選択した商品に2次流通データがまだありません。</p>
+          )}
+          </>
+        )}
+      </div>
+
       <input
         value={search}
         onChange={(e) => {
@@ -580,199 +774,6 @@ export default function ProductsPage() {
         </button>
       )}
 
-      <div className="rounded-lg border border-black/10 p-4 dark:border-white/10">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-sm font-semibold">選択した商品の比較（{selectedProducts.length}件）</h2>
-          {selectedIds.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setSelectedIds([])}
-              className="text-xs opacity-60 hover:underline"
-            >
-              選択解除
-            </button>
-          )}
-        </div>
-
-        {selectedIds.length === 0 ? (
-          <p className="text-sm opacity-60">
-            商品名の左にあるチェックボックスにチェックを入れると、ここに価格推移や2次流通の比較が棒グラフで表示されます。
-          </p>
-        ) : (
-          <>
-          <div className="mb-4 flex flex-wrap gap-2">
-            {selectedProducts.map((p) => (
-              <span
-                key={p.id}
-                className="flex items-center gap-1.5 rounded-full bg-black/5 py-1 pl-1 pr-2.5 text-xs dark:bg-white/10"
-              >
-                {p.has_image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={`/api/products/${p.id}/image`} alt="" className="h-5 w-5 rounded-full object-cover" />
-                ) : (
-                  <span className="h-5 w-5 rounded-full bg-black/10 dark:bg-white/20" />
-                )}
-                {p.canonical_name}
-              </span>
-            ))}
-          </div>
-
-          <h3 className="mb-2 text-xs font-semibold opacity-70">投稿ベースのトレンド比較</h3>
-          <div className="mb-4 flex flex-wrap gap-3">
-            <label className="text-sm">
-              <span className="mb-1 block opacity-60">時間の単位</span>
-              <select
-                value={granularity}
-                onChange={(e) => setGranularity(e.target.value as Granularity)}
-                className="rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
-              >
-                <option value="day">1日単位</option>
-                <option value="year">年単位</option>
-              </select>
-            </label>
-            <label className="text-sm">
-              <span className="mb-1 block opacity-60">価格区分</span>
-              <select
-                value={priceType}
-                onChange={(e) => setPriceType(e.target.value as PriceType)}
-                className="rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
-              >
-                <option value="sell">販売</option>
-                <option value="buy">買取</option>
-              </select>
-            </label>
-            <label className="text-sm">
-              <span className="mb-1 block opacity-60">期間（{granularity === "year" ? "年" : "日付"}・任意）From</span>
-              <input
-                value={trendXFrom}
-                onChange={(e) => setTrendXFrom(e.target.value)}
-                placeholder={granularity === "year" ? "2024" : "2026-01-01"}
-                className="w-32 rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
-              />
-            </label>
-            <label className="text-sm">
-              <span className="mb-1 block opacity-60">期間 To</span>
-              <input
-                value={trendXTo}
-                onChange={(e) => setTrendXTo(e.target.value)}
-                placeholder={granularity === "year" ? "2026" : "2026-12-31"}
-                className="w-32 rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
-              />
-            </label>
-            <label className="text-sm">
-              <span className="mb-1 block opacity-60">金額の範囲（円・任意）下限</span>
-              <input
-                type="number"
-                value={trendYMin}
-                onChange={(e) => setTrendYMin(e.target.value)}
-                placeholder="自動"
-                className="w-28 rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
-              />
-            </label>
-            <label className="text-sm">
-              <span className="mb-1 block opacity-60">上限</span>
-              <input
-                type="number"
-                value={trendYMax}
-                onChange={(e) => setTrendYMax(e.target.value)}
-                placeholder="自動"
-                className="w-28 rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
-              />
-            </label>
-            {(trendXFrom || trendXTo || trendYMin || trendYMax) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setTrendXFrom("");
-                  setTrendXTo("");
-                  setTrendYMin("");
-                  setTrendYMax("");
-                }}
-                className="self-end rounded-md border border-black/15 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
-              >
-                範囲指定を解除
-              </button>
-            )}
-          </div>
-
-          {compareError && <p className="text-sm text-red-500">{compareError.message}</p>}
-
-          {chartData.length > 0 ? (
-            <div className="mb-6 h-80 overflow-x-auto">
-              <div className="h-full" style={{ minWidth: Math.max(chartData.length * 60, 320) }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                    <XAxis dataKey="bucket" fontSize={12} />
-                    <YAxis fontSize={12} domain={trendYDomain} tickFormatter={(v) => formatYen(v)} />
-                    <Tooltip formatter={(v) => formatYen(v)} />
-                    <Legend />
-                    {selectedProducts.map((p, i) => (
-                      <Bar key={p.id} dataKey={p.canonical_name} fill={colorForSeries(i, selectedProducts.length)}>
-                        <LabelList dataKey={p.canonical_name} content={renderBarNameLabel(p.canonical_name)} />
-                      </Bar>
-                    ))}
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          ) : (
-            <p className="mb-6 text-sm opacity-60">
-              選択した商品・価格区分（{priceType === "sell" ? "販売" : "買取"}）の投稿データがまだありません。
-            </p>
-          )}
-
-          <h3 className="mb-2 text-xs font-semibold opacity-70">2次流通の比較</h3>
-          <div className="mb-3 flex flex-wrap gap-4 text-sm">
-            <label className="flex items-center gap-1.5">
-              <input
-                type="checkbox"
-                checked={compareSeries.individual}
-                onChange={(e) => setCompareSeries((prev) => ({ ...prev, individual: e.target.checked }))}
-              />
-              個人間
-            </label>
-            <label className="flex items-center gap-1.5">
-              <input
-                type="checkbox"
-                checked={compareSeries.buybackShrink}
-                onChange={(e) => setCompareSeries((prev) => ({ ...prev, buybackShrink: e.target.checked }))}
-              />
-              買取（シュリンク有）
-            </label>
-            <label className="flex items-center gap-1.5">
-              <input
-                type="checkbox"
-                checked={compareSeries.buybackNoshrink}
-                onChange={(e) => setCompareSeries((prev) => ({ ...prev, buybackNoshrink: e.target.checked }))}
-              />
-              買取（シュリンク無）
-            </label>
-          </div>
-
-          {hasSecondaryData ? (
-            <div className="h-72 overflow-x-auto">
-              <div className="h-full" style={{ minWidth: Math.max(secondaryCompareData.length * 100, 320) }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={secondaryCompareData}>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                    <XAxis dataKey="name" fontSize={11} />
-                    <YAxis fontSize={12} tickFormatter={(v) => formatYen(v)} />
-                    <Tooltip formatter={(v) => formatYen(v as number)} />
-                    <Legend />
-                    {compareSeries.individual && <Bar dataKey="個人間" fill="#16a34a" />}
-                    {compareSeries.buybackShrink && <Bar dataKey="買取(有)" fill="#2563eb" />}
-                    {compareSeries.buybackNoshrink && <Bar dataKey="買取(無)" fill="#d97706" />}
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm opacity-60">選択した商品に2次流通データがまだありません。</p>
-          )}
-          </>
-        )}
-      </div>
 
       <div className="rounded-lg border border-black/10 p-4 dark:border-white/10">
         <h2 className="mb-3 text-sm font-semibold">表記ゆれの統合</h2>
