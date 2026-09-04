@@ -51,7 +51,7 @@ export default function NavBar() {
   }, [menuOpen]);
 
   return (
-    <nav className="border-b border-black/10 dark:border-white/10">
+    <nav className="sticky top-0 z-20 border-b border-black/10 bg-background dark:border-white/10">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-1 px-4 py-3">
         <div className="flex items-center gap-2">
           {!isHome && (

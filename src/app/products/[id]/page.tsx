@@ -2,7 +2,7 @@
 
 import { use, useMemo, useState } from "react";
 import useSWR from "swr";
-import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Legend, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { jsonFetcher } from "@/lib/api-client";
 import { formatYen } from "@/lib/format";
 import type { Product } from "@/types/domain";
@@ -154,14 +154,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           )}
           <div className="h-72 rounded-lg border border-black/10 p-4 dark:border-white/10">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
+              <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                 <XAxis dataKey="date" fontSize={12} />
                 <YAxis fontSize={12} tickFormatter={(v) => formatYen(v)} />
                 <Tooltip formatter={(v) => formatYen(v)} />
                 <Legend />
-                <Line type="monotone" dataKey="販売" stroke="#2563eb" connectNulls dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="買取" stroke="#dc2626" connectNulls dot={{ r: 3 }} />
+                <Bar dataKey="販売" fill="#2563eb" />
+                <Bar dataKey="買取" fill="#dc2626" />
                 {mode === "individual" && hasIndividual && (
                   <ReferenceLine
                     y={product.secondary_market_price_individual!}
@@ -189,7 +189,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     label={{ value: "買取(無)", position: "insideBottomRight", fill: "#d97706", fontSize: 11 }}
                   />
                 )}
-              </LineChart>
+              </BarChart>
             </ResponsiveContainer>
           </div>
           {mode === "individual" && hasIndividual && (
