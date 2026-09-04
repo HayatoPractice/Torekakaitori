@@ -365,7 +365,11 @@ export default function ProductsPage() {
         {selectedIds.length > 0 && (
           <div className="flex gap-3 text-xs">
             <button type="button" onClick={clearSelectionInView} className="opacity-60 hover:underline">
-              表示中の選択だけ解除
+              {isSearching
+                ? "検索結果の選択だけ解除"
+                : currentYear === YEAR_UNKNOWN
+                  ? "発売日不明の選択だけ解除"
+                  : `${currentYear}年の選択だけ解除`}
             </button>
             <button type="button" onClick={() => setSelectedIds([])} className="opacity-60 hover:underline">
               全年代の選択を解除
