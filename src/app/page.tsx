@@ -518,10 +518,10 @@ export default function ProductsPage() {
         </button>
       )}
 
-      {selectedIds.length > 0 && (
-        <div className="rounded-lg border border-black/10 p-4 dark:border-white/10">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold">選択した商品の比較（{selectedProducts.length}件）</h2>
+      <div className="rounded-lg border border-black/10 p-4 dark:border-white/10">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold">選択した商品の比較（{selectedProducts.length}件）</h2>
+          {selectedIds.length > 0 && (
             <button
               type="button"
               onClick={() => setSelectedIds([])}
@@ -529,8 +529,15 @@ export default function ProductsPage() {
             >
               選択解除
             </button>
-          </div>
+          )}
+        </div>
 
+        {selectedIds.length === 0 ? (
+          <p className="text-sm opacity-60">
+            商品名の左にあるチェックボックスにチェックを入れると、ここに価格推移や2次流通の比較が棒グラフで表示されます。
+          </p>
+        ) : (
+          <>
           <div className="mb-4 flex flex-wrap gap-2">
             {selectedProducts.map((p) => (
               <span
@@ -647,8 +654,9 @@ export default function ProductsPage() {
           ) : (
             <p className="text-sm opacity-60">選択した商品に2次流通データがまだありません。</p>
           )}
-        </div>
-      )}
+          </>
+        )}
+      </div>
 
       <div className="rounded-lg border border-black/10 p-4 dark:border-white/10">
         <h2 className="mb-3 text-sm font-semibold">表記ゆれの統合</h2>
