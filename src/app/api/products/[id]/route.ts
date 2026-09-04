@@ -9,6 +9,14 @@ interface Params {
   params: Promise<{ id: string }>;
 }
 
+const priceField = z
+  .number({ message: "価格は数値で指定してください" })
+  .int("価格は整数で指定してください")
+  .min(0, "価格は0以上にしてください")
+  .nullable()
+  .optional();
+const trendField = z.string({ message: "傾向メモは文字列で指定してください" }).nullable().optional();
+
 const patchProductSchema = z.object({
   canonical_name: z
     .string({ message: "canonical_name は文字列で指定してください" })
@@ -16,27 +24,63 @@ const patchProductSchema = z.object({
     .min(1, "canonical_name は空にできません")
     .optional(),
   resale_notes: z.string({ message: "resale_notes は文字列で指定してください" }).nullable().optional(),
+  release_date: z
+    .string({ message: "release_date はYYYY-MM-DD形式で指定してください" })
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "release_date はYYYY-MM-DD形式で指定してください")
+    .nullable()
+    .optional(),
+  secondary_market_price_individual: priceField,
+  secondary_market_trend_individual: trendField,
+  secondary_market_price_buyback_shrink: priceField,
+  secondary_market_trend_buyback_shrink: trendField,
+  secondary_market_price_buyback_noshrink: priceField,
+  secondary_market_trend_buyback_noshrink: trendField,
 });
 
-/** PATCH /api/products/[id] { canonical_name?, resale_notes? } — 商品名・再販履歴メモを編集する */
+/** 「キーが無い＝変更しない」「null/空文字＝クリアする」を区別するためのヘルパー */
+function readTriState<T>(body: Record<string, unknown>, key: string, value: T | null | undefined) {
+  const present = key in body;
+  return { present, value: present ? (value ?? null) : null };
+}
+
+/**
+ * PATCH /api/products/[id]
+ * 商品名・再販履歴メモ・発売日・2次流通相場（個人間／買取シュリンク有／買取シュリンク無）を編集する。
+ * 2次流通のいずれかが送られてきたら、調査日時（secondary_market_checked_at）をサーバー側で自動更新する。
+ */
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params;
   const body = await req.json();
   const parsed = parseBody(patchProductSchema, body);
   if ("error" in parsed) return parsed.error;
-  const { canonical_name: canonicalName } = parsed.data;
+  const data = parsed.data;
+  const { canonical_name: canonicalName } = data;
 
-  // resale_notesは「キー自体が無い＝変更しない」「null/空文字＝クリアする」を区別する必要があるため、
-  // パース済みの値だけでなく元のbodyにキーがあるかも見る（accounts PATCHと同じパターン）
-  const hasResaleNotes = "resale_notes" in body;
-  const resaleNotes = hasResaleNotes ? parsed.data.resale_notes?.trim() || null : null;
+  const resaleNotes = readTriState(body, "resale_notes", data.resale_notes?.trim() || null);
+  const releaseDate = readTriState(body, "release_date", data.release_date);
+  const priceIndividual = readTriState(body, "secondary_market_price_individual", data.secondary_market_price_individual);
+  const trendIndividual = readTriState(body, "secondary_market_trend_individual", data.secondary_market_trend_individual?.trim() || null);
+  const priceBuybackShrink = readTriState(body, "secondary_market_price_buyback_shrink", data.secondary_market_price_buyback_shrink);
+  const trendBuybackShrink = readTriState(body, "secondary_market_trend_buyback_shrink", data.secondary_market_trend_buyback_shrink?.trim() || null);
+  const priceBuybackNoshrink = readTriState(body, "secondary_market_price_buyback_noshrink", data.secondary_market_price_buyback_noshrink);
+  const trendBuybackNoshrink = readTriState(body, "secondary_market_trend_buyback_noshrink", data.secondary_market_trend_buyback_noshrink?.trim() || null);
+  const touchesSecondaryMarket =
+    priceIndividual.present || trendIndividual.present || priceBuybackShrink.present || trendBuybackShrink.present || priceBuybackNoshrink.present || trendBuybackNoshrink.present;
 
   const sql = getSql();
   try {
     const updated = await sql`
       UPDATE products SET
         canonical_name = COALESCE(${canonicalName ?? null}, canonical_name),
-        resale_notes = CASE WHEN ${hasResaleNotes} THEN ${resaleNotes} ELSE resale_notes END
+        resale_notes = CASE WHEN ${resaleNotes.present} THEN ${resaleNotes.value} ELSE resale_notes END,
+        release_date = CASE WHEN ${releaseDate.present} THEN ${releaseDate.value}::date ELSE release_date END,
+        secondary_market_price_individual = CASE WHEN ${priceIndividual.present} THEN ${priceIndividual.value} ELSE secondary_market_price_individual END,
+        secondary_market_trend_individual = CASE WHEN ${trendIndividual.present} THEN ${trendIndividual.value} ELSE secondary_market_trend_individual END,
+        secondary_market_price_buyback_shrink = CASE WHEN ${priceBuybackShrink.present} THEN ${priceBuybackShrink.value} ELSE secondary_market_price_buyback_shrink END,
+        secondary_market_trend_buyback_shrink = CASE WHEN ${trendBuybackShrink.present} THEN ${trendBuybackShrink.value} ELSE secondary_market_trend_buyback_shrink END,
+        secondary_market_price_buyback_noshrink = CASE WHEN ${priceBuybackNoshrink.present} THEN ${priceBuybackNoshrink.value} ELSE secondary_market_price_buyback_noshrink END,
+        secondary_market_trend_buyback_noshrink = CASE WHEN ${trendBuybackNoshrink.present} THEN ${trendBuybackNoshrink.value} ELSE secondary_market_trend_buyback_noshrink END,
+        secondary_market_checked_at = CASE WHEN ${touchesSecondaryMarket} THEN now() ELSE secondary_market_checked_at END
       WHERE id = ${id}
       RETURNING *
     `;

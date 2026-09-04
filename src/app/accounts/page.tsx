@@ -100,10 +100,33 @@ export default function AccountsPage() {
   }
 
   const error = actionError ?? (loadError ? loadError.message : null);
+  const accountsWithUrl = accounts.filter((a) => a.url);
 
   return (
     <div className="space-y-6">
       <h1 className="text-xl font-bold">アカウント管理</h1>
+
+      {accountsWithUrl.length > 0 && (
+        <div className="rounded-lg border border-black/10 p-4 dark:border-white/10">
+          <h2 className="mb-1 text-sm font-semibold">アカウントページをまとめて開く</h2>
+          <p className="mb-3 text-xs opacity-60">
+            X側の通知ベル（🔔 すべてのポスト）でアカウントをフォローしておくと、新着があった時にここから1タップで確認しに行けます。
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {accountsWithUrl.map((a) => (
+              <a
+                key={a.id}
+                href={a.url!}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1.5 rounded-full border border-black/15 px-3 py-1.5 text-sm hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+              >
+                ↗ {a.display_name}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleAdd} className="grid gap-3 rounded-lg border border-black/10 p-4 sm:grid-cols-2 dark:border-white/10">
         <label className="text-sm">
@@ -219,9 +242,9 @@ export default function AccountsPage() {
                         href={a.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="ml-2 text-xs opacity-60 hover:underline"
+                        className="ml-2 inline-flex items-center gap-1 rounded-full border border-black/15 px-2 py-0.5 text-xs opacity-70 hover:bg-black/5 hover:opacity-100 dark:border-white/20 dark:hover:bg-white/10"
                       >
-                        アカウントページを開く
+                        ↗ 開く
                       </a>
                     )}
                     {a.notes && <p className="text-xs opacity-50">{a.notes}</p>}

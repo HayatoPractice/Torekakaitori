@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import useSWR from "swr";
+import { jsonFetcher } from "@/lib/api-client";
+import type { Account } from "@/types/domain";
 
 const LINKS = [
   { href: "/", label: "商品・相場比較" },
@@ -15,7 +18,11 @@ const LINKS = [
 
 export default function NavBar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const isHome = pathname === "/";
+  const { data } = useSWR<{ accounts: Account[] }>("/api/accounts", jsonFetcher);
+  const accountsWithUrl = (data?.accounts ?? []).filter((a) => a.url);
 
   // ページ遷移したら開けっぱなしにならないよう自動で閉じる
   useEffect(() => {
@@ -46,42 +53,82 @@ export default function NavBar() {
   return (
     <nav className="border-b border-black/10 dark:border-white/10">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-1 px-4 py-3">
-        <span className="font-bold text-sm tracking-wide">トレカ相場確認</span>
-
-        {/* 通常幅：横並びのナビ（スマホでは隠す） */}
-        <div className="hidden flex-wrap items-center gap-1 sm:flex">
-          {LINKS.map((link) => {
-            const active = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
-                  active
-                    ? "bg-foreground text-background"
-                    : "hover:bg-black/5 dark:hover:bg-white/10"
-                }`}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
+        <div className="flex items-center gap-2">
+          {!isHome && (
+            <button
+              type="button"
+              onClick={() => router.back()}
+              aria-label="前の画面に戻る"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-lg hover:bg-black/5 dark:hover:bg-white/10"
+            >
+              ←
+            </button>
+          )}
+          <Link href="/" className="font-bold text-sm tracking-wide hover:opacity-70">
+            トレカ相場確認
+          </Link>
         </div>
 
-        {/* スマホ幅：右上のハンバーガーボタン */}
-        <button
-          type="button"
-          onClick={() => setMenuOpen(true)}
-          aria-label="メニューを開く"
-          aria-expanded={menuOpen}
-          className="flex h-9 w-9 items-center justify-center rounded-md hover:bg-black/5 sm:hidden dark:hover:bg-white/10"
-        >
-          <span className="flex flex-col gap-1">
-            <span className="h-0.5 w-5 bg-foreground" />
-            <span className="h-0.5 w-5 bg-foreground" />
-            <span className="h-0.5 w-5 bg-foreground" />
-          </span>
-        </button>
+        <div className="flex items-center gap-1">
+          {accountsWithUrl.length > 0 && (
+            <details className="group relative">
+              <summary className="flex cursor-pointer list-none items-center gap-1 rounded-md px-2 py-1.5 text-sm hover:bg-black/5 dark:hover:bg-white/10">
+                🔗 アカウント
+              </summary>
+              <div className="absolute right-0 z-30 mt-1 w-56 max-w-[80vw] rounded-md border border-black/10 bg-background p-2 shadow-lg dark:border-white/10">
+                <p className="mb-1 px-1 text-[11px] opacity-50">投稿を見に行く（新しいタブで開く）</p>
+                <div className="flex max-h-64 flex-col gap-0.5 overflow-y-auto">
+                  {accountsWithUrl.map((a) => (
+                    <a
+                      key={a.id}
+                      href={a.url!}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="truncate rounded px-2 py-1.5 text-sm hover:bg-black/5 dark:hover:bg-white/10"
+                    >
+                      ↗ {a.display_name}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </details>
+          )}
+
+          {/* 通常幅：横並びのナビ（スマホでは隠す） */}
+          <div className="hidden flex-wrap items-center gap-1 sm:flex">
+            {LINKS.map((link) => {
+              const active = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
+                    active
+                      ? "bg-foreground text-background"
+                      : "hover:bg-black/5 dark:hover:bg-white/10"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* スマホ幅：右上のハンバーガーボタン */}
+          <button
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            aria-label="メニューを開く"
+            aria-expanded={menuOpen}
+            className="flex h-9 w-9 items-center justify-center rounded-md hover:bg-black/5 sm:hidden dark:hover:bg-white/10"
+          >
+            <span className="flex flex-col gap-1">
+              <span className="h-0.5 w-5 bg-foreground" />
+              <span className="h-0.5 w-5 bg-foreground" />
+              <span className="h-0.5 w-5 bg-foreground" />
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* スマホ幅：右からスライドインするメニュー */}

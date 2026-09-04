@@ -1,11 +1,14 @@
 "use client";
 
-import { use, useMemo } from "react";
+import { use, useMemo, useState } from "react";
 import useSWR from "swr";
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { jsonFetcher } from "@/lib/api-client";
 import { formatYen } from "@/lib/format";
 import type { Product } from "@/types/domain";
+
+type Mode = "individual" | "buyback";
+type ShrinkChoice = "shrink" | "noshrink" | "both";
 
 interface TrendPoint {
   date: string;
@@ -55,6 +58,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const buyRanking = ranking.filter((r) => r.price_type === "buy").sort((a, b) => b.price - a.price);
   const latestDate = trend.length > 0 ? trend[trend.length - 1].date : null;
 
+  const hasIndividual = product?.secondary_market_price_individual != null;
+  const hasBuybackShrink = product?.secondary_market_price_buyback_shrink != null;
+  const hasBuybackNoshrink = product?.secondary_market_price_buyback_noshrink != null;
+  const hasSecondaryData = hasIndividual || hasBuybackShrink || hasBuybackNoshrink;
+
+  const [mode, setMode] = useState<Mode>(hasIndividual ? "individual" : "buyback");
+  const [shrinkChoice, setShrinkChoice] = useState<ShrinkChoice>("shrink");
+
   if (error) return <p className="text-sm text-red-500">{error.message}</p>;
   if (!product) return <p className="text-sm opacity-60">読み込み中...</p>;
 
@@ -89,19 +100,119 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         <p className="text-xs opacity-50">最新データ：{latestDate}（{daysAgo(latestDate)}日前）</p>
       )}
 
-      {chartData.length > 0 ? (
-        <div className="h-72 rounded-lg border border-black/10 p-4 dark:border-white/10">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-              <XAxis dataKey="date" fontSize={12} />
-              <YAxis fontSize={12} tickFormatter={(v) => formatYen(v)} />
-              <Tooltip formatter={(v) => formatYen(v)} />
-              <Legend />
-              <Line type="monotone" dataKey="販売" stroke="#2563eb" connectNulls dot={{ r: 3 }} />
-              <Line type="monotone" dataKey="買取" stroke="#dc2626" connectNulls dot={{ r: 3 }} />
-            </LineChart>
-          </ResponsiveContainer>
+      {chartData.length > 0 || hasSecondaryData ? (
+        <div className="space-y-2">
+          {hasSecondaryData && (
+            <div className="flex flex-wrap items-center gap-3 text-xs">
+              <div className="flex overflow-hidden rounded-md border border-black/15 dark:border-white/20">
+                <button
+                  type="button"
+                  disabled={!hasIndividual}
+                  onClick={() => setMode("individual")}
+                  className={`px-2.5 py-1 disabled:opacity-30 ${mode === "individual" ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"}`}
+                >
+                  個人間
+                </button>
+                <button
+                  type="button"
+                  disabled={!hasBuybackShrink && !hasBuybackNoshrink}
+                  onClick={() => setMode("buyback")}
+                  className={`px-2.5 py-1 disabled:opacity-30 ${mode === "buyback" ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"}`}
+                >
+                  買取
+                </button>
+              </div>
+              {mode === "buyback" && (
+                <div className="flex overflow-hidden rounded-md border border-black/15 dark:border-white/20">
+                  <button
+                    type="button"
+                    disabled={!hasBuybackShrink}
+                    onClick={() => setShrinkChoice("shrink")}
+                    className={`px-2.5 py-1 disabled:opacity-30 ${shrinkChoice === "shrink" ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"}`}
+                  >
+                    有
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!hasBuybackNoshrink}
+                    onClick={() => setShrinkChoice("noshrink")}
+                    className={`px-2.5 py-1 disabled:opacity-30 ${shrinkChoice === "noshrink" ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"}`}
+                  >
+                    無
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!hasBuybackShrink || !hasBuybackNoshrink}
+                    onClick={() => setShrinkChoice("both")}
+                    className={`px-2.5 py-1 disabled:opacity-30 ${shrinkChoice === "both" ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"}`}
+                  >
+                    両方比較
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="h-72 rounded-lg border border-black/10 p-4 dark:border-white/10">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                <XAxis dataKey="date" fontSize={12} />
+                <YAxis fontSize={12} tickFormatter={(v) => formatYen(v)} />
+                <Tooltip formatter={(v) => formatYen(v)} />
+                <Legend />
+                <Line type="monotone" dataKey="販売" stroke="#2563eb" connectNulls dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="買取" stroke="#dc2626" connectNulls dot={{ r: 3 }} />
+                {mode === "individual" && hasIndividual && (
+                  <ReferenceLine
+                    y={product.secondary_market_price_individual!}
+                    stroke="#16a34a"
+                    strokeDasharray="4 4"
+                    ifOverflow="extendDomain"
+                    label={{ value: "個人間", position: "insideTopRight", fill: "#16a34a", fontSize: 11 }}
+                  />
+                )}
+                {mode === "buyback" && (shrinkChoice === "shrink" || shrinkChoice === "both") && hasBuybackShrink && (
+                  <ReferenceLine
+                    y={product.secondary_market_price_buyback_shrink!}
+                    stroke="#16a34a"
+                    strokeDasharray="4 4"
+                    ifOverflow="extendDomain"
+                    label={{ value: "買取(有)", position: "insideTopRight", fill: "#16a34a", fontSize: 11 }}
+                  />
+                )}
+                {mode === "buyback" && (shrinkChoice === "noshrink" || shrinkChoice === "both") && hasBuybackNoshrink && (
+                  <ReferenceLine
+                    y={product.secondary_market_price_buyback_noshrink!}
+                    stroke="#d97706"
+                    strokeDasharray="4 4"
+                    ifOverflow="extendDomain"
+                    label={{ value: "買取(無)", position: "insideBottomRight", fill: "#d97706", fontSize: 11 }}
+                  />
+                )}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          {mode === "individual" && hasIndividual && (
+            <p className="text-xs opacity-60">
+              個人間の目安価格：{formatYen(product.secondary_market_price_individual!)}
+              {product.secondary_market_trend_individual && `（${product.secondary_market_trend_individual}）`}
+              {product.secondary_market_checked_at && `　※${product.secondary_market_checked_at.slice(0, 10)}時点の調査`}
+            </p>
+          )}
+          {mode === "buyback" && (shrinkChoice === "shrink" || shrinkChoice === "both") && hasBuybackShrink && (
+            <p className="text-xs opacity-60">
+              買取（有）の目安価格：{formatYen(product.secondary_market_price_buyback_shrink!)}
+              {product.secondary_market_trend_buyback_shrink && `（${product.secondary_market_trend_buyback_shrink}）`}
+              {product.secondary_market_checked_at && `　※${product.secondary_market_checked_at.slice(0, 10)}時点の調査`}
+            </p>
+          )}
+          {mode === "buyback" && (shrinkChoice === "noshrink" || shrinkChoice === "both") && hasBuybackNoshrink && (
+            <p className="text-xs opacity-60">
+              買取（無）の目安価格：{formatYen(product.secondary_market_price_buyback_noshrink!)}
+              {product.secondary_market_trend_buyback_noshrink && `（${product.secondary_market_trend_buyback_noshrink}）`}
+              {product.secondary_market_checked_at && `　※${product.secondary_market_checked_at.slice(0, 10)}時点の調査`}
+            </p>
+          )}
         </div>
       ) : (
         <p className="text-sm opacity-60">価格推移データがまだありません。</p>

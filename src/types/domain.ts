@@ -18,6 +18,17 @@ export interface Product {
   item_type: ItemType;
   has_image: boolean;
   resale_notes: string | null;
+  release_date: string | null; // YYYY-MM-DD（カードの実際の発売日。created_atとは別物）
+  /** 個人間（フリマ）相場。情報源がシュリンク有無を区別しないため単一値 */
+  secondary_market_price_individual: number | null;
+  secondary_market_trend_individual: string | null;
+  /** 買取相場（シュリンク有、またはシュリンク区分の無い商品の唯一の値） */
+  secondary_market_price_buyback_shrink: number | null;
+  secondary_market_trend_buyback_shrink: string | null;
+  /** 買取相場・シュリンク無。シュリンク区分が無い商品はnull */
+  secondary_market_price_buyback_noshrink: number | null;
+  secondary_market_trend_buyback_noshrink: string | null;
+  secondary_market_checked_at: string | null;
   created_at: string;
 }
 
