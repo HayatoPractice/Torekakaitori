@@ -22,15 +22,30 @@ interface CompareRow {
   sample_count: number;
 }
 
+interface SecondaryHistoryRow {
+  product_id: string;
+  product_name: string;
+  date: string;
+  price_individual: number | null;
+  price_buyback_shrink: number | null;
+  price_buyback_noshrink: number | null;
+}
+
 type Granularity = "day" | "year";
+type SecondaryMetric = "individual" | "buybackShrink" | "buybackNoshrink";
 
 const YEAR_UNKNOWN = "不明";
 
-/** 2次流通比較グラフの凡例クリック用：表示ラベル → compareSeriesのキー */
-const SECONDARY_SERIES_BY_LABEL: Record<string, "individual" | "buybackShrink" | "buybackNoshrink"> = {
-  個人間: "individual",
-  "買取(有)": "buybackShrink",
-  "買取(無)": "buybackNoshrink",
+const SECONDARY_METRIC_FIELD: Record<SecondaryMetric, "price_individual" | "price_buyback_shrink" | "price_buyback_noshrink"> = {
+  individual: "price_individual",
+  buybackShrink: "price_buyback_shrink",
+  buybackNoshrink: "price_buyback_noshrink",
+};
+
+const SECONDARY_METRIC_LABEL: Record<SecondaryMetric, string> = {
+  individual: "個人間",
+  buybackShrink: "買取（シュリンク有）",
+  buybackNoshrink: "買取（シュリンク無）",
 };
 
 function daysSince(dateStr: string): number {
@@ -50,6 +65,22 @@ function pivotRows(rows: CompareRow[]): Array<{ bucket: string } & Record<string
     map.get(r.bucket)![r.product_name] = r.avg_price;
   }
   return Array.from(map.values()).sort((a, b) => a.bucket.localeCompare(b.bucket));
+}
+
+/** 2次流通の推移データを日付ごとにまとめ、商品名をキーにした行へ変換する（商品ごとに1本の線にするため） */
+function pivotSecondaryHistory(
+  rows: SecondaryHistoryRow[],
+  metric: SecondaryMetric
+): Array<{ date: string } & Record<string, number | string>> {
+  const field = SECONDARY_METRIC_FIELD[metric];
+  const map = new Map<string, { date: string } & Record<string, number | string>>();
+  for (const r of rows) {
+    const value = r[field];
+    if (value == null) continue;
+    if (!map.has(r.date)) map.set(r.date, { date: r.date });
+    map.get(r.date)![r.product_name] = value;
+  }
+  return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
 }
 
 export default function ProductsPage() {
@@ -89,7 +120,8 @@ export default function ProductsPage() {
   const [draftYMax, setDraftYMax] = useState("");
   const [draftXFrom, setDraftXFrom] = useState(() => monthsAgoLocalDate(1));
   const [draftXTo, setDraftXTo] = useState(todayLocalDate);
-  const [compareSeries, setCompareSeries] = useState({ individual: true, buybackShrink: true, buybackNoshrink: false });
+  const [secondaryMetric, setSecondaryMetric] = useState<SecondaryMetric>("individual");
+  const secondaryLegend = useLegendToggle();
 
   const isSearching = search.trim().length > 0;
   const filtered = products.filter((p) => p.canonical_name.toLowerCase().includes(search.toLowerCase()));
@@ -155,17 +187,16 @@ export default function ProductsPage() {
     trendYMax.trim() ? Number(trendYMax) : "auto",
   ];
 
-  const secondaryCompareData = useMemo(
-    () =>
-      selectedProducts.map((p) => ({
-        name: p.canonical_name,
-        個人間: p.secondary_market_price_individual ?? undefined,
-        "買取(有)": p.secondary_market_price_buyback_shrink ?? undefined,
-        "買取(無)": p.secondary_market_price_buyback_noshrink ?? undefined,
-      })),
-    [selectedProducts]
+  const secondaryHistoryQs = new URLSearchParams({ product_ids: selectedIds.join(",") });
+  const { data: secondaryHistoryData, error: secondaryHistoryError } = useSWR<{ rows: SecondaryHistoryRow[] }>(
+    selectedIds.length > 0 ? `/api/summary/products/secondary-history?${secondaryHistoryQs.toString()}` : null,
+    jsonFetcher
   );
-  const hasSecondaryData = secondaryCompareData.some((d) => d.個人間 != null || d["買取(有)"] != null || d["買取(無)"] != null);
+  const secondaryChartData = useMemo(
+    () => pivotSecondaryHistory(secondaryHistoryData?.rows ?? [], secondaryMetric),
+    [secondaryHistoryData, secondaryMetric]
+  );
+  const hasSecondaryData = secondaryChartData.length > 0;
 
   function toggleProduct(id: string) {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -228,7 +259,7 @@ export default function ProductsPage() {
 
         {selectedIds.length === 0 ? (
           <p className="text-sm opacity-60">
-            商品名の左にあるチェックボックスにチェックを入れると、ここに価格推移や2次流通の比較が棒グラフで表示されます。
+            商品名の左にあるチェックボックスにチェックを入れると、ここに価格推移や2次流通の比較が折れ線グラフで表示されます。
           </p>
         ) : (
           <>
@@ -371,69 +402,50 @@ export default function ProductsPage() {
             </p>
           )}
 
-          <h3 className="mb-2 text-xs font-semibold opacity-70">2次流通の比較</h3>
+          <h3 className="mb-2 text-xs font-semibold opacity-70">2次流通の比較（商品ごとの時系列）</h3>
           <div className="mb-3 flex flex-wrap gap-4 text-sm">
-            <label className="flex items-center gap-1.5">
-              <input
-                type="checkbox"
-                checked={compareSeries.individual}
-                onChange={(e) => setCompareSeries((prev) => ({ ...prev, individual: e.target.checked }))}
-              />
-              個人間
-            </label>
-            <label className="flex items-center gap-1.5">
-              <input
-                type="checkbox"
-                checked={compareSeries.buybackShrink}
-                onChange={(e) => setCompareSeries((prev) => ({ ...prev, buybackShrink: e.target.checked }))}
-              />
-              買取（シュリンク有）
-            </label>
-            <label className="flex items-center gap-1.5">
-              <input
-                type="checkbox"
-                checked={compareSeries.buybackNoshrink}
-                onChange={(e) => setCompareSeries((prev) => ({ ...prev, buybackNoshrink: e.target.checked }))}
-              />
-              買取（シュリンク無）
-            </label>
+            {(Object.keys(SECONDARY_METRIC_LABEL) as SecondaryMetric[]).map((metric) => (
+              <label key={metric} className="flex items-center gap-1.5">
+                <input
+                  type="radio"
+                  name="secondary-metric"
+                  checked={secondaryMetric === metric}
+                  onChange={() => setSecondaryMetric(metric)}
+                />
+                {SECONDARY_METRIC_LABEL[metric]}
+              </label>
+            ))}
           </div>
+
+          {secondaryHistoryError && <p className="text-sm text-red-500">{secondaryHistoryError.message}</p>}
 
           {hasSecondaryData ? (
             <div className="h-72 overflow-x-auto">
-              <div className="h-full" style={{ minWidth: Math.max(secondaryCompareData.length * 100, 320) }}>
+              <div className="h-full" style={{ minWidth: Math.max(secondaryChartData.length * 60, 320) }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={secondaryCompareData}>
+                  <LineChart data={secondaryChartData}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                    <XAxis dataKey="name" fontSize={11} />
+                    <XAxis dataKey="date" fontSize={11} />
                     <YAxis fontSize={12} tickFormatter={(v) => formatYen(v)} />
                     <Tooltip formatter={(v) => formatYen(v as number)} />
-                    <Legend
-                      onClick={(entry) => {
-                        const key = SECONDARY_SERIES_BY_LABEL[entry.dataKey as string];
-                        if (key) setCompareSeries((prev) => ({ ...prev, [key]: !prev[key] }));
-                      }}
-                      formatter={(value) => (
-                        <span
-                          style={{
-                            textDecoration: compareSeries[SECONDARY_SERIES_BY_LABEL[value]] ? "none" : "line-through",
-                            opacity: compareSeries[SECONDARY_SERIES_BY_LABEL[value]] ? 1 : 0.4,
-                            cursor: "pointer",
-                          }}
-                        >
-                          {value}
-                        </span>
-                      )}
-                    />
-                    <Line type="monotone" dataKey="個人間" stroke="#16a34a" connectNulls dot={{ r: 4 }} hide={!compareSeries.individual} />
-                    <Line type="monotone" dataKey="買取(有)" stroke="#2563eb" connectNulls dot={{ r: 4 }} hide={!compareSeries.buybackShrink} />
-                    <Line type="monotone" dataKey="買取(無)" stroke="#d97706" connectNulls dot={{ r: 4 }} hide={!compareSeries.buybackNoshrink} />
+                    <Legend onClick={secondaryLegend.onLegendClick} formatter={secondaryLegend.legendFormatter} />
+                    {selectedProducts.map((p, i) => (
+                      <Line
+                        key={p.id}
+                        type="monotone"
+                        dataKey={p.canonical_name}
+                        stroke={colorForSeries(i, selectedProducts.length)}
+                        connectNulls
+                        dot={{ r: 3 }}
+                        hide={secondaryLegend.isHidden(p.canonical_name)}
+                      />
+                    ))}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
           ) : (
-            <p className="text-sm opacity-60">選択した商品に2次流通データがまだありません。</p>
+            <p className="text-sm opacity-60">選択した商品に2次流通データの推移がまだありません。</p>
           )}
           </>
         )}
