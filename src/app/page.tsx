@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import useSWR from "swr";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { jsonFetcher, readJson } from "@/lib/api-client";
-import { normalizeDateInput } from "@/lib/date";
+import { monthsAgoLocalDate, normalizeDateInput, todayLocalDate } from "@/lib/date";
 import { formatYen } from "@/lib/format";
 import { useLegendToggle } from "@/hooks/useLegendToggle";
 import type { PriceType, Product, ProductAlias } from "@/types/domain";
@@ -79,15 +79,16 @@ export default function ProductsPage() {
   const [priceType, setPriceType] = useState<PriceType>("sell");
   const [trendYMin, setTrendYMin] = useState("");
   const [trendYMax, setTrendYMax] = useState("");
-  const [trendXFrom, setTrendXFrom] = useState("");
-  const [trendXTo, setTrendXTo] = useState("");
+  // 未入力時は「今日から1ヶ月前〜今日」をデフォルトの表示期間にする
+  const [trendXFrom, setTrendXFrom] = useState(() => monthsAgoLocalDate(1));
+  const [trendXTo, setTrendXTo] = useState(todayLocalDate);
   // 入力中の下書き（「検索」ボタンで上の実条件へ反映する）
   const [draftGranularity, setDraftGranularity] = useState<Granularity>("day");
   const [draftPriceType, setDraftPriceType] = useState<PriceType>("sell");
   const [draftYMin, setDraftYMin] = useState("");
   const [draftYMax, setDraftYMax] = useState("");
-  const [draftXFrom, setDraftXFrom] = useState("");
-  const [draftXTo, setDraftXTo] = useState("");
+  const [draftXFrom, setDraftXFrom] = useState(() => monthsAgoLocalDate(1));
+  const [draftXTo, setDraftXTo] = useState(todayLocalDate);
   const [compareSeries, setCompareSeries] = useState({ individual: true, buybackShrink: true, buybackNoshrink: false });
 
   const isSearching = search.trim().length > 0;

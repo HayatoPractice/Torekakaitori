@@ -4,7 +4,7 @@ import { use, useMemo, useRef, useState } from "react";
 import useSWR from "swr";
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { jsonFetcher, readJson } from "@/lib/api-client";
-import { normalizeDateInput } from "@/lib/date";
+import { monthsAgoLocalDate, normalizeDateInput, todayLocalDate } from "@/lib/date";
 import { prepareImageForUpload } from "@/lib/file";
 import { formatYen, parsePriceInput } from "@/lib/format";
 import { useLegendToggle } from "@/hooks/useLegendToggle";
@@ -99,8 +99,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const salesLegend = useLegendToggle();
   const historyLegend = useLegendToggle();
 
-  const [xFrom, setXFrom] = useState("");
-  const [xTo, setXTo] = useState("");
+  // 未入力時は「今日から1ヶ月前〜今日」をデフォルトの表示期間にする
+  const [xFrom, setXFrom] = useState(() => monthsAgoLocalDate(1));
+  const [xTo, setXTo] = useState(todayLocalDate);
   const [yMin, setYMin] = useState("");
   const [yMax, setYMax] = useState("");
   const chartData = useMemo(() => {
