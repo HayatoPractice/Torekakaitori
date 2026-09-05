@@ -12,3 +12,12 @@ export function formatYen(value: unknown): string {
 export function priceTypeLabel(priceType: PriceType): string {
   return priceType === "buy" ? "買取" : "販売";
 }
+
+/** 価格入力欄の文字列をパースする。""はnull（未入力）、数値文字列はその数値、それ以外は"invalid" */
+export function parsePriceInput(text: string): number | null | "invalid" {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+  const n = Number(trimmed);
+  if (Number.isNaN(n)) return "invalid";
+  return Math.round(n);
+}

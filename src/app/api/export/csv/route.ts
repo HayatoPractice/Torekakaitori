@@ -1,15 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getSql } from "@/lib/db";
+import { csvResponse } from "@/lib/csv";
 
 export const dynamic = "force-dynamic";
 
-function csvEscape(value: unknown): string {
-  const s = value === null || value === undefined ? "" : String(value);
-  if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
-}
-
-/** GET /api/export/csv?date=...&account_id=...&product_id=... （フィルタは任意） */
+/** GET /api/export/csv?date=...&account_id=...&product_id=... （フィルタは任意） 投稿ベースの価格データ */
 export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams;
   const date = params.get("date");
@@ -46,14 +41,5 @@ export async function GET(req: NextRequest) {
     row.source_url ?? "",
   ]);
 
-  const csv = [header, ...csvRows].map((r) => r.map(csvEscape).join(",")).join("\r\n");
-  const withBom = "﻿" + csv; // Excelでの文字化け防止
-
-  return new NextResponse(withBom, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="torecasouba_export.csv"`,
-    },
-  });
+  return csvResponse(header, csvRows, "torecasouba_export.csv");
 }

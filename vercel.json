@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/secondary-market-fallback",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}

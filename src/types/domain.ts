@@ -19,6 +19,7 @@ export interface Product {
   has_image: boolean;
   resale_notes: string | null;
   release_date: string | null; // YYYY-MM-DD（カードの実際の発売日。created_atとは別物）
+  retail_price: number | null; // 発売時の定価（税込・円）
   /** 個人間（フリマ）相場。情報源がシュリンク有無を区別しないため単一値 */
   secondary_market_price_individual: number | null;
   secondary_market_trend_individual: string | null;

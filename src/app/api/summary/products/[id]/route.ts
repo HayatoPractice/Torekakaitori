@@ -13,7 +13,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   const sql = getSql();
 
   const productRows = await sql`
-    SELECT id, canonical_name, item_type, created_at, resale_notes, release_date::text AS release_date,
+    SELECT id, canonical_name, item_type, created_at, resale_notes, release_date::text AS release_date, retail_price,
       secondary_market_price_individual, secondary_market_trend_individual,
       secondary_market_price_buyback_shrink, secondary_market_trend_buyback_shrink,
       secondary_market_price_buyback_noshrink, secondary_market_trend_buyback_noshrink,
@@ -63,5 +63,18 @@ export async function GET(req: NextRequest, { params }: Params) {
   }));
   ranking.sort((a, b) => (a.price_type === b.price_type ? a.price - b.price : 0));
 
-  return NextResponse.json({ product, trend, ranking });
+  const secondaryHistoryRows = await sql`
+    SELECT recorded_at::text AS recorded_at, price_individual, price_buyback_shrink, price_buyback_noshrink
+    FROM secondary_market_history
+    WHERE product_id = ${id}
+    ORDER BY recorded_at ASC
+  `;
+  const secondaryHistory = secondaryHistoryRows.map((r) => ({
+    date: (r.recorded_at as string).slice(0, 10),
+    individual: r.price_individual as number | null,
+    buyback_shrink: r.price_buyback_shrink as number | null,
+    buyback_noshrink: r.price_buyback_noshrink as number | null,
+  }));
+
+  return NextResponse.json({ product, trend, ranking, secondaryHistory });
 }

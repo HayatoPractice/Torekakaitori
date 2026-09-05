@@ -7,7 +7,7 @@ export async function GET() {
   const sql = getSql();
   const products = await sql`
     SELECT
-      p.id, p.canonical_name, p.item_type, p.created_at, p.resale_notes, p.release_date::text AS release_date,
+      p.id, p.canonical_name, p.item_type, p.created_at, p.resale_notes, p.release_date::text AS release_date, p.retail_price,
       p.secondary_market_price_individual, p.secondary_market_trend_individual,
       p.secondary_market_price_buyback_shrink, p.secondary_market_trend_buyback_shrink,
       p.secondary_market_price_buyback_noshrink, p.secondary_market_trend_buyback_noshrink,

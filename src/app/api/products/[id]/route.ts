@@ -29,6 +29,7 @@ const patchProductSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "release_date はYYYY-MM-DD形式で指定してください")
     .nullable()
     .optional(),
+  retail_price: priceField,
   secondary_market_price_individual: priceField,
   secondary_market_trend_individual: trendField,
   secondary_market_price_buyback_shrink: priceField,
@@ -58,6 +59,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   const resaleNotes = readTriState(body, "resale_notes", data.resale_notes?.trim() || null);
   const releaseDate = readTriState(body, "release_date", data.release_date);
+  const retailPrice = readTriState(body, "retail_price", data.retail_price);
   const priceIndividual = readTriState(body, "secondary_market_price_individual", data.secondary_market_price_individual);
   const trendIndividual = readTriState(body, "secondary_market_trend_individual", data.secondary_market_trend_individual?.trim() || null);
   const priceBuybackShrink = readTriState(body, "secondary_market_price_buyback_shrink", data.secondary_market_price_buyback_shrink);
@@ -66,6 +68,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const trendBuybackNoshrink = readTriState(body, "secondary_market_trend_buyback_noshrink", data.secondary_market_trend_buyback_noshrink?.trim() || null);
   const touchesSecondaryMarket =
     priceIndividual.present || trendIndividual.present || priceBuybackShrink.present || trendBuybackShrink.present || priceBuybackNoshrink.present || trendBuybackNoshrink.present;
+  // 価格そのものが変わった時だけ推移として記録する（傾向メモだけの編集では記録しない）
+  const touchesSecondaryMarketPrice = priceIndividual.present || priceBuybackShrink.present || priceBuybackNoshrink.present;
 
   const sql = getSql();
   try {
@@ -74,6 +78,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         canonical_name = COALESCE(${canonicalName ?? null}, canonical_name),
         resale_notes = CASE WHEN ${resaleNotes.present} THEN ${resaleNotes.value} ELSE resale_notes END,
         release_date = CASE WHEN ${releaseDate.present} THEN ${releaseDate.value}::date ELSE release_date END,
+        retail_price = CASE WHEN ${retailPrice.present} THEN ${retailPrice.value} ELSE retail_price END,
         secondary_market_price_individual = CASE WHEN ${priceIndividual.present} THEN ${priceIndividual.value} ELSE secondary_market_price_individual END,
         secondary_market_trend_individual = CASE WHEN ${trendIndividual.present} THEN ${trendIndividual.value} ELSE secondary_market_trend_individual END,
         secondary_market_price_buyback_shrink = CASE WHEN ${priceBuybackShrink.present} THEN ${priceBuybackShrink.value} ELSE secondary_market_price_buyback_shrink END,
@@ -82,10 +87,22 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         secondary_market_trend_buyback_noshrink = CASE WHEN ${trendBuybackNoshrink.present} THEN ${trendBuybackNoshrink.value} ELSE secondary_market_trend_buyback_noshrink END,
         secondary_market_checked_at = CASE WHEN ${touchesSecondaryMarket} THEN now() ELSE secondary_market_checked_at END
       WHERE id = ${id}
-      RETURNING *
+      RETURNING
+        id, canonical_name, item_type, created_at, resale_notes, release_date::text AS release_date,
+        retail_price, secondary_market_price_individual, secondary_market_trend_individual,
+        secondary_market_price_buyback_shrink, secondary_market_trend_buyback_shrink,
+        secondary_market_price_buyback_noshrink, secondary_market_trend_buyback_noshrink,
+        secondary_market_checked_at, (image_data IS NOT NULL) AS has_image
     `;
     if (updated.length === 0) return NextResponse.json({ error: "商品が見つかりません" }, { status: 404 });
-    return NextResponse.json({ product: updated[0] });
+    const product = updated[0];
+    if (touchesSecondaryMarketPrice) {
+      await sql`
+        INSERT INTO secondary_market_history (product_id, price_individual, price_buyback_shrink, price_buyback_noshrink)
+        VALUES (${id}, ${product.secondary_market_price_individual}, ${product.secondary_market_price_buyback_shrink}, ${product.secondary_market_price_buyback_noshrink})
+      `;
+    }
+    return NextResponse.json({ product });
   } catch (err) {
     if (isPgError(err, PG_UNIQUE_VIOLATION)) {
       return NextResponse.json({ error: `商品名「${canonicalName}」は既に登録されています` }, { status: 409 });

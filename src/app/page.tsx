@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import useSWR from "swr";
-import { Bar, BarChart, CartesianGrid, LabelList, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { jsonFetcher, readJson } from "@/lib/api-client";
-import { prepareImageForUpload } from "@/lib/file";
+import { normalizeDateInput } from "@/lib/date";
 import { formatYen } from "@/lib/format";
 import type { PriceType, Product, ProductAlias } from "@/types/domain";
 
@@ -22,36 +22,17 @@ interface CompareRow {
 }
 
 type Granularity = "day" | "year";
-type ShrinkView = "shrink" | "noshrink";
 
 const YEAR_UNKNOWN = "不明";
 
-/** 棒グラフの色。選択数ぶん色相を均等に割るので、何色選んでも重複しない */
+function daysSince(dateStr: string): number {
+  return Math.floor((Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24));
+}
+
+/** 折れ線・棒グラフの色。選択数ぶん色相を均等に割るので、何色選んでも重複しない */
 function colorForSeries(index: number, total: number): string {
   const hue = Math.round((360 * index) / Math.max(total, 1));
   return `hsl(${hue}, 65%, 45%)`;
-}
-
-/** バーの上に商品名を斜めに小さく表示する（凡例だけだと色の対応が追いにくいため） */
-function renderBarNameLabel(name: string) {
-  return function BarNameLabel(props: { x?: string | number; y?: string | number; width?: string | number }) {
-    const x = Number(props.x ?? 0);
-    const y = Number(props.y ?? 0);
-    const width = Number(props.width ?? 0);
-    return (
-      <text
-        x={x + width / 2}
-        y={y - 4}
-        textAnchor="start"
-        fontSize={8}
-        fill="currentColor"
-        opacity={0.6}
-        transform={`rotate(-60, ${x + width / 2}, ${y - 4})`}
-      >
-        {name}
-      </text>
-    );
-  };
 }
 
 function pivotRows(rows: CompareRow[]): Array<{ bucket: string } & Record<string, number | string>> {
@@ -63,39 +44,19 @@ function pivotRows(rows: CompareRow[]): Array<{ bucket: string } & Record<string
   return Array.from(map.values()).sort((a, b) => a.bucket.localeCompare(b.bucket));
 }
 
-/** "" はnull（未入力）、数値文字列はその数値、それ以外はエラーとして返す */
-function parsePriceInput(text: string): number | null | "invalid" {
-  const trimmed = text.trim();
-  if (!trimmed) return null;
-  const n = Number(trimmed);
-  if (Number.isNaN(n)) return "invalid";
-  return Math.round(n);
-}
-
-interface ProductDraft {
-  canonical_name: string;
-  resale_notes: string;
-  release_date: string;
-  secondary_market_price_individual: string;
-  secondary_market_trend_individual: string;
-  secondary_market_price_buyback_shrink: string;
-  secondary_market_trend_buyback_shrink: string;
-  secondary_market_price_buyback_noshrink: string;
-  secondary_market_trend_buyback_noshrink: string;
-}
-
-const PRICE_FIELDS = [
-  { key: "secondary_market_price_individual", label: "個人間の目安価格" },
-  { key: "secondary_market_price_buyback_shrink", label: "買取の目安価格（シュリンク有）" },
-  { key: "secondary_market_price_buyback_noshrink", label: "買取の目安価格（シュリンク無）" },
-] as const;
-
 export default function ProductsPage() {
   const { data, error: loadError, mutate } = useSWR<{ products: ProductWithAliases[] }>(
     "/api/products",
     jsonFetcher
   );
   const products = useMemo(() => data?.products ?? [], [data]);
+
+  // 2次流通データの最新調査日時（一番新しいものが7日以上前なら更新を促す）
+  const latestSecondaryCheckedAt = useMemo(() => {
+    const dates = products.map((p) => p.secondary_market_checked_at).filter((d): d is string => !!d);
+    return dates.length === 0 ? null : dates.reduce((a, b) => (a > b ? a : b));
+  }, [products]);
+  const daysSinceSecondaryUpdate = latestSecondaryCheckedAt ? daysSince(latestSecondaryCheckedAt) : null;
 
   const [search, setSearch] = useState("");
   const [visibleCount, setVisibleCount] = useState(30);
@@ -104,20 +65,21 @@ export default function ProductsPage() {
   const [mergeInto, setMergeInto] = useState("");
   const [mergeMessage, setMergeMessage] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  // 実際にグラフへ反映されている条件（「検索」ボタンを押すまで変わらない）
   const [granularity, setGranularity] = useState<Granularity>("day");
   const [priceType, setPriceType] = useState<PriceType>("sell");
   const [trendYMin, setTrendYMin] = useState("");
   const [trendYMax, setTrendYMax] = useState("");
   const [trendXFrom, setTrendXFrom] = useState("");
   const [trendXTo, setTrendXTo] = useState("");
+  // 入力中の下書き（「検索」ボタンで上の実条件へ反映する）
+  const [draftGranularity, setDraftGranularity] = useState<Granularity>("day");
+  const [draftPriceType, setDraftPriceType] = useState<PriceType>("sell");
+  const [draftYMin, setDraftYMin] = useState("");
+  const [draftYMax, setDraftYMax] = useState("");
+  const [draftXFrom, setDraftXFrom] = useState("");
+  const [draftXTo, setDraftXTo] = useState("");
   const [compareSeries, setCompareSeries] = useState({ individual: true, buybackShrink: true, buybackNoshrink: false });
-  const [shrinkView, setShrinkView] = useState<Record<string, ShrinkView>>({});
-  const [uploadingFor, setUploadingFor] = useState<string | null>(null);
-  const [imageError, setImageError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const uploadTargetRef = useRef<string | null>(null);
-  const [editing, setEditing] = useState<Record<string, ProductDraft>>({});
-  const [editError, setEditError] = useState<string | null>(null);
 
   const isSearching = search.trim().length > 0;
   const filtered = products.filter((p) => p.canonical_name.toLowerCase().includes(search.toLowerCase()));
@@ -155,98 +117,14 @@ export default function ProductsPage() {
     setSelectedIds((prev) => prev.filter((id) => !idsInView.has(id)));
   }
 
-  function startImageUpload(productId: string) {
-    uploadTargetRef.current = productId;
-    fileInputRef.current?.click();
-  }
-
-  async function handleImageSelected(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    const productId = uploadTargetRef.current;
-    e.target.value = ""; // 同じファイルを選び直しても発火するように毎回空に戻す
-    if (!file || !productId) return;
-
-    setImageError(null);
-    setUploadingFor(productId);
-    try {
-      const { base64Data, mimeType } = await prepareImageForUpload(file);
-      const res = await fetch(`/api/products/${productId}/image`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ base64Data, mimeType }),
-      });
-      await readJson(res);
-      mutate();
-    } catch (err) {
-      setImageError(err instanceof Error ? err.message : "画像のアップロードに失敗しました");
-    } finally {
-      setUploadingFor(null);
-    }
-  }
-
-  function startEdit(p: Product) {
-    setEditError(null);
-    setEditing((prev) => ({
-      ...prev,
-      [p.id]: {
-        canonical_name: p.canonical_name,
-        resale_notes: p.resale_notes ?? "",
-        release_date: p.release_date ?? "",
-        secondary_market_price_individual: p.secondary_market_price_individual != null ? String(p.secondary_market_price_individual) : "",
-        secondary_market_trend_individual: p.secondary_market_trend_individual ?? "",
-        secondary_market_price_buyback_shrink: p.secondary_market_price_buyback_shrink != null ? String(p.secondary_market_price_buyback_shrink) : "",
-        secondary_market_trend_buyback_shrink: p.secondary_market_trend_buyback_shrink ?? "",
-        secondary_market_price_buyback_noshrink: p.secondary_market_price_buyback_noshrink != null ? String(p.secondary_market_price_buyback_noshrink) : "",
-        secondary_market_trend_buyback_noshrink: p.secondary_market_trend_buyback_noshrink ?? "",
-      },
-    }));
-  }
-
-  function cancelEdit(id: string) {
-    setEditing((prev) => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
-  }
-
-  async function saveEdit(id: string) {
-    const draft = editing[id];
-    if (!draft) return;
-    setEditError(null);
-
-    const parsedPrices: Record<string, number | null> = {};
-    for (const { key, label } of PRICE_FIELDS) {
-      const parsed = parsePriceInput(draft[key]);
-      if (parsed === "invalid") {
-        setEditError(`${label}は数値で入力してください`);
-        return;
-      }
-      parsedPrices[key] = parsed;
-    }
-
-    try {
-      const res = await fetch(`/api/products/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          canonical_name: draft.canonical_name.trim(),
-          resale_notes: draft.resale_notes.trim() || null,
-          release_date: draft.release_date || null,
-          secondary_market_price_individual: parsedPrices.secondary_market_price_individual,
-          secondary_market_trend_individual: draft.secondary_market_trend_individual.trim() || null,
-          secondary_market_price_buyback_shrink: parsedPrices.secondary_market_price_buyback_shrink,
-          secondary_market_trend_buyback_shrink: draft.secondary_market_trend_buyback_shrink.trim() || null,
-          secondary_market_price_buyback_noshrink: parsedPrices.secondary_market_price_buyback_noshrink,
-          secondary_market_trend_buyback_noshrink: draft.secondary_market_trend_buyback_noshrink.trim() || null,
-        }),
-      });
-      await readJson(res);
-      cancelEdit(id);
-      mutate();
-    } catch (err) {
-      setEditError(err instanceof Error ? err.message : "更新に失敗しました");
-    }
+  /** 下書きの検索条件を実際の表示に反映する（「検索」ボタン） */
+  function applyTrendFilters() {
+    setGranularity(draftGranularity);
+    setPriceType(draftPriceType);
+    setTrendXFrom(normalizeDateInput(draftXFrom));
+    setTrendXTo(normalizeDateInput(draftXTo));
+    setTrendYMin(draftYMin);
+    setTrendYMax(draftYMax);
   }
 
   const compareQs = new URLSearchParams({ product_ids: selectedIds.join(","), granularity, price_type: priceType });
@@ -283,10 +161,6 @@ export default function ProductsPage() {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
-  function getShrinkView(productId: string): ShrinkView {
-    return shrinkView[productId] ?? "shrink";
-  }
-
   async function handleMerge(e: React.FormEvent) {
     e.preventDefault();
     setMergeMessage(null);
@@ -312,7 +186,21 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold">商品・相場比較</h1>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="text-xl font-bold">商品・相場比較</h1>
+        <a
+          href="/api/export/products-csv"
+          className="rounded-md border border-black/15 px-3 py-1.5 text-sm hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+        >
+          商品マスタCSVを出力
+        </a>
+      </div>
+
+      {daysSinceSecondaryUpdate !== null && daysSinceSecondaryUpdate >= 7 && (
+        <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+          ⚠️ 2次流通データの最終更新から{daysSinceSecondaryUpdate}日経過しています。Claude Codeのセッションで「更新して」と伝えてください。
+        </p>
+      )}
 
       <div className="rounded-lg border border-black/10 p-4 dark:border-white/10">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -356,8 +244,8 @@ export default function ProductsPage() {
             <label className="text-sm">
               <span className="mb-1 block opacity-60">時間の単位</span>
               <select
-                value={granularity}
-                onChange={(e) => setGranularity(e.target.value as Granularity)}
+                value={draftGranularity}
+                onChange={(e) => setDraftGranularity(e.target.value as Granularity)}
                 className="rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
               >
                 <option value="day">1日単位</option>
@@ -367,8 +255,8 @@ export default function ProductsPage() {
             <label className="text-sm">
               <span className="mb-1 block opacity-60">価格区分</span>
               <select
-                value={priceType}
-                onChange={(e) => setPriceType(e.target.value as PriceType)}
+                value={draftPriceType}
+                onChange={(e) => setDraftPriceType(e.target.value as PriceType)}
                 className="rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
               >
                 <option value="sell">販売</option>
@@ -376,29 +264,29 @@ export default function ProductsPage() {
               </select>
             </label>
             <label className="text-sm">
-              <span className="mb-1 block opacity-60">期間（{granularity === "year" ? "年" : "日付"}・任意）From</span>
+              <span className="mb-1 block opacity-60">期間（任意・どんな形式でも可）From</span>
               <input
-                value={trendXFrom}
-                onChange={(e) => setTrendXFrom(e.target.value)}
-                placeholder={granularity === "year" ? "2024" : "2026-01-01"}
-                className="w-32 rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
+                value={draftXFrom}
+                onChange={(e) => setDraftXFrom(e.target.value)}
+                placeholder="2026-1-1 / 2026年1月1日 等"
+                className="w-40 rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
               />
             </label>
             <label className="text-sm">
               <span className="mb-1 block opacity-60">期間 To</span>
               <input
-                value={trendXTo}
-                onChange={(e) => setTrendXTo(e.target.value)}
-                placeholder={granularity === "year" ? "2026" : "2026-12-31"}
-                className="w-32 rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
+                value={draftXTo}
+                onChange={(e) => setDraftXTo(e.target.value)}
+                placeholder="2026-12-31 / 2026年12月31日 等"
+                className="w-40 rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
               />
             </label>
             <label className="text-sm">
               <span className="mb-1 block opacity-60">金額の範囲（円・任意）下限</span>
               <input
                 type="number"
-                value={trendYMin}
-                onChange={(e) => setTrendYMin(e.target.value)}
+                value={draftYMin}
+                onChange={(e) => setDraftYMin(e.target.value)}
                 placeholder="自動"
                 className="w-28 rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
               />
@@ -407,16 +295,27 @@ export default function ProductsPage() {
               <span className="mb-1 block opacity-60">上限</span>
               <input
                 type="number"
-                value={trendYMax}
-                onChange={(e) => setTrendYMax(e.target.value)}
+                value={draftYMax}
+                onChange={(e) => setDraftYMax(e.target.value)}
                 placeholder="自動"
                 className="w-28 rounded-md border border-black/15 bg-transparent px-3 py-2 dark:border-white/20"
               />
             </label>
+            <button
+              type="button"
+              onClick={applyTrendFilters}
+              className="self-end rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background"
+            >
+              検索
+            </button>
             {(trendXFrom || trendXTo || trendYMin || trendYMax) && (
               <button
                 type="button"
                 onClick={() => {
+                  setDraftXFrom("");
+                  setDraftXTo("");
+                  setDraftYMin("");
+                  setDraftYMax("");
                   setTrendXFrom("");
                   setTrendXTo("");
                   setTrendYMin("");
@@ -435,18 +334,23 @@ export default function ProductsPage() {
             <div className="mb-6 h-80 overflow-x-auto">
               <div className="h-full" style={{ minWidth: Math.max(chartData.length * 60, 320) }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
+                  <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                     <XAxis dataKey="bucket" fontSize={12} />
                     <YAxis fontSize={12} domain={trendYDomain} tickFormatter={(v) => formatYen(v)} />
                     <Tooltip formatter={(v) => formatYen(v)} />
                     <Legend />
                     {selectedProducts.map((p, i) => (
-                      <Bar key={p.id} dataKey={p.canonical_name} fill={colorForSeries(i, selectedProducts.length)}>
-                        <LabelList dataKey={p.canonical_name} content={renderBarNameLabel(p.canonical_name)} />
-                      </Bar>
+                      <Line
+                        key={p.id}
+                        type="monotone"
+                        dataKey={p.canonical_name}
+                        stroke={colorForSeries(i, selectedProducts.length)}
+                        connectNulls
+                        dot={{ r: 3 }}
+                      />
                     ))}
-                  </BarChart>
+                  </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
@@ -518,17 +422,7 @@ export default function ProductsPage() {
         className="w-full max-w-sm rounded-md border border-black/15 bg-transparent px-3 py-2 text-sm dark:border-white/20"
       />
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleImageSelected}
-        className="hidden"
-      />
-
       {loadError && <p className="text-sm text-red-500">{loadError.message}</p>}
-      {imageError && <p className="text-sm text-red-500">{imageError}</p>}
-      {editError && <p className="text-sm text-red-500">{editError}</p>}
 
       {!isSearching && years.length > 0 && (
         <div className="flex items-center justify-between gap-2 rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10">
@@ -574,11 +468,7 @@ export default function ProductsPage() {
 
       <ul className="divide-y divide-black/5 rounded-lg border border-black/10 dark:divide-white/10 dark:border-white/10">
         {visibleProducts.map((p) => {
-          const draft = editing[p.id];
-          const view = getShrinkView(p.id);
-          const buybackPrice = view === "noshrink" && p.secondary_market_price_buyback_noshrink != null
-            ? p.secondary_market_price_buyback_noshrink
-            : p.secondary_market_price_buyback_shrink;
+          const buybackPrice = p.secondary_market_price_buyback_shrink;
           return (
             <li key={p.id} className="flex flex-wrap items-start justify-between gap-2 px-4 py-3 text-sm">
               <div className="flex min-w-0 flex-1 items-start gap-2">
@@ -602,157 +492,17 @@ export default function ProductsPage() {
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  {draft ? (
-                    <div className="space-y-1">
-                      <input
-                        value={draft.canonical_name}
-                        onChange={(e) =>
-                          setEditing((prev) => ({ ...prev, [p.id]: { ...draft, canonical_name: e.target.value } }))
-                        }
-                        placeholder="商品名"
-                        className="w-full rounded border border-black/15 bg-transparent px-2 py-1 text-sm dark:border-white/20"
-                      />
-                      <label className="flex items-center gap-2 text-xs opacity-70">
-                        発売日
-                        <input
-                          type="date"
-                          value={draft.release_date}
-                          onChange={(e) =>
-                            setEditing((prev) => ({ ...prev, [p.id]: { ...draft, release_date: e.target.value } }))
-                          }
-                          className="rounded border border-black/15 bg-transparent px-2 py-1 text-xs dark:border-white/20"
-                        />
-                      </label>
-                      <textarea
-                        value={draft.resale_notes}
-                        onChange={(e) =>
-                          setEditing((prev) => ({ ...prev, [p.id]: { ...draft, resale_notes: e.target.value } }))
-                        }
-                        placeholder="再販履歴等のメモ（任意）"
-                        rows={2}
-                        className="w-full rounded border border-black/15 bg-transparent px-2 py-1 text-xs dark:border-white/20"
-                      />
-                      <div className="space-y-1 rounded border border-black/10 p-2 dark:border-white/10">
-                        <p className="text-[11px] font-medium opacity-60">2次流通（個人間）</p>
-                        <div className="flex gap-2">
-                          <input
-                            type="number"
-                            value={draft.secondary_market_price_individual}
-                            onChange={(e) =>
-                              setEditing((prev) => ({ ...prev, [p.id]: { ...draft, secondary_market_price_individual: e.target.value } }))
-                            }
-                            placeholder="目安価格"
-                            className="w-32 rounded border border-black/15 bg-transparent px-2 py-1 text-xs dark:border-white/20"
-                          />
-                          <input
-                            value={draft.secondary_market_trend_individual}
-                            onChange={(e) =>
-                              setEditing((prev) => ({ ...prev, [p.id]: { ...draft, secondary_market_trend_individual: e.target.value } }))
-                            }
-                            placeholder="傾向メモ"
-                            className="flex-1 rounded border border-black/15 bg-transparent px-2 py-1 text-xs dark:border-white/20"
-                          />
-                        </div>
-                        <p className="text-[11px] font-medium opacity-60">2次流通（買取・シュリンク有）</p>
-                        <div className="flex gap-2">
-                          <input
-                            type="number"
-                            value={draft.secondary_market_price_buyback_shrink}
-                            onChange={(e) =>
-                              setEditing((prev) => ({ ...prev, [p.id]: { ...draft, secondary_market_price_buyback_shrink: e.target.value } }))
-                            }
-                            placeholder="目安価格"
-                            className="w-32 rounded border border-black/15 bg-transparent px-2 py-1 text-xs dark:border-white/20"
-                          />
-                          <input
-                            value={draft.secondary_market_trend_buyback_shrink}
-                            onChange={(e) =>
-                              setEditing((prev) => ({ ...prev, [p.id]: { ...draft, secondary_market_trend_buyback_shrink: e.target.value } }))
-                            }
-                            placeholder="傾向メモ"
-                            className="flex-1 rounded border border-black/15 bg-transparent px-2 py-1 text-xs dark:border-white/20"
-                          />
-                        </div>
-                        <p className="text-[11px] font-medium opacity-60">2次流通（買取・シュリンク無）</p>
-                        <div className="flex gap-2">
-                          <input
-                            type="number"
-                            value={draft.secondary_market_price_buyback_noshrink}
-                            onChange={(e) =>
-                              setEditing((prev) => ({ ...prev, [p.id]: { ...draft, secondary_market_price_buyback_noshrink: e.target.value } }))
-                            }
-                            placeholder="目安価格"
-                            className="w-32 rounded border border-black/15 bg-transparent px-2 py-1 text-xs dark:border-white/20"
-                          />
-                          <input
-                            value={draft.secondary_market_trend_buyback_noshrink}
-                            onChange={(e) =>
-                              setEditing((prev) => ({ ...prev, [p.id]: { ...draft, secondary_market_trend_buyback_noshrink: e.target.value } }))
-                            }
-                            placeholder="傾向メモ"
-                            className="flex-1 rounded border border-black/15 bg-transparent px-2 py-1 text-xs dark:border-white/20"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <button onClick={() => saveEdit(p.id)} className="text-xs text-emerald-600 hover:underline dark:text-emerald-400">
-                          保存
-                        </button>
-                        <button onClick={() => cancelEdit(p.id)} className="text-xs hover:underline">
-                          キャンセル
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <Link href={`/products/${p.id}`} className="font-medium hover:underline">
-                        {p.canonical_name}
-                      </Link>
-                      {p.release_date && <p className="text-xs opacity-40">発売日: {p.release_date}</p>}
-                      {p.product_aliases.length > 0 && (
-                        <p className="text-xs opacity-50">
-                          表記ゆれ: {p.product_aliases.map((a) => a.alias_text).join(" / ")}
-                        </p>
-                      )}
-                      {p.resale_notes && (
-                        <p className="whitespace-pre-wrap text-xs opacity-50">再販: {p.resale_notes}</p>
-                      )}
-                      {p.secondary_market_price_individual != null && (
-                        <p className="text-xs opacity-50">個人間: {formatYen(p.secondary_market_price_individual)}</p>
-                      )}
-                      {buybackPrice != null && (
-                        <div className="flex items-center gap-2 text-xs opacity-50">
-                          <span>
-                            買取（{view === "noshrink" && p.secondary_market_price_buyback_noshrink != null ? "無" : "有"}）: {formatYen(buybackPrice)}
-                          </span>
-                          {p.secondary_market_price_buyback_noshrink != null && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setShrinkView((prev) => ({ ...prev, [p.id]: getShrinkView(p.id) === "shrink" ? "noshrink" : "shrink" }))
-                              }
-                              className="rounded border border-black/15 px-1.5 py-0.5 text-[10px] hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
-                            >
-                              {view === "noshrink" ? "有を見る" : "無を見る"}
-                            </button>
-                          )}
-                        </div>
-                      )}
-                      <div className="flex gap-3">
-                        <button
-                          type="button"
-                          onClick={() => startImageUpload(p.id)}
-                          disabled={uploadingFor === p.id}
-                          className="text-xs opacity-60 hover:underline disabled:opacity-30"
-                        >
-                          {uploadingFor === p.id ? "アップロード中..." : p.has_image ? "画像を変更" : "画像を追加"}
-                        </button>
-                        <button type="button" onClick={() => startEdit(p)} className="text-xs opacity-60 hover:underline">
-                          編集
-                        </button>
-                      </div>
-                    </>
-                  )}
+                  <Link href={`/products/${p.id}`} className="font-medium hover:underline">
+                    {p.canonical_name}
+                  </Link>
+                  {p.release_date && <span className="ml-2 text-xs opacity-40">{p.release_date}</span>}
+                  <div className="flex flex-wrap gap-x-3 text-xs opacity-50">
+                    {p.retail_price != null && <span>定価: {formatYen(p.retail_price)}</span>}
+                    {p.secondary_market_price_individual != null && (
+                      <span>個人間: {formatYen(p.secondary_market_price_individual)}</span>
+                    )}
+                    {buybackPrice != null && <span>買取（有）: {formatYen(buybackPrice)}</span>}
+                  </div>
                 </div>
               </div>
               <span className="shrink-0 rounded bg-black/5 px-2 py-0.5 text-xs dark:bg-white/10">
