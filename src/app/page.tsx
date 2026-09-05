@@ -7,6 +7,7 @@ import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContai
 import { jsonFetcher, readJson } from "@/lib/api-client";
 import { normalizeDateInput } from "@/lib/date";
 import { formatYen } from "@/lib/format";
+import { useLegendToggle } from "@/hooks/useLegendToggle";
 import type { PriceType, Product, ProductAlias } from "@/types/domain";
 
 interface ProductWithAliases extends Product {
@@ -24,6 +25,13 @@ interface CompareRow {
 type Granularity = "day" | "year";
 
 const YEAR_UNKNOWN = "不明";
+
+/** 2次流通比較グラフの凡例クリック用：表示ラベル → compareSeriesのキー */
+const SECONDARY_SERIES_BY_LABEL: Record<string, "individual" | "buybackShrink" | "buybackNoshrink"> = {
+  個人間: "individual",
+  "買取(有)": "buybackShrink",
+  "買取(無)": "buybackNoshrink",
+};
 
 function daysSince(dateStr: string): number {
   return Math.floor((Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24));
@@ -50,6 +58,7 @@ export default function ProductsPage() {
     jsonFetcher
   );
   const products = useMemo(() => data?.products ?? [], [data]);
+  const trendLegend = useLegendToggle();
 
   // 2次流通データの最新調査日時（一番新しいものが7日以上前なら更新を促す）
   const latestSecondaryCheckedAt = useMemo(() => {
@@ -339,7 +348,7 @@ export default function ProductsPage() {
                     <XAxis dataKey="bucket" fontSize={12} />
                     <YAxis fontSize={12} domain={trendYDomain} tickFormatter={(v) => formatYen(v)} />
                     <Tooltip formatter={(v) => formatYen(v)} />
-                    <Legend />
+                    <Legend onClick={trendLegend.onLegendClick} formatter={trendLegend.legendFormatter} />
                     {selectedProducts.map((p, i) => (
                       <Line
                         key={p.id}
@@ -348,6 +357,7 @@ export default function ProductsPage() {
                         stroke={colorForSeries(i, selectedProducts.length)}
                         connectNulls
                         dot={{ r: 3 }}
+                        hide={trendLegend.isHidden(p.canonical_name)}
                       />
                     ))}
                   </LineChart>
@@ -397,10 +407,26 @@ export default function ProductsPage() {
                     <XAxis dataKey="name" fontSize={11} />
                     <YAxis fontSize={12} tickFormatter={(v) => formatYen(v)} />
                     <Tooltip formatter={(v) => formatYen(v as number)} />
-                    <Legend />
-                    {compareSeries.individual && <Bar dataKey="個人間" fill="#16a34a" />}
-                    {compareSeries.buybackShrink && <Bar dataKey="買取(有)" fill="#2563eb" />}
-                    {compareSeries.buybackNoshrink && <Bar dataKey="買取(無)" fill="#d97706" />}
+                    <Legend
+                      onClick={(entry) => {
+                        const key = SECONDARY_SERIES_BY_LABEL[entry.dataKey as string];
+                        if (key) setCompareSeries((prev) => ({ ...prev, [key]: !prev[key] }));
+                      }}
+                      formatter={(value) => (
+                        <span
+                          style={{
+                            textDecoration: compareSeries[SECONDARY_SERIES_BY_LABEL[value]] ? "none" : "line-through",
+                            opacity: compareSeries[SECONDARY_SERIES_BY_LABEL[value]] ? 1 : 0.4,
+                            cursor: "pointer",
+                          }}
+                        >
+                          {value}
+                        </span>
+                      )}
+                    />
+                    <Bar dataKey="個人間" fill="#16a34a" hide={!compareSeries.individual} />
+                    <Bar dataKey="買取(有)" fill="#2563eb" hide={!compareSeries.buybackShrink} />
+                    <Bar dataKey="買取(無)" fill="#d97706" hide={!compareSeries.buybackNoshrink} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

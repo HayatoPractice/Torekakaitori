@@ -7,6 +7,7 @@ import { jsonFetcher, readJson } from "@/lib/api-client";
 import { normalizeDateInput } from "@/lib/date";
 import { prepareImageForUpload } from "@/lib/file";
 import { formatYen, parsePriceInput } from "@/lib/format";
+import { useLegendToggle } from "@/hooks/useLegendToggle";
 import type { Product } from "@/types/domain";
 
 type Mode = "individual" | "buyback";
@@ -68,7 +69,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const product = data?.product ?? null;
   const trend = useMemo(() => data?.trend ?? [], [data]);
   const ranking = data?.ranking ?? [];
-  const secondaryHistory = data?.secondaryHistory ?? [];
+  const secondaryHistory = useMemo(
+    () =>
+      (data?.secondaryHistory ?? []).map((h) => ({
+        date: h.date,
+        個人間: h.individual ?? undefined,
+        "買取(有)": h.buyback_shrink ?? undefined,
+        "買取(無)": h.buyback_noshrink ?? undefined,
+      })),
+    [data]
+  );
 
   const chartDataAll = useMemo(() => {
     const byDate = new Map<string, { date: string; 販売?: number; 買取?: number; sellCount: number; buyCount: number }>();
@@ -85,6 +95,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     }
     return Array.from(byDate.values()).sort((a, b) => a.date.localeCompare(b.date));
   }, [trend]);
+
+  const salesLegend = useLegendToggle();
+  const historyLegend = useLegendToggle();
 
   const [xFrom, setXFrom] = useState("");
   const [xTo, setXTo] = useState("");
@@ -471,9 +484,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 <XAxis dataKey="date" fontSize={12} />
                 <YAxis fontSize={12} domain={yDomain} tickFormatter={(v) => formatYen(v)} />
                 <Tooltip formatter={(v) => formatYen(v)} />
-                <Legend />
-                <Line type="monotone" dataKey="販売" stroke="#2563eb" connectNulls dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="買取" stroke="#dc2626" connectNulls dot={{ r: 3 }} />
+                <Legend onClick={salesLegend.onLegendClick} formatter={salesLegend.legendFormatter} />
+                <Line type="monotone" dataKey="販売" stroke="#2563eb" connectNulls dot={{ r: 3 }} hide={salesLegend.isHidden("販売")} />
+                <Line type="monotone" dataKey="買取" stroke="#dc2626" connectNulls dot={{ r: 3 }} hide={salesLegend.isHidden("買取")} />
                 {mode === "individual" && hasIndividual && (
                   <ReferenceLine
                     y={product.secondary_market_price_individual!}
@@ -542,10 +555,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     <XAxis dataKey="date" fontSize={12} />
                     <YAxis fontSize={12} tickFormatter={(v) => formatYen(v)} />
                     <Tooltip formatter={(v) => formatYen(v)} />
-                    <Legend />
-                    <Line type="monotone" dataKey="individual" name="個人間" stroke="#16a34a" connectNulls dot={{ r: 3 }} />
-                    <Line type="monotone" dataKey="buyback_shrink" name="買取(有)" stroke="#2563eb" connectNulls dot={{ r: 3 }} />
-                    <Line type="monotone" dataKey="buyback_noshrink" name="買取(無)" stroke="#d97706" connectNulls dot={{ r: 3 }} />
+                    <Legend onClick={historyLegend.onLegendClick} formatter={historyLegend.legendFormatter} />
+                    <Line type="monotone" dataKey="個人間" stroke="#16a34a" connectNulls dot={{ r: 3 }} hide={historyLegend.isHidden("個人間")} />
+                    <Line type="monotone" dataKey="買取(有)" stroke="#2563eb" connectNulls dot={{ r: 3 }} hide={historyLegend.isHidden("買取(有)")} />
+                    <Line type="monotone" dataKey="買取(無)" stroke="#d97706" connectNulls dot={{ r: 3 }} hide={historyLegend.isHidden("買取(無)")} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
