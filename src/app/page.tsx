@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import useSWR from "swr";
-import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { jsonFetcher, readJson } from "@/lib/api-client";
 import { monthsAgoLocalDate, normalizeDateInput, todayLocalDate } from "@/lib/date";
 import { formatYen } from "@/lib/format";
@@ -403,7 +403,7 @@ export default function ProductsPage() {
             <div className="h-72 overflow-x-auto">
               <div className="h-full" style={{ minWidth: Math.max(secondaryCompareData.length * 100, 320) }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={secondaryCompareData}>
+                  <LineChart data={secondaryCompareData}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                     <XAxis dataKey="name" fontSize={11} />
                     <YAxis fontSize={12} tickFormatter={(v) => formatYen(v)} />
@@ -425,10 +425,10 @@ export default function ProductsPage() {
                         </span>
                       )}
                     />
-                    <Bar dataKey="個人間" fill="#16a34a" hide={!compareSeries.individual} />
-                    <Bar dataKey="買取(有)" fill="#2563eb" hide={!compareSeries.buybackShrink} />
-                    <Bar dataKey="買取(無)" fill="#d97706" hide={!compareSeries.buybackNoshrink} />
-                  </BarChart>
+                    <Line type="monotone" dataKey="個人間" stroke="#16a34a" connectNulls dot={{ r: 4 }} hide={!compareSeries.individual} />
+                    <Line type="monotone" dataKey="買取(有)" stroke="#2563eb" connectNulls dot={{ r: 4 }} hide={!compareSeries.buybackShrink} />
+                    <Line type="monotone" dataKey="買取(無)" stroke="#d97706" connectNulls dot={{ r: 4 }} hide={!compareSeries.buybackNoshrink} />
+                  </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
