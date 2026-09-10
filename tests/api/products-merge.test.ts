@@ -71,6 +71,24 @@ describe("mergeProducts / POST /api/products/merge", () => {
     expect(fromProduct.length).toBe(0);
   });
 
+  it("統合元のsecondary_market_historyが統合先へ引き継がれる（ON DELETE CASCADEで消えない）", async () => {
+    const intoId = await createProduct("履歴統合先商品");
+    const fromId = await createProduct("履歴統合元商品");
+
+    const historyRows = await sql`
+      INSERT INTO secondary_market_history (product_id, price_individual, price_buyback_shrink, price_buyback_noshrink)
+      VALUES (${fromId}, 10000, 8000, 6000)
+      RETURNING id
+    `;
+    const historyId = historyRows[0].id as string;
+
+    await mergeProducts(fromId, intoId);
+
+    const history = await sql`SELECT product_id FROM secondary_market_history WHERE id = ${historyId}`;
+    expect(history.length).toBe(1);
+    expect(history[0].product_id).toBe(intoId);
+  });
+
   it("同じID同士のmergeは何もしない（早期return）", async () => {
     const id = await createProduct("自己統合商品");
     await mergeProducts(id, id);

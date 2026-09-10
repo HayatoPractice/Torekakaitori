@@ -39,11 +39,19 @@ export async function ingestPost(input: IngestInput): Promise<IngestResult> {
   const imageBuffers = images.map((img) => Buffer.from(img.base64Data, "base64"));
   const contentHash = computeContentHash(rawText, imageBuffers);
 
-  // URLが無いテキスト/画像投稿は、内容の完全一致で重複を検知する
+  // URLが無いテキスト/画像投稿は、内容の完全一致で重複を検知する。
+  // ただし前回が解析エラー（Gemini一時障害等）で終わっている場合は、同じ内容の
+  // 再投稿を「重複」として弾くと、その内容は永久に再解析できなくなってしまう。
+  // その場合は古い失敗レコードを消し、やり直し（再解析）として扱う。
   if (!sourceUrl) {
     const existing = await sql`SELECT ${sql.unsafe(POST_COLUMNS)} FROM posts WHERE content_hash = ${contentHash} LIMIT 1`;
     if (existing.length > 0) {
-      return { post: existing[0] as unknown as Post, items: [], duplicateOf: existing[0].id as string };
+      const prev = existing[0] as unknown as Post;
+      if (prev.status === "error") {
+        await sql`DELETE FROM posts WHERE id = ${prev.id}`; // post_imagesはON DELETE CASCADEで一緒に消える
+      } else {
+        return { post: prev, items: [], duplicateOf: prev.id };
+      }
     }
   }
 
@@ -58,9 +66,23 @@ export async function ingestPost(input: IngestInput): Promise<IngestResult> {
   } catch (err) {
     if (isPgError(err, PG_UNIQUE_VIOLATION)) {
       const existing = await sql`SELECT ${sql.unsafe(POST_COLUMNS)} FROM posts WHERE source_url = ${sourceUrl} LIMIT 1`;
-      return { post: existing[0] as unknown as Post, items: [], duplicateOf: existing[0]?.id as string };
+      const prev = existing[0] as unknown as Post | undefined;
+      if (prev?.status === "error") {
+        // 同じURLの前回投稿が解析エラーで終わっている。「重複」として消えたことにせず、
+        // 古い失敗レコードを消してから同じURLで再登録し直す（やり直し）。
+        await sql`DELETE FROM posts WHERE id = ${prev.id}`;
+        const retried = await sql`
+          INSERT INTO posts (account_id, posted_date, source_url, raw_text, content_hash, status)
+          VALUES (${input.accountId}, ${input.postedDate}, ${sourceUrl}, ${rawText}, ${contentHash}, 'pending')
+          RETURNING ${sql.unsafe(POST_COLUMNS)}
+        `;
+        post = retried[0] as unknown as Post;
+      } else {
+        return { post: prev ?? null, items: [], duplicateOf: prev?.id };
+      }
+    } else {
+      throw new Error(`投稿の登録に失敗しました: ${err instanceof Error ? err.message : "unknown error"}`);
     }
-    throw new Error(`投稿の登録に失敗しました: ${err instanceof Error ? err.message : "unknown error"}`);
   }
 
   // 画像をDBへ保存（bytea）。16進テキスト経由で確実にエンコードする。

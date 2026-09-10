@@ -27,13 +27,16 @@ export async function findOrCreateProduct(rawName: string, itemType: string): Pr
   return created[0].id as string;
 }
 
-/** 商品を統合する。fromProductId配下のitems/aliasesをintoProductIdへ付け替えて、fromを削除する */
+/** 商品を統合する。fromProductId配下のitems/aliases/価格履歴をintoProductIdへ付け替えて、fromを削除する */
 export async function mergeProducts(fromProductId: string, intoProductId: string): Promise<void> {
   if (fromProductId === intoProductId) return;
   const sql = getSql();
 
   await sql`UPDATE extracted_items SET product_id = ${intoProductId} WHERE product_id = ${fromProductId}`;
   await sql`UPDATE product_aliases SET product_id = ${intoProductId} WHERE product_id = ${fromProductId}`;
+  // secondary_market_historyはON DELETE CASCADEのため、付け替え忘れるとfrom削除時に
+  // 価格推移が黙って失われる（この関数が書かれた後に新設されたテーブルのため、当初は漏れていた）
+  await sql`UPDATE secondary_market_history SET product_id = ${intoProductId} WHERE product_id = ${fromProductId}`;
 
   const fromRows = await sql`SELECT canonical_name FROM products WHERE id = ${fromProductId}`;
   if (fromRows.length > 0) {
