@@ -239,7 +239,7 @@ function PostForm() {
       {resultItems && resultItems.length > 0 && (
         <div className="rounded-lg border border-black/10 p-4 dark:border-white/10">
           <h2 className="mb-3 text-sm font-semibold">抽出結果</h2>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto [touch-action:pan-x_pan-y]">
             <table className="w-full min-w-[480px] text-sm">
               <thead>
                 <tr className="text-left opacity-60">

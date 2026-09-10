@@ -153,7 +153,7 @@ export default function EntriesPage() {
             )}
 
             {post.extracted_items.length > 0 && (
-              <div className="mt-2 overflow-x-auto">
+              <div className="mt-2 overflow-x-auto [touch-action:pan-x_pan-y]">
                 <table className="w-full min-w-[420px] text-sm">
                   <tbody>
                     {post.extracted_items.map((item) => (

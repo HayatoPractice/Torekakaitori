@@ -19,12 +19,27 @@
   }
 }
 
+html,
+body {
+  /* 個々の要素側でoverflow-x-autoを付け忘れても、ページ全体が横スクロールしないようにする保険。
+     bodyだけでなくhtml側にも付けておかないと、要素によっては保険が効かないブラウザがある */
+  overflow-x: hidden;
+  /*
+   * スマホでの横スワイプ操作そのものを無効化する（縦方向のパンのみ許可）。
+   * iOS Safari等は、たとえoverflow-x:hiddenを設定していても、画面外にposition:fixedで
+   * 配置した要素（スマホ用メニューの引き出し等）があると、指でドラッグした時にページ全体が
+   * 一瞬横に動く（ラバーバンド）ことがある。touch-actionでジェスチャー自体を縦方向に限定することで、
+   * どの要素が原因でも横方向の意図しない移動を確実に防げる。
+   * 横スクロールさせたい表・グラフ側は、その要素自身にtouch-actionを個別指定して上書きすること。
+   */
+  touch-action: pan-y;
+  overscroll-behavior-x: none;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-  /* 個々の要素側でoverflow-x-autoを付け忘れても、ページ全体が横スクロールしないようにする保険 */
-  overflow-x: hidden;
 }
 
 /*

@@ -58,7 +58,7 @@ export default function AccountSummaryPage({ params }: { params: Promise<{ id: s
       {products.length === 0 ? (
         <p className="text-sm opacity-60">まだこのアカウントの価格データがありません。</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-black/10 dark:border-white/10">
+        <div className="overflow-x-auto rounded-lg border border-black/10 [touch-action:pan-x_pan-y] dark:border-white/10">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-black/10 text-left opacity-60 dark:border-white/10">

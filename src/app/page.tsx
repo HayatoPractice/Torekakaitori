@@ -372,7 +372,7 @@ export default function ProductsPage() {
           {compareError && <p className="text-sm text-red-500">{compareError.message}</p>}
 
           {chartData.length > 0 ? (
-            <div className="mb-6 h-80 overflow-x-auto">
+            <div className="mb-6 h-80 overflow-x-auto [touch-action:pan-x_pan-y]">
               <div className="h-full" style={{ minWidth: Math.max(chartData.length * 60, 320) }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData}>
@@ -420,7 +420,7 @@ export default function ProductsPage() {
           {secondaryHistoryError && <p className="text-sm text-red-500">{secondaryHistoryError.message}</p>}
 
           {hasSecondaryData ? (
-            <div className="h-72 overflow-x-auto">
+            <div className="h-72 overflow-x-auto [touch-action:pan-x_pan-y]">
               <div className="h-full" style={{ minWidth: Math.max(secondaryChartData.length * 60, 320) }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={secondaryChartData}>
